@@ -1,0 +1,252 @@
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix,epsfig,comment}
+\setlength{\parskip}{1.8mm}
+\setlength{\parindent}{0mm}
+\begin{document}
+%\date{}
+\title{\Large \bf Probabilistic Agent Based Modelling: Mathematical foundations}
+
+\author{
+{\rm Daniel Tang}\\
+Institution
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+%\thispagestyle{empty}
+
+\abstract
+In order to do modelling well we need to do calibration, data assimilation and uncertainty quantification properly. All of these problems can be posed in terms of probabilistic inference. At present, tools to do probabilistic inference on ABMs are lacking. In this paper I develop a mathematical foundation for thinking about and working with probabilistic inference in ABMs.
+
+\section{Agent based dynamical systems}
+We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can exchange messages with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent acts. The only actions an agent can perform are: send a message, change its internal state, create a new agent or leave the system completely.
+
+We would like to have a convenient way of specifying agent behaviours and calculating how those behaviours relate to the aggregate behaviour of the whole system. In order to do probabilistic inference we will require a way of working with probability distributions over the system (i.e. the joint state of all agents) and calculating the posterior distribution given observations of the system.
+
+\subsection{Single agent}
+We start with the simplest possible agent based dynamical system: a system with only one stateless agent. Even a system as simple as this will allow us to introduce a few key concepts. Suppose that at time $t=0$ the agent definitely exists and between time $t$ and $t+dt$ the agent leaves the system with probability $rdt$. We now introduce a variable, $z$, to represent the state that the agent is in the system and represent the probabilistic state of the system as a polynomial in $z$
+\[
+S = c + pz
+\]
+where $p$ is the probability that $z$ is the case (i.e. that the agent is in the system) and $c = (1-p)$ is the probability that the system is empty. So, at time $t=0$, $S(0) = z$. Now, we introduce an important concept, borrowed from quantum field theory, called the \textit{annihilation} operator which acts on probabilistic states. In our case, we can definte the annihilation operator as
+\[
+a = \frac{\partial}{\partial z}
+\]
+
+If we apply this operator to $S(0)$ we get $aS(0) = az = \frac{\partial z}{\partial z} = 1$. So the annihilation operator transforms a state in which there is definitely one agent into a state which is definitely empty, i.e. the agent is annihilated. We'll see later how this generalises very nicely to the case of multiple agents.
+
+Similarly, we define a \textit{creation operator}:
+\[
+a^{\dag} = z
+\]
+If we apply the creation operator to a state which is definitely empty, $1$, we get $z$ which represents a state which definitely has one agent.
+
+So much for states where we have certainty. We'll now make an operator that simulates the change in an uncertain state due to an infinitesimal timestep of an agent with a proensity $r$ to annihilate itself. In an uncertain state, $S = c + pz$, the probability that an agent both exists \textit{and} annihilates itself in a timestep $dt$ is just $prdt$. So, in a timestep we expect $c$ to increase by $prdt$ and p to decrease by the same amount. We can do this with the following operator:
+\[
+\frac{\partial}{\partial t} = H = r(a - a^{\dag}a)
+\]
+Where $H$ is often called the \textit{Hamiltonian}. Again, we'll see later that by choosing this form we make things very elegant when we come to generalise to many agents.
+
+Once we have the Hamiltonian, the probabilistic dynamics of the system is completely defined by the equation
+\[
+\frac{\partial S}{\partial t} = HS
+\]
+which is the probabilistic dynamics version of Schr\"{o}dinger's equation. This equation has a very general solution
+\[
+S(t) = e^{tH}S(0)
+\]
+where the exponent of an operator is defined as
+\[
+e^{tH} = \sum_{k=0}^\infty \frac{(tH)^k}{k!}
+\]
+In our case, the equation of motion is
+\[
+\frac{\partial S}{\partial t} = HS = r\left(\frac{\partial }{\partial z} - z\frac{\partial }{\partial z}\right)S
+\]
+Solving this for $S(0) = z$ gives
+\[
+S(t) = e^{tr((1-z)\frac{\partial}{\partial z})}z
+\]
+\[
+ = \sum_{k=0}^\infty \frac{\left(tr\left((1-z)\frac{\partial}{\partial z}\right)\right)^k}{k!}z
+\]
+\[
+= \sum_{k=0}^\infty \frac{(-tr)^k\left((z-1)\frac{\partial}{\partial z}\right)^k}{k!}z
+\]
+but since $\frac{\partial^n}{\partial z^n} = 0$ for $n>1$
+\[
+\left((z-1)\frac{\partial}{\partial z}\right)^k = (z-1)\frac{\partial}{\partial z}
+\]
+for $k>0$, so
+\[
+S(t) = 1 + \sum_{k=0}^\infty \frac{(-tr)^k}{k!}(z-1)
+\]
+where the initial $1$ is to account for the case when $k=0$. We can now turn the sum back into an exponent to give
+\[
+S(t) = (1 - e^{-rt}) + e^{-rt}z
+\]
+So the probability that the agent exists reduces exponentially as time progresses. This is exactly what we would expect.
+
+\subsection{Many agents}
+
+We can now show how our operators extend very nicely to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $S = z^n$. This means that a probabilistic state is represented by a polynomial
+\[
+S = \sum_{n=0}^N p_n z^n
+\]
+where $p_n$ is the probability that there are $n$ agents. By choosing this representation, we can see immediately that our creation operator works on definite states:
+\[
+a^\dag z^n = z^{n+1}
+\]
+Even better, it works on probabilistic states too. For example, suppose there's a $0.5$ probability that the state is empty and a $0.5$ probability that there's one agent, so $S = 0.5 + 0.5z$. In this case
+\[
+a^\dag (0.5 + 0.5z) = 0.5z + 0.5z^2
+\]
+So there's now an equal probability of there being either one or two agents. The operator simultaneously adds an agent to all possible states.
+
+If we start with an empty system (i.e. $S(0) = 1$) and add agents at a constant rate we'd expect the Hamiltonian to be given by
+\[
+\frac{\partial S}{\partial t} = HS = r(a^\dag - 1)S
+\]
+where the first term adds probability to states after the new agent is created and the second term deducts probability from the original states that had agents added to them. This can again be solved analytically:
+\[
+S(t) = e^{-rt(1-z)} = e^{-rt}e^{rtz}
+\]
+\[
+= e^{-rt}\sum_k \frac{(rtz)^k}{k!}
+\]
+\[
+S(t) = \sum_k \frac{(rt)^ke^{-rt}}{k!}z^k
+\]
+which is just the Poisson distribution, as we would expect.
+
+Now let's try the annihilation operator on $S = 0.5z + 0.5z^2$:
+\[
+a (0.5z + 0.5z^2) = 0.5 + z
+\]
+We don't get $0.5 + 0.5z$ as you may have expected. Instead, for a polynomial $S = \sum_n p_nz^n$ we get
+\[
+a \sum_n p_nz^n = \sum_n n p_n z^{n-1}
+\]
+This behaviour can be harnessed to make a very useful operator
+\[
+N = a^\dag a
+\]
+which in quantum field theory is called the number operator because
+\[
+a^\dag a \sum_n p_nz^n = \sum_n n p_n z^n
+\]
+it multiplies the probability of each state by the number of agents in that state. We can use this operator to make a higher order operator
+\[
+E(T) = (T - 1)N
+\]
+Which we'll call the \textit{foreach} operator because it gives us the rate of change of state if we were to execute the operator $T$ on all agents, as if we'd executed a \texttt{foreach} loop in a computer program. This allows us to construct the $T$ operator from the point of view of a single agent.
+
+Inside a foreach operator, if we want to annihilate the agent, rather than use the annihilation operator we should use the inverse of the creation operator $a^{\dag -1} = z^{-1}$
+
+To illustrate this, suppose we start with $n$ agents and each agent has a propensity, $r$, to annihilate itself. In pseudocode this may look something like
+\begin{verbatim}
+foreach(a in S) {
+  if(random() < r*dt) delete(a)
+}
+\end{verbatim}
+
+We can create the Hamiltonian for this
+\[
+\frac{\partial}{\partial t} = H = rE(a^{\dag-1}) = r(a^{\dag-1} - 1)N
+\]
+but expanding this gives
+\[
+H = r(a^{\dag-1} - 1)a^\dag a = r(a - a^\dag a)
+\]
+which is exactly the Hamiltonian from the single agent case, but now we understand why it will also work in the case of many agents.
+
+The only difference here is the boundary condition. Instead of $S(0) = z$ as in the single agent case, we now have $S(0) = z^n$. The solution to which is
+\[
+S(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}z^m
+\]
+The coefficients of $z$ (i.e. the probabilities that there are $m$ agents) make up a Binomial distribution, which, again, is what we would expect.
+
+The above examples, although very simple, demonstrate how we can define a Hamiltonian operator in terms of the behaviour of an agent, yet apply that operator to the state of a whole system to get the aggregate behaviour.
+
+\subsection{Agent states}
+
+So far, the agents haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $z_0$ and an agent in state $1$ as $z_1$. A state with $n$ agents in state $z_0$ and $m$ agents in state $z_1$ is represented as state $S = z_0^nz_1^m$. We define annihilation and creation operators for each state:
+\[
+a_0 = \frac{\partial}{\partial z_0}
+\]
+\[
+a_1 = \frac{\partial}{\partial z_1}
+\]
+\[
+a_0^\dag = z_0
+\]
+and
+\[
+a_1^\dag = z_1
+\]
+Similarly, we now have two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $E_0(T) = (T-1)N_0$ and $E_1 = (T-1)N_1$ which act only on the agents in state $0$ and $1$ respectively.
+
+A change of state from $x$ to $y$ can be represented as an agent in state $x$ annihilating itself while simultaneously creating a new agent in state $y$, $a_y^\dag a_x^{\dag-1} = z_yz_x^{-1}$.
+
+Let's illustrate this with a system of $n$ agents who each have a propensity $r$ to flip to the opposite state. In pseudocode we want something like
+\begin{verbatim}
+S0  = S
+foreach(x in S0 suchthat S0.state(x)=0) {
+  if(random() < r*dt) S.state(x) = 1
+}
+foreach(x in S0 suchthat S0.state(x)=1) {
+  if(random() < r*dt) S.state(x) = 0
+}
+\end{verbatim}
+ This can be expressed as a Hamiltonian
+\[
+H = rE_0(z_1 z_0^{-1}) + rE_1(z_0 z_1^{-1})
+\]
+expanding this gives
+\[
+H = r\left((z_1 - z_0)\frac{\partial}{\partial z_0} + (z_0 - z_1)\frac{\partial}{\partial z_1}\right)
+\]
+If we suppose that at time $t = 0$ all agents are in state $z_1$ then we can solve
+\[
+S(t) = 
+\]
+
+\section{ABM as a computational paradigm}
+
+We define an ABM as a set of (Turing complete) computational processes, which we call \textit{agents}. Without loss of generality, we assume that each agent is executing the same program, although their internal states may differ. In addition, there is an \textit{environment} which has a finite state and a \textit{public API} through which any agent may perform actions or query for information. Similarly, the each agent has a public API through which the environment may act on the agent or gain information about the state of the agent. The environment can also create or annihilate agents.
+
+Computation proceeds in three modes
+\begin{description}
+
+\item[Synchronous mode] In which each agent gets to perform computations and act on the environment through repeated execution of a \textit{timestep} function. For each timestep of the whole model, the state of the environment is only updated once per timestep.
+
+\item[Sequential mode] In which each agent has a unique identity which has an ordering. Computation proceeds through repeated execution of each agent's timestep function \textbf{in order of their identity}. This time the environment is updated immediately as agents act upon it.
+
+\item[Asymchronous mode] In which each agent is a separate process which communicates with the environment through asynchronous message passing. We will not consider this mode in this paper.
+
+\end{description}
+
+It is immediately clear that an ABM is a Turing complete computer, so can be considered to be a paradigm for computation. This paradigm is particularly convenient when we are modelling domains that we would naturally think in terms of multiple, interacting agents.
+
+Since both sequential and synchronous modes are Turing complete, it follows that they are equivalent. A constructive proof of this is as follows: A synchronous mode ABM can calculate an sequential mode ABM by having the environment assignin a unique ID to each agent. At each timestep the environment passes a \textit{right of execution} to a single agent. Upon execution of an agents timestep function, the agent may only act if it is currently holding a \textit{right of execution}. Once used, the agent passes the right of execution back to the environment, which then passes it on to the next agent in the ordering of IDs. Similarly, a sequential mode ABM can calculate a synchronous mode ABM by having each agent hold a boolean state which specifies whether the next timestep is a calculation step or an action step. On the calculation step, each agent calculates its actions for that step, while on an action step each agent performs the pre-caclulated action. The boolean state is flipped at the end of each step. Since, in synchronous mode, agent's actions must commute the resulting computation is independent of the ordering of the agents.
+
+Given this equivalence, we will consider only synchronous mode ABMs in the remainder of this paper.
+
+\section{Probabilistic semantics for ABMs}
+
+\subsection{Fixed number of agents, no interaction}
+
+Let's start with a vert simple ABM: an agent-based simulation of a Markov process.  
+
+The state of an ABM can be defined as a pair $(E ,\Psi)$, where $E$ is the state of the environment and $\Psi$ is a bag of states of the agents\footnote{where a \textit{bag} is like a set but it may contain multiple members with the same state.}.
+
+
+%{\footnotesize \bibliographystyle{acm}
+%\bibliography{sample}}
+
+
+%\theendnotes
+
+\end{document}
