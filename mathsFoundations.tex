@@ -8,7 +8,7 @@
 
 \author{
 {\rm Daniel Tang}\\
-Institution
+Deselby research institute
 }
 
 \maketitle
@@ -41,19 +41,23 @@ Similarly, we define a \textit{creation operator}:
 \[
 a^{\dag} = z
 \]
-If we apply the creation operator to a state which is definitely empty, $1$, we get $z$ which represents a state which definitely has one agent.
+If we apply the creation operator to a state which is definitely empty, $S=1$, we get $a^\dag S=z$ which represents a state which definitely has one agent.
 
-So much for states where we have certainty. We'll now make an operator that simulates the change in an uncertain state due to an infinitesimal timestep of an agent with a proensity $r$ to annihilate itself. In an uncertain state, $S = c + pz$, the probability that an agent both exists \textit{and} annihilates itself in a timestep $dt$ is just $prdt$. So, in a timestep we expect $c$ to increase by $prdt$ and p to decrease by the same amount. We can do this with the following operator:
+Given the creation and annihilation operators, it will be useful to know the rate of change of a probabilistic state if an agent has a propensity, $r$, to create or annihilate itself. Given an empty state and an agent that is currently outside of the system that has a propensity, $r$, to enter the system, then in time slice $[t, t+dt]$ there is a probability $rdt$ that the state will switch from empty to having an agent in it. So in time $dt$ the probability of the empty state goes down by $rdt$ and the probability of there being an agent goes up by $dt$. So the rate of change of the state is givcen by
 \[
-\frac{\partial}{\partial t} = H = r(a - a^{\dag}a)
+H_{a^\dag} = \frac{\partial}{dt} = (a^\dag - 1)r
 \]
-Where $H$ is often called the \textit{Hamiltonian}. Again, we'll see later that by choosing this form we make things very elegant when we come to generalise to many agents.
+Similarly, for the annihilation operator. If we start with an agent in the system, the probability of there being an agent decreases by $rdt$ while the probability of the state being empty increases by the same amount. We can achieve this with the operator
+\[
+H_a = \frac{\partial}{\partial t} = (a - a^{\dag}a)r
+\]
+We'll call $H_{a\dag}$ and $H_a$ the \textit{Hamiltonians} for their respective operators. Again, we'll see later that by choosing this form for the Hamiltonians we make things very elegant when we come to generalise to many agents.
 
-Once we have the Hamiltonian, the probabilistic dynamics of the system is completely defined by the equation
+Once we have the Hamiltonian for a system, the probabilistic dynamics of the system is completely defined by the equation
 \[
 \frac{\partial S}{\partial t} = HS
 \]
-which is the probabilistic dynamics version of Schr\"{o}dinger's equation. This equation has a very general solution
+which is the probabilistic dynamics' analogue of Schr\"{o}dinger's equation. This equation has a very general solution
 \[
 S(t) = e^{tH}S(0)
 \]
@@ -61,19 +65,21 @@ where the exponent of an operator is defined as
 \[
 e^{tH} = \sum_{k=0}^\infty \frac{(tH)^k}{k!}
 \]
-In our case, the equation of motion is
+and eponentiation of an operator is just repeated application (taking care to respect the order of non-commutative operators).
+
+Going back now to the agent that has propensity $r$ to annihilate itself, the equation of motion is
 \[
-\frac{\partial S}{\partial t} = HS = r\left(\frac{\partial }{\partial z} - z\frac{\partial }{\partial z}\right)S
+\frac{\partial S}{\partial t} = H_aS = \left(\frac{\partial }{\partial z} - z\frac{\partial }{\partial z}\right)rS
 \]
 Solving this for $S(0) = z$ gives
 \[
-S(t) = e^{tr((1-z)\frac{\partial}{\partial z})}z
+S(t) = e^{rt((1-z)\frac{\partial}{\partial z})}z
 \]
 \[
- = \sum_{k=0}^\infty \frac{\left(tr\left((1-z)\frac{\partial}{\partial z}\right)\right)^k}{k!}z
+ = \sum_{k=0}^\infty \frac{\left(rt(1-z)\frac{\partial}{\partial z}\right)^k}{k!}z
 \]
 \[
-= \sum_{k=0}^\infty \frac{(-tr)^k\left((z-1)\frac{\partial}{\partial z}\right)^k}{k!}z
+= \sum_{k=0}^\infty \frac{(-rt)^k\left((z-1)\frac{\partial}{\partial z}\right)^k}{k!}z
 \]
 but since $\frac{\partial^n}{\partial z^n} = 0$ for $n>1$
 \[
@@ -81,9 +87,9 @@ but since $\frac{\partial^n}{\partial z^n} = 0$ for $n>1$
 \]
 for $k>0$, so
 \[
-S(t) = 1 + \sum_{k=0}^\infty \frac{(-tr)^k}{k!}(z-1)
+S(t) = 1 + \sum_{k=0}^\infty \frac{(-rt)^k}{k!}(z-1)
 \]
-where the initial $1$ is to account for the case when $k=0$. We can now turn the sum back into an exponent to give
+where the initial $1$ accounts for the case when $k=0$. We can now turn the sum back into an exponent to give
 \[
 S(t) = (1 - e^{-rt}) + e^{-rt}z
 \]
@@ -91,11 +97,15 @@ So the probability that the agent exists reduces exponentially as time progresse
 
 \subsection{Many agents}
 
-We can now show how our operators extend very nicely to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $S = z^n$. This means that a probabilistic state is represented by a polynomial
+We can now show how our operators extend very elegantly to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $S = z^n$. A probabilistic state is therefore represented by a polynomial
 \[
-S = \sum_{n=0}^N p_n z^n
+S = \sum_{n=0}^\infty p_n z^n
 \]
-where $p_n$ is the probability that there are $n$ agents. By choosing this representation, we can see immediately that our creation operator works on definite states:
+where $p_n$ is the probability that there are $n$ agents, and
+\[
+\sum_{n=0}^\infty p_n = 1
+\]
+By choosing this representation, we can see immediately that our creation operator works on definite states:
 \[
 a^\dag z^n = z^{n+1}
 \]
@@ -103,21 +113,22 @@ Even better, it works on probabilistic states too. For example, suppose there's 
 \[
 a^\dag (0.5 + 0.5z) = 0.5z + 0.5z^2
 \]
-So there's now an equal probability of there being either one or two agents. The operator simultaneously adds an agent to all possible states.
+So there's now an equal probability of there being either one or two agents, i.e. the operator simultaneously adds an agent to all possible states.
 
 If we start with an empty system (i.e. $S(0) = 1$) and add agents at a constant rate we'd expect the Hamiltonian to be given by
 \[
-\frac{\partial S}{\partial t} = HS = r(a^\dag - 1)S
+\frac{\partial S}{\partial t} = H_{a\dag}S = (a^\dag - 1)rS
 \]
-where the first term adds probability to states after the new agent is created and the second term deducts probability from the original states that had agents added to them. This can again be solved analytically:
+This can again be solved analytically:
 \[
-S(t) = e^{-rt(1-z)} = e^{-rt}e^{rtz}
-\]
-\[
-= e^{-rt}\sum_k \frac{(rtz)^k}{k!}
+S(t) = e^{tH} = e^{-rt(1-z)} = e^{-rt}e^{rtz}
 \]
 \[
-S(t) = \sum_k \frac{(rt)^ke^{-rt}}{k!}z^k
+= e^{-rt}\sum_k \frac{(rt)^k}{k!}z^k
+\]
+so, the probability of there being $k$ agents (i.e. the coefficient of the $k^{th}$ power of $z$) is 
+\[
+c_k = \frac{(rt)^ke^{-rt}}{k!}
 \]
 which is just the Poisson distribution, as we would expect.
 
@@ -133,17 +144,20 @@ This behaviour can be harnessed to make a very useful operator
 \[
 N = a^\dag a
 \]
-which in quantum field theory is called the number operator because
+which in quantum field theory is called the number operator because it multiplies the probability of each state by the number of agents in that state
 \[
 a^\dag a \sum_n p_nz^n = \sum_n n p_n z^n
 \]
-it multiplies the probability of each state by the number of agents in that state. We can use this operator to make a higher order operator
+We can now understand the Hamiltonian of the annihilation operator in a new light
 \[
-E(T) = (T - 1)N
+H_a = (a - a^\dag a)r = (a^{\dag -1} - 1)Nr
 \]
-Which we'll call the \textit{foreach} operator because it gives us the rate of change of state if we were to execute the operator $T$ on all agents, as if we'd executed a \texttt{foreach} loop in a computer program. This allows us to construct the $T$ operator from the point of view of a single agent.
+where $a^{\dag -1} = z^{-1}$ is the inverse of the creation operator, which we'll call the agent-based annihilation operator. In this form, we can understand the $a^{\dag -1}$ term as the transition operator for a single agent's propensity. The number operator $N$ has the effect of applying this operator to all the agents in the system, as if we'd executed a \texttt{foreach} loop in a computer program.
 
-Inside a foreach operator, if we want to annihilate the agent, rather than use the annihilation operator we should use the inverse of the creation operator $a^{\dag -1} = z^{-1}$
+This works for any operator that represents the transition function for an agent's propensity. Because it's so useful, well define a higher order function which takes an agent action $T$ and returns the Hamiltonian that applies this propensity to all agents in a probabilistic state
+\[
+\mathcal{H}(T) = (T - 1)Nr
+\]
 
 To illustrate this, suppose we start with $n$ agents and each agent has a propensity, $r$, to annihilate itself. In pseudocode this may look something like
 \begin{verbatim}
@@ -154,15 +168,15 @@ foreach(a in S) {
 
 We can create the Hamiltonian for this
 \[
-\frac{\partial}{\partial t} = H = rE(a^{\dag-1}) = r(a^{\dag-1} - 1)N
+\frac{\partial}{\partial t} = \mathcal{H}(a^{\dag -1}) = (a^{\dag-1} - 1)Nr
 \]
-but expanding this gives
+Expanding this gives
 \[
-H = r(a^{\dag-1} - 1)a^\dag a = r(a - a^\dag a)
+H = (a^{\dag-1} - 1)a^\dag ar = (a - a^\dag a)r
 \]
-which is exactly the Hamiltonian from the single agent case, but now we understand why it will also work in the case of many agents.
+which is exactly the Hamiltonian from the single agent case, but now we understand why it has this form and why it will also work in the case of many agents.
 
-The only difference here is the boundary condition. Instead of $S(0) = z$ as in the single agent case, we now have $S(0) = z^n$. The solution to which is
+The only difference here is the boundary condition. Instead of $S(0) = z$ as in the single agent case, we now have $S(0) = z^n$. The solution to this is
 \[
 S(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}z^m
 \]
@@ -213,6 +227,8 @@ If we suppose that at time $t = 0$ all agents are in state $z_1$ then we can sol
 S(t) = 
 \]
 
+
+\begin{comment}
 \section{ABM as a computational paradigm}
 
 We define an ABM as a set of (Turing complete) computational processes, which we call \textit{agents}. Without loss of generality, we assume that each agent is executing the same program, although their internal states may differ. In addition, there is an \textit{environment} which has a finite state and a \textit{public API} through which any agent may perform actions or query for information. Similarly, the each agent has a public API through which the environment may act on the agent or gain information about the state of the agent. The environment can also create or annihilate agents.
@@ -241,6 +257,7 @@ Given this equivalence, we will consider only synchronous mode ABMs in the remai
 Let's start with a vert simple ABM: an agent-based simulation of a Markov process.  
 
 The state of an ABM can be defined as a pair $(E ,\Psi)$, where $E$ is the state of the environment and $\Psi$ is a bag of states of the agents\footnote{where a \textit{bag} is like a set but it may contain multiple members with the same state.}.
+\end{comment}
 
 
 %{\footnotesize \bibliographystyle{acm}
