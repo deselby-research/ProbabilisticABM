@@ -18,10 +18,10 @@ Deselby research institute
 %\thispagestyle{empty}
 
 \abstract
-In order to do modelling well we need to do calibration, data assimilation and uncertainty quantification properly. All of these problems can be posed in terms of probabilistic inference. At present, tools to do probabilistic inference on ABMs are lacking. In this paper I develop a mathematical foundation for thinking about and working with probabilistic inference in ABMs.
+In order to do modelling well we need to do calibration, data assimilation and uncertainty quantification properly. All of these problems can be posed in terms of probabilistic inference. At present, tools to do probabilistic inference on ABMs are lacking. In this paper I introduce the idea of a agent based dynamical system and develop a mathematical foundation for thinking about and working with probabilistic inference in these systems.
 
 \section{Agent based dynamical systems}
-We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can exchange messages with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent acts. The only actions an agent can perform are: send a message, change its internal state, create a new agent or leave the system completely.
+We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are: change its own internal state, change the state of another agent, create a new agent or leave the system completely.
 
 We would like to have a convenient way of specifying agent behaviours and calculating how those behaviours relate to the aggregate behaviour of the whole system. In order to do probabilistic inference we will require a way of working with probability distributions over the system (i.e. the joint state of all agents) and calculating the posterior distribution given observations of the system.
 
@@ -156,8 +156,9 @@ where $a^{\dag -1} = z^{-1}$ is the inverse of the creation operator, which we'l
 
 This works for any operator that represents the transition function for an agent's propensity. Because it's so useful, well define a higher order function which takes an agent action $T$ and returns the Hamiltonian that applies this propensity to all agents in a probabilistic state
 \[
-\mathcal{H}(T) = (T - 1)Nr
+\mathcal{H}_r(T) = (T - 1)Nr
 \]
+we'll call this the \textit{foreach} operator.
 
 To illustrate this, suppose we start with $n$ agents and each agent has a propensity, $r$, to annihilate itself. In pseudocode this may look something like
 \begin{verbatim}
@@ -182,11 +183,13 @@ S(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}z^m
 \]
 The coefficients of $z$ (i.e. the probabilities that there are $m$ agents) make up a Binomial distribution, which, again, is what we would expect.
 
-The above examples, although very simple, demonstrate how we can define a Hamiltonian operator in terms of the behaviour of an agent, yet apply that operator to the state of a whole system to get the aggregate behaviour.
+The above examples, although very simple, demonstrate how we can define a Hamiltonian operator in terms of the behaviour of a single agent then apply it to each agent in a system and ultimately describe the aggregate dynamics of a probability distribution over the whole system.
+
+
 
 \subsection{Agent states}
 
-So far, the agents haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $z_0$ and an agent in state $1$ as $z_1$. A state with $n$ agents in state $z_0$ and $m$ agents in state $z_1$ is represented as state $S = z_0^nz_1^m$. We define annihilation and creation operators for each state:
+So far, the agents we've been considering haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $z_0$ and an agent in state $1$ as $z_1$. A state with $n$ agents in state $z_0$ and $m$ agents in state $z_1$ is represented as state $S = z_0^nz_1^m$. We define annihilation and creation operators for each state:
 \[
 a_0 = \frac{\partial}{\partial z_0}
 \]
@@ -200,23 +203,23 @@ and
 \[
 a_1^\dag = z_1
 \]
-Similarly, we now have two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $E_0(T) = (T-1)N_0$ and $E_1 = (T-1)N_1$ which act only on the agents in state $0$ and $1$ respectively.
+Similarly, we now have two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $\mathcal{H}_{0r}(T) = (T-1)N_0r$ and $\mathcal{H}_{1r} = (T-1)N_1r$ which loop over agents in state $0$ and $1$ respectively.
 
 A change of state from $x$ to $y$ can be represented as an agent in state $x$ annihilating itself while simultaneously creating a new agent in state $y$, $a_y^\dag a_x^{\dag-1} = z_yz_x^{-1}$.
 
 Let's illustrate this with a system of $n$ agents who each have a propensity $r$ to flip to the opposite state. In pseudocode we want something like
 \begin{verbatim}
 S0  = S
-foreach(x in S0 suchthat S0.state(x)=0) {
+foreach(x in S0 suchthat S0.state(x)==0) {
   if(random() < r*dt) S.state(x) = 1
 }
-foreach(x in S0 suchthat S0.state(x)=1) {
+foreach(x in S0 suchthat S0.state(x)==1) {
   if(random() < r*dt) S.state(x) = 0
 }
 \end{verbatim}
  This can be expressed as a Hamiltonian
 \[
-H = rE_0(z_1 z_0^{-1}) + rE_1(z_0 z_1^{-1})
+H = r\mathcal{H}_{0r}(z_1 z_0^{-1}) + r\mathcal{H}_{1r}(z_0 z_1^{-1})
 \]
 expanding this gives
 \[
@@ -224,9 +227,65 @@ H = r\left((z_1 - z_0)\frac{\partial}{\partial z_0} + (z_0 - z_1)\frac{\partial}
 \]
 If we suppose that at time $t = 0$ all agents are in state $z_1$ then we can solve
 \[
-S(t) = 
+S(t) = 2^{-n} \sum_{m=0}^n {n\choose m} (1-e^{-2rt})^{n-m}(1+e^{-2rt})^m z_0^{n-m}z_1^m
 \]
+[TODO: add proof]
 
+\subsection{Interacting agents}
+
+Now let's get agents to interact. Suppose we have a conpartmental model of infectious disease spread. Suppose there's a population of $n$ people. Each person can be one of suseptible, infected or recovered. Infected people have a propensity, $\beta$, to meet and infect a suseptible person, in which case the suseptible person becomes infected. Also, infected people have a propensity, $\gamma$ to recover.
+
+In order to represent the interaction of infected people with suseptible, we want a Hamiltonian that would be equivalent to pseudocode something like
+\begin{verbatim}
+foreach(x in S0 suchthat 
+        S0.state(x)==Suseptible) {
+  foreach(y in S0 suchthat
+          S0.state(y) == Infected) {
+    if(random() < beta*dt)
+      S.state(x) = Infected
+  }
+}
+\end{verbatim}
+
+It turns out that the number operator can be used in a quite natural way to represent this nested \texttt{foreach} operator.
+
+If we let $z_S$, $z_I$ and $z_R$ represent suseptible, infected and recovered people respectively, then the Hamiltonian we're after is just
+\[
+H = \mathcal{H}_{S\beta}(z_Iz_S^{-1}N_I) = (z_Iz_S^{-1}N_I - 1)N_S\beta
+\]
+so, the Hamiltonian for the whole model is just
+\[
+H = \mathcal{H}_{S\beta}(z_Iz_S^{-1}N_I) + \mathcal{H}_{I\gamma}(z_Rz_I^{-1})
+\]
+and the equation of motion for the probabilistic state is, as always
+\[
+\frac{\partial S}{\partial t} = HS
+\]
+Although this is a differential equation, it's worth pointing out explicitly that it is representing discrete interactions between agents. So, it captures things like disease eradication when the number of infected agents is small, unlike the standard differential version of the SIR model, which is only accurate for large numbers of agents.
+
+\subsection{Continuous states and the uncertainty principle}
+
+So far, we've only considered agents with a finite number of discrete states. We may want to endow the agent with a real number as part of its state, in which case the agent can be in any of an uncountable infinity of states and we'd need a polynomial in an infinite number of variables to represent this.
+
+Consider an agent with a 1-dimensional, real valued state. We'd naturally represent a probability distribution over this value as a density function $P:\mathcal{R} \rightarrow \mathcal{R}$. For such a density function, we define the information of the function to be
+\[
+I = \int_{-\infty}^\infty P(x) \log(P(x)) dx
+\]
+We can escape the infinitude of variables by noting that in all realistic scenarios, the amount of information we have about an agent is finite. That is, whatever observations we make of a variable, there always remains some inherent uncertainty. This is analogous to Heisenberg's uncertainty principle: the more precicely we measure the location of a particle, the more momentum it must have. In our case, momentum is replaced with information and we are only interested in cases of finite information.
+
+Given this, we can represent any probability density that has finite information as a probability mass function over a finite number of variables. For example, if the PDF has a compact support, a convenient representation would be as a Bernstein polynomial, a Deselby polynomial or the spectral modes.
+
+[TODO: find good bases that make the mapping simple from agent to aggregate behaviour]
+
+\section{State approximation: Projecting to lower dimensional spaces}
+
+Whether or not the agents have continuous variables in their states, the number of coefficients in the probabilistic state of the system will expand exponentially as the number of variables of each agent increases. This means for many real world models we won't be able to explicitly represent the polynomial of the probabilistic state.
+
+In order to deal with this, we will now introduce a way to project the high dimensional space of probabilistic states into lower dimensional spaces that are more practical to work with.
+
+\section{Making observations and doing inference}
+
+\section{Data assimilation}
 
 \begin{comment}
 \section{ABM as a computational paradigm}
