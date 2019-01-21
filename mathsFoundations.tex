@@ -1,5 +1,5 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
-\usepackage{usenix,epsfig,comment}
+\usepackage{usenix,epsfig,comment,amssymb}
 \setlength{\parskip}{1.8mm}
 \setlength{\parindent}{0mm}
 \begin{document}
@@ -283,13 +283,25 @@ So far, we've only considered agents with a finite number of discrete states. We
 
 The idea of our state polynomial carries over to the infinitesimal case quite naturally. The transition is made easier if we think of the coefficients as a function from monomials to coefficient values. For example, for a monovariate polynomial
 \[
-P = \sum_n c_n z^n = \sum_n f(z^n)z^n 
+S = \sum_n c_n z^n = \sum_n f(z^n)z^n 
 \]
-In this format we can go over to the infinitesimal limit by replacing the monomials with sets of real numbers. The coefficients can now be represented as a function from sets of real numbers to probability densities (i.e. a PDF over the set of sets of real numbers). Because we chose sets rather than bags to represent monomials, we can now no longer represent multiple agents in the same state, but because each state is infinitesimally small the probability of finding more than one agent in a state is of second order.
+In this format we can go over to the infinitesimal limit by replacing the monomials with sets of real numbers. The coefficients can now be represented as a function from sets of real numbers to probability densities (i.e. a PDF over $\mathcal{P}(\mathbb{R})$ the power set of the real numbers). The state now becomes
+\[
+S = \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z})
+\]
+Note that because we chose sets rather than bags to represent monomials, we can now no longer represent multiple agents in the same state, but because each state is infinitesimally small the probability of finding more than one agent in a state is of second order.
 
-The construction and annihilation operators now become the set member addition and removal operators, where removal of a member from a set that does not contain that member results in the \textit{null} set  (which is distinct from the empty set) and addition to the null set results in the null set.
+Multiplication of a state by $\mathbf{z}_n = \left\{z_n\right\}$ becomes
+\[
+\mathbf{z_n}S \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \setminus\mathbf{z_n})
+\]
+while differentiation becomes
+\[
+\frac{\partial S}{\partial \mathbf{z_n}}  \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \cup \left\{z_n\right\})
+\]
+[TODO: make these integrals more formally correct. Define as differential ring/algebra?]
 
-Consider an agent with a 1-dimensional, real valued state. We'd naturally represent a probability distribution over this value as a density function $P:\mathcal{R} \rightarrow \mathcal{R}$. For such a density function, we define the information of the function to be
+Consider an agent with a 1-dimensional, real valued state. We'd naturally represent a probability distribution over this value as a density function $P:\mathbb{R} \rightarrow \mathbb{R}$. For such a density function, we define the information of the function to be
 \[
 I = \int_{-\infty}^\infty P(x) \log(P(x)) dx
 \]
@@ -298,6 +310,12 @@ We can escape the infinitude of variables by noting that in all realistic scenar
 Given this, we can represent any probability density that has finite information as a probability mass function over a finite number of variables. For example, if the PDF has a compact support, a convenient representation would be as a Bernstein polynomial, a Deselby polynomial or the spectral modes.
 
 [TODO: find good bases that make the mapping simple from agent to aggregate behaviour]
+
+\subsection{Mixed real/integer states}
+ We can create a fully general system state that can deal with mixed real and integer agent states by defining the state to be a function from bags of state vectors to real coefficients.
+ \[
+ S = \int_{\Psi\in\mathcal{P}(\psi)} f(\Psi)
+ \]
 
 \section{Making observations and doing inference}
 
@@ -351,14 +369,23 @@ S(S|o) = \frac{0.5 + 0.5(1-e^{-rt})z}{(1-0.5e^{-rt})}
 
 So far, we've considered simple systems that have analytic solutions. However, almost all of the systems of interest will not have an analytic solution. We'll now introduce some techniques to help us to numerically approximate solutions.
 
-\subsection{Integrating over propensities: The path integral}
+Because the number of coefficients in the probabilistic state of a system expands exponentially with the number of variables in an agent's state and with the number of agents, for most real world models it isn't feasible to explicitly represent the probabilistic state as a list of coefficients. There are three ways around this. We can represent the state symbolically, we can approximate the state or we can abstract over the state.
+
+\subsection{Symbolic representation of states}
+
+In almost all cases of interest a system state, although very high dimensional and complex, will be the result of a (potentially large but manageable) number of operations. What's more, we can construct these states from the state $S=1$. So, instead of representing a system state as a list of coefficients we can represent it as a list of operations on $1$:
+\[
+S = \prod_n O_n1
+\]
 
 \subsection{State approximation: Projecting to lower dimensional spaces}
 
-Whether or not the agents have continuous variables in their states, the number of coefficients in the probabilistic state of the system will expand exponentially as the number of variables of each agent increases. This means for many real world models we won't be able to explicitly represent the polynomial of the probabilistic state.
+We can also often approximate a high-dimensional probabilistic state in a lower dimensional space that is more practical to work with.
 
-In order to deal with this, we will now introduce a way to project the high dimensional space of probabilistic states into lower dimensional spaces that are more practical to work with.
+\subsection{State abstraction: Projection to lower dimensional spaces without approximation}
 
+
+\section{Integrating over propensities: The path integral}
 
 \section{Data assimilation}
 
