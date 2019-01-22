@@ -21,16 +21,16 @@ Deselby research institute
 In order to do modelling well we need to do calibration, data assimilation and uncertainty quantification properly. All of these problems can be posed in terms of probabilistic inference. At present, tools to do probabilistic inference on ABMs are lacking. In this paper I introduce the idea of a agent based dynamical system and develop a mathematical foundation for thinking about and working with probabilistic inference in these systems.
 
 \section{Agent based dynamical systems}
-We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are: change its own internal state, change the state of another agent, create a new agent or leave the system completely.
+We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are to remove an agent and to create a new agent. Surprisingly, this will be enough to express all agent behaviours.
 
 We would like to have a convenient way of specifying agent behaviours and calculating how those behaviours relate to the aggregate behaviour of the whole system. In order to do probabilistic inference we will require a way of working with probability distributions over the system (i.e. the joint state of all agents) and calculating the posterior distribution given observations of the system.
 
 \subsection{Single agent}
-We start with the simplest possible agent based dynamical system: a system with only one stateless agent. Even a system as simple as this will allow us to introduce a few key concepts. Suppose that at time $t=0$ the agent definitely exists and between time $t$ and $t+dt$ the agent leaves the system with probability $rdt$. We now introduce a variable, $z$, to represent the state that the agent is in the system and represent the probabilistic state of the system as a polynomial in $z$
+We start with the simplest possible agent based dynamical system: a system with either one or zero stateless agents. Even a system as simple as this will allow us to introduce a few key concepts. Suppose that at time $t=0$ there is definitely one agent in the system and between time $t$ and $t+dt$ the agent leaves the system with probability $rdt$. We now introduce a variable, $z$, to represent the state that the agent is in the system and represent the probability distribution over the two states of the system as a polynomial in $z$
 \[
-S = c + pz
+P = c + pz
 \]
-where $p$ is the probability that $z$ is the case (i.e. that the agent is in the system) and $c = (1-p)$ is the probability that the system is empty. So, at time $t=0$, $S(0) = z$. Now, we introduce an important concept, borrowed from quantum field theory, called the \textit{annihilation} operator which acts on probabilistic states. In our case, we can definte the annihilation operator as
+where $p$ is the probability that $z$ is the case (i.e. that the agent is in the system) and $c = (1-p)$ is the probability that the system is empty. So, at time $t=0$, $P(0) = z$. Now, we introduce an important concept, borrowed from quantum field theory, called the \textit{annihilation} operator which acts on probabilistic states. In our case, we can definte the annihilation operator as
 \[
 a = \frac{\partial}{\partial z}
 \]
@@ -43,7 +43,7 @@ a^{\dag} = z
 \]
 If we apply the creation operator to a state which is definitely empty, $S=1$, we get $a^\dag S=z$ which represents a state which definitely has one agent.
 
-Given the creation and annihilation operators, it will be useful to know the rate of change of a probabilistic state if an agent has a propensity, $r$, to create or annihilate itself. Given an empty state and an agent that is currently outside of the system that has a propensity, $r$, to enter the system, then in time slice $[t, t+dt]$ there is a probability $rdt$ that the state will switch from empty to having an agent in it. So in time $dt$ the probability of the empty state goes down by $rdt$ and the probability of there being an agent goes up by $dt$. So the rate of change of the state is givcen by
+Given the creation and annihilation operators, it will be useful to know the rate of change of a probabilistic state if an agent has a propensity, $r$, to create or annihilate itself. Given an empty state and an agent that is currently outside of the system that has a propensity, $r$, to enter the system, then in time slice $[t, t+dt]$ there is a probability $rdt$ that the state will switch from empty to having an agent in it. So in time $dt$ the probability of the empty state goes down by $rdt$ and the probability of there being an agent goes up by $rdt$. So the rate of change of the state is givcen by
 \[
 H_{a^\dag} = \frac{\partial}{dt} = (a^\dag - 1)r
 \]
@@ -53,13 +53,13 @@ H_a = \frac{\partial}{\partial t} = (a - a^{\dag}a)r
 \]
 We'll call $H_{a\dag}$ and $H_a$ the \textit{Hamiltonians} for their respective operators. Again, we'll see later that by choosing this form for the Hamiltonians we make things very elegant when we come to generalise to many agents.
 
-Once we have the Hamiltonian for a system, the probabilistic dynamics of the system is completely defined by the equation
+Once we have the Hamiltonian for a probability distribution, the time evolution of that probability distribution is completely defined by the equation
 \[
-\frac{\partial S}{\partial t} = HS
+\frac{\partial P}{\partial t} = HP
 \]
 which is the probabilistic dynamics' analogue of Schr\"{o}dinger's equation. This equation has a very general solution
 \[
-S(t) = e^{tH}S(0)
+P(t) = e^{tH}P(0)
 \]
 where the exponent of an operator is defined as
 \[
@@ -69,11 +69,11 @@ and eponentiation of an operator is just repeated application (taking care to re
 
 Going back now to the agent that has propensity $r$ to annihilate itself, the equation of motion is
 \[
-\frac{\partial S}{\partial t} = H_aS = \left(\frac{\partial }{\partial z} - z\frac{\partial }{\partial z}\right)rS
+\frac{\partial P}{\partial t} = H_aP = \left(\frac{\partial }{\partial z} - z\frac{\partial }{\partial z}\right)rP
 \]
-Solving this for $S(0) = z$ gives
+Solving this for $P(0) = z$ gives
 \[
-S(t) = e^{rt((1-z)\frac{\partial}{\partial z})}z
+P(t) = e^{rt((1-z)\frac{\partial}{\partial z})}z
 \]
 \[
  = \sum_{k=0}^\infty \frac{\left(rt(1-z)\frac{\partial}{\partial z}\right)^k}{k!}z
@@ -87,19 +87,19 @@ but since $\frac{\partial^n}{\partial z^n} = 0$ for $n>1$
 \]
 for $k>0$, so
 \[
-S(t) = 1 + \sum_{k=0}^\infty \frac{(-rt)^k}{k!}(z-1)
+P(t) = 1 + \sum_{k=0}^\infty \frac{(-rt)^k}{k!}(z-1)
 \]
 where the initial $1$ accounts for the case when $k=0$. We can now turn the sum back into an exponent to give
 \[
-S(t) = (1 - e^{-rt}) + e^{-rt}z
+P(t) = (1 - e^{-rt}) + e^{-rt}z
 \]
 So the probability that the agent exists reduces exponentially as time progresses. This is exactly what we would expect.
 
 \subsection{Many agents}
 
-We can now show how our operators extend very elegantly to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $S = z^n$. A probabilistic state is therefore represented by a polynomial
+We can now show how our operators extend very elegantly to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $P = z^n$. A probability distribution for a set of agents can therefore represented by a polynomial
 \[
-S = \sum_{n=0}^\infty p_n z^n
+P = \sum_{n=0}^\infty p_n z^n
 \]
 where $p_n$ is the probability that there are $n$ agents, and
 \[
@@ -109,19 +109,19 @@ By choosing this representation, we can see immediately that our creation operat
 \[
 a^\dag z^n = z^{n+1}
 \]
-Even better, it works on probabilistic states too. For example, suppose there's a $0.5$ probability that the state is empty and a $0.5$ probability that there's one agent, so $S = 0.5 + 0.5z$. In this case
+Even better, it works on probabilistic states too. For example, suppose there's a $0.5$ probability that the system is empty and a $0.5$ probability that there's one agent, so $P = 0.5 + 0.5z$. In this case
 \[
 a^\dag (0.5 + 0.5z) = 0.5z + 0.5z^2
 \]
-So there's now an equal probability of there being either one or two agents, i.e. the operator simultaneously adds an agent to all possible states.
+So, after applying the creation operator, there's an equal probability of there being either one or two agents, i.e. the operator simultaneously adds an agent to all possible states.
 
-If we start with an empty system (i.e. $S(0) = 1$) and add agents at a constant rate we'd expect the Hamiltonian to be given by
+If we start with an empty system (i.e. $P(0) = 1$) and add agents at a constant rate we'd expect the Hamiltonian to be given by
 \[
-\frac{\partial S}{\partial t} = H_{a\dag}S = (a^\dag - 1)rS
+\frac{\partial P}{\partial t} = H_{a\dag}P = (a^\dag - 1)rP
 \]
 This can again be solved analytically:
 \[
-S(t) = e^{tH} = e^{-rt(1-z)} = e^{-rt}e^{rtz}
+P(t) = e^{tH} = e^{-rt(1-z)} = e^{-rt}e^{rtz}
 \]
 \[
 = e^{-rt}\sum_k \frac{(rt)^k}{k!}z^k
@@ -132,15 +132,15 @@ c_k = \frac{(rt)^ke^{-rt}}{k!}
 \]
 which is just the Poisson distribution, as we would expect.
 
-Now let's try the annihilation operator on $S = 0.5z + 0.5z^2$:
+Now let's try the annihilation operator on $P = 0.5z + 0.5z^2$:
 \[
 a (0.5z + 0.5z^2) = 0.5 + z
 \]
-We don't get $0.5 + 0.5z$ as you may have expected. Instead, for a polynomial $S = \sum_n p_nz^n$ we get
+We don't get $0.5 + 0.5z$ as you may have expected. Instead, for a distribution $P = \sum_n p_nz^n$ we get
 \[
 a \sum_n p_nz^n = \sum_n n p_n z^{n-1}
 \]
-This behaviour can be harnessed to make a very useful operator
+which isn't even a valid probability distribution. Howerver, this behaviour can be harnessed to make a very useful operator
 \[
 N = a^\dag a
 \]
@@ -177,9 +177,9 @@ H = (a^{\dag-1} - 1)a^\dag ar = (a - a^\dag a)r
 \]
 which is exactly the Hamiltonian from the single agent case, but now we understand why it has this form and why it will also work in the case of many agents.
 
-The only difference here is the boundary condition. Instead of $S(0) = z$ as in the single agent case, we now have $S(0) = z^n$. The solution to this is
+The only difference here is the boundary condition. Instead of $S(0) = z$ as in the single agent case, we now have $P(0) = z^n$. The solution to this is
 \[
-S(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}z^m
+P(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}z^m
 \]
 The coefficients of $z$ (i.e. the probabilities that there are $m$ agents) make up a Binomial distribution, which, again, is what we would expect.
 
@@ -189,7 +189,7 @@ The above examples, although very simple, demonstrate how we can define a Hamilt
 
 \subsection{Agent states}
 
-So far, the agents we've been considering haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $z_0$ and an agent in state $1$ as $z_1$. A state with $n$ agents in state $z_0$ and $m$ agents in state $z_1$ is represented as state $S = z_0^nz_1^m$. We define annihilation and creation operators for each state:
+So far, the agents we've been considering haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $z_0$ and an agent in state $1$ as $z_1$. A system with $n$ agents in state $z_0$ and $m$ agents in state $z_1$ will be represented as $z_0^nz_1^m$, so a probability distribution over all states is again a polynomial, but this time in two variables. We define annihilation and creation operators for each agent state:
 \[
 a_0 = \frac{\partial}{\partial z_0}
 \]
@@ -203,7 +203,7 @@ and
 \[
 a_1^\dag = z_1
 \]
-Similarly, we now have two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $\mathcal{H}_{0r}(T) = (T-1)N_0r$ and $\mathcal{H}_{1r} = (T-1)N_1r$ which loop over agents in state $0$ and $1$ respectively.
+This induces two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $\mathcal{H}_{0r}(T) = (T-1)N_0r$ and $\mathcal{H}_{1r} = (T-1)N_1r$ which loop over agents in state $0$ and $1$ respectively.
 
 A change of state from $x$ to $y$ can be represented as an agent in state $x$ annihilating itself while simultaneously creating a new agent in state $y$, $a_y^\dag a_x^{\dag-1} = z_yz_x^{-1}$.
 
@@ -225,9 +225,9 @@ expanding this gives
 \[
 H = r\left((z_1 - z_0)\frac{\partial}{\partial z_0} + (z_0 - z_1)\frac{\partial}{\partial z_1}\right)
 \]
-If we suppose that at time $t = 0$ all agents are in state $z_1$ then we can solve
+If we suppose that at time $t = 0$ all agents are in state $z_1$ then we can solve the governing equation $\frac{\partial P}{\partial t} = HP$ to give
 \[
-S(t) = 2^{-n} \sum_{m=0}^n {n\choose m} (1-e^{-2rt})^{n-m}(1+e^{-2rt})^m z_0^{n-m}z_1^m
+P(t) = 2^{-n} \sum_{m=0}^n {n\choose m} (1-e^{-2rt})^{n-m}(1+e^{-2rt})^m z_0^{n-m}z_1^m
 \]
 [TODO: add proof]
 
@@ -259,12 +259,25 @@ so, the Hamiltonian for the whole model is just
 \[
 H = \mathcal{H}_{S\beta}(z_Iz_S^{-1}N_I) + \mathcal{H}_{I\gamma}(z_Rz_I^{-1})
 \]
-and the equation of motion for the probabilistic state is, as always
+and the equation of motion for the probability distribution over states is, as always
 \[
-\frac{\partial S}{\partial t} = HS
+\frac{\partial P}{\partial t} = HP
 \]
 Although this is a differential equation, it's worth pointing out explicitly that it is representing discrete interactions between agents. So, it captures things like disease eradication when the number of infected agents is small, unlike the standard differential version of the SIR model, which is only accurate for large numbers of agents.
 
+Notice also that the different number operators are able to single out agents based on their state. If we allow higher-order operators, we can extend this idea to any predicate on the state of an agent, so that we can loop over any describable subset of agents. For example, suppose agents are located on a 2D grid and each agent has a state $\mathbf{v} = (x,y)$ giving the agent's position on that grid. We could express the program
+\begin{verbatim}
+foreach(a in S0) {
+  foreach(b in S0 suchthat 
+    norm(a.v-b.v)<4) {
+    call F(a.v,b.v)
+  }
+}
+\end{verbatim}
+as
+\[
+H = \sum_{(a_v\in S)}\sum_{(b_v\in \{v | |a_v-v| < 4\})} \mathcal{H}_{a_v}(F(a_v,b_v)N_{b_v})
+\]
 \subsection{Arithmetic}
 
 If an agent has numerical variables in its state, we can represent arithmetic on those variables with a change of state operation. For example, if an agent has two integers, $a$ and $b$ in its state, we can represent the operation $a = a + b$ as
@@ -281,23 +294,23 @@ The same method can be used to apply any operator on any number of variables.
 
 So far, we've only considered agents with a finite number of discrete states. We may want to endow the agent with a real number as part of its state, in which case the agent can be in any one of an uncountable infinity of states and we'd need a polynomial in an infinite number of variables to represent this.
 
-The idea of our state polynomial carries over to the infinitesimal case quite naturally. The transition is made easier if we think of the coefficients as a function from monomials to coefficient values. For example, for a monovariate polynomial
+The idea of using a polynomial to represent a probability distribution carries over to the infinitesimal case quite naturally. The transition is made easier if we think of the coefficients as a function from monomials to coefficient values. For example, for a monovariate polynomial
 \[
-S = \sum_n c_n z^n = \sum_n f(z^n)z^n 
+P = \sum_n c_n z^n = \sum_n f(z^n)z^n 
 \]
-In this format we can go over to the infinitesimal limit by replacing the monomials with sets of real numbers. The coefficients can now be represented as a function from sets of real numbers to probability densities (i.e. a PDF over $\mathcal{P}(\mathbb{R})$ the power set of the real numbers). The state now becomes
+In this format we can go over to the infinitesimal limit by replacing the monomials with sets of real numbers. The coefficients can now be represented as a function from sets of real numbers to probability densities (i.e. a PDF over $\mathcal{P}(\mathbb{R})$, the power set of the real numbers). The probability distribution now becomes
 \[
-S = \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z})
+P = \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z})
 \]
 Note that because we chose sets rather than bags to represent monomials, we can now no longer represent multiple agents in the same state, but because each state is infinitesimally small the probability of finding more than one agent in a state is of second order.
 
 Multiplication of a state by $\mathbf{z}_n = \left\{z_n\right\}$ becomes
 \[
-\mathbf{z_n}S \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \setminus\mathbf{z_n})
+\mathbf{z_n}P \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \setminus\mathbf{z_n})
 \]
 while differentiation becomes
 \[
-\frac{\partial S}{\partial \mathbf{z_n}}  \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \cup \left\{z_n\right\})
+\frac{\partial P}{\partial \mathbf{z_n}}  \equiv \int_{\mathbf{z} \in \mathcal{P}(\mathbb{R})} f(\mathbf{z} \cup \left\{z_n\right\})
 \]
 [TODO: make these integrals more formally correct. Define as differential ring/algebra?]
 
@@ -314,55 +327,53 @@ Given this, we can represent any probability density that has finite information
 \subsection{Mixed real/integer states}
  We can create a fully general system state that can deal with mixed real and integer agent states by defining the state to be a function from bags of state vectors to real coefficients.
  \[
- S = \int_{\Psi\in\mathcal{P}(\psi)} f(\Psi)
+ P = \int_{\Psi\in\mathcal{P}(\psi)} f(\Psi)
  \]
 
 \section{Making observations and doing inference}
 
-[connection to probabilistic programming]
-
-If we have a prior $S$ and an observation operator $O$ that goes from probabilistic system states to 1D probabilistic state and we make an observation $o$ then we can define the posterior
+If we have a prior $P(S)$ over system states and an observation operator $O$ that goes from a probability distribution over a system state to a probability distribution over the reals and we observe that the obervation operator has value $o$ then we can define the posterior
 \[
-P(S|o) \propto P(o|S)P(S)
+P(S|OS = o) \propto P(OS=o|S)P(S)
 \]
-i,e, we multiply the probability distribution over $S$ by the likelihood of the observation. We can represent likelihoods in a similar way to probabilistic states
+i,e, we multiply the prior probability distribution over $S$ by the likelihood of the observation. We can represent likelihoods as polynomials in a similar way to probability distributions
 \[
-S(o|S) = \sum_n P(o|S)z^n
+P(o|.) = \sum_n P(o|z^n)z^n
 \]
-However, multiplication of two probability distributions is not the same as multiplication of our state polynomials. Instead, it is multiplication of the coefficients:
+However, multiplication of two probability distributions is not the same as polynomial multiplication. Instead, it is multiplication of the coefficients:
 \[
 \left(\sum_n c_n z_n\right) \times \left(\sum_m d_mz_m\right) = \sum_n c_nd_nz^n
 \]
 
 Going back to the example of a single agent that has a unit propensity to annihilate itself. If we start with a prior that there's a 0.5 probability that the agent exists, then observe that it doesn't exist at time $t$, what's the posterior probability that it existed at time $t=0$? The equation of motion is
 \[
-\frac{\partial S}{\partial t} = HS = \left(\frac{\partial}{\partial z} - z \frac{\partial }{\partial z}\right)S
+\frac{\partial P}{\partial t} = HP = \left(\frac{\partial}{\partial z} - z \frac{\partial }{\partial z}\right)P
 \]
-Integrating this for the case $S(0) = (1-p) + pz$
+Integrating this for the case $P(0) = (1-p) + pz$
 \[
-S(t) = e^{\frac{\partial}{\partial z} - z \frac{\partial }{\partial z}}S
+P(t) = e^{\frac{\partial}{\partial z} - z \frac{\partial }{\partial z}}S
 \]
 \[
 = 1-pe^{-rt} + e^{-rt}pz
 \]
 So,
 \[
-S(o|S) = 1 + (1-e^{-rt})z
+P(o|.) = 1 + (1-e^{-rt})z
 \]
 So
 \[
-S(S|o) \propto (1-p) + (1-e^{-rt})pz
+P(.|o) \propto (1-p) + (1-e^{-rt})pz
 \]
 normalising
 \[
-\int S(S|o) dp = (1-0.5e^{-rt})
+\int P(.|o) dp = (1-0.5e^{-rt})
 \]
 \[
-S(S|o) = \frac{(1-p) + (1-e^{-rt})pz}{(1-0.5e^{-rt})}
+P(.|o) = \frac{(1-p) + (1-e^{-rt})pz}{(1-0.5e^{-rt})}
 \]
-So, if the prior $S(0) = 0.5 + 0.5z$ then the posterior is given by
+So, if the prior $P(0) = 0.5 + 0.5z$ then the posterior is given by
 \[
-S(S|o) = \frac{0.5 + 0.5(1-e^{-rt})z}{(1-0.5e^{-rt})}
+P(.|o) = \frac{0.5 + 0.5(1-e^{-rt})z}{(1-0.5e^{-rt})}
 \]
 
 \section{Numerical methods}
@@ -375,7 +386,7 @@ Because the number of coefficients in the probabilistic state of a system expand
 
 In almost all cases of interest a system state, although very high dimensional and complex, will be the result of a (potentially large but manageable) number of operations. What's more, we can construct these states from the state $S=1$. So, instead of representing a system state as a list of coefficients we can represent it as a list of operations on $1$:
 \[
-S = \prod_n O_n1
+P = \prod_n O_n1
 \]
 
 \subsection{State approximation: Projecting to lower dimensional spaces}
