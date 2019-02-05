@@ -1,5 +1,5 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
-\usepackage{usenix,epsfig,comment,amssymb}
+\usepackage{usenix,epsfig,comment,amssymb,listings}
 \setlength{\parskip}{1.8mm}
 \setlength{\parindent}{0mm}
 \begin{document}
@@ -22,7 +22,7 @@ In order to do modelling well we need to do calibration, data assimilation and u
 
 \section{Introduction: The problem}
 
-In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system as a whole and are able to define an observation operator for each observation type that goes from the state of the system to the observation. We would like to know something about a (hitherto unobserved) observable at some time which may be in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That something may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
+In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system and are able to define an observation operator for each observation type that goes from the state of the system to the observation. We would like to gain information about a the posterior distribution of a (hitherto unobserved) observable at some time in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That information may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
 
 \subsection{Defining agents}
 We will proceed by specifying our knowledge of the behaviour of an agent as a computer program written from the point of view of an agent. In order to express any incompleteness in our knowledge of the behaviour, we suppose there is a set of global paramaters, which we do not know but which we have a prior distribution for, that may  infulence an agent's behaviour. In addition, we may make the agent's behaviour stochastic in order to express our uncertainty in the agent's behaviour. By doing this, we can track the effect of our uncertainty in the agent's behaviour on the uncertainty in the aggregate behaviour of the system.
@@ -30,14 +30,14 @@ We will proceed by specifying our knowledge of the behaviour of an agent as a co
 \subsection{Defining observation operators}
 Similarly, we will define observation operators as computer programs that take a state of the system as input and return an observation (i.e. a real number or vector of reals). The observation operator will itself be stochastic in order to represent the noise in the observation.
 
-We can connect our data to the observation operators by storing the oputput of an observation operator in a variable and allowing an \texttt{observe(x,v)} command which should be interpreted as ``we observe the variable \texttt{x} to have value \texttt{v}''.
+We can connect real-world observations to observations of the model by means of an \texttt{observe(x,v)} command which should be interpreted as ``we observe the variable \texttt{x} to have value \texttt{v}''.
 
 In this way, our whole problem can be specified in a single computer program that looks very much like a normal simulation which, if executed, would generate an instance of our data and an instance of the observable we're interested in. The values generated would probably not match our actual data, but there is a positive, if small, probability that they would match.
 
-Our problem can now be cast as one of doing inference on this computer program. That is, finding the expectation value of the observable of interest given that the generated data matches our actual observations.
+Our problem can now be cast as one of doing inference on this computer program. That is, finding the expectation value of the observable of interest given that the generated data matches our real-world observations.
 
 \section{Agent based dynamical systems}
-We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are to remove an agent and to create a new agent. Surprisingly, this will be enough to express all agent behaviours.
+We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are to create a new agent or iterate over agents that have a given property. Surprisingly, we will show that this will be enough to express all agent behaviours.
 
 \section{Object oriented implementation of an agent based dynamical system}
 In order to implement an agent based dynamical system in an object oriented programming language, we have a class, \texttt{ABM}, which is templated on the agent state type \texttt{T}. This class represents a probability distribution over ABM states and has three methods:
@@ -46,24 +46,28 @@ In order to implement an agent based dynamical system in an object oriented prog
 \hline
 \texttt{add(s)} & add an agent in state \texttt{s} to the ABM and return the modified ABM\\
 \hline
-\texttt{foreach(a)} & execute action \texttt{a} on every agent and return the result\\
+\texttt{foreach(A,r)} & execute action \texttt{A} on every agent at a rate \texttt{r} and return the result\\
 \hline
 \texttt{observe(o,v)} & observe that the observable \texttt{o} has value \texttt{v} and return the resulting \texttt{ABM}\\
 \hline
 \end{tabular}
 
-An \texttt{action} is a lambda function that takes an agent state (the state of the agent that is performing the action) and an \texttt{ABM} (the environment the agent finds itself in) and returns an \texttt{ABM} that is the result of performing the action. When passed to a \texttt{foreach} method, the \texttt{ABM} passed to the action is the \texttt{ABM} with the current agent removed.
+The \texttt{foreach} method takes an \texttt{action} and returns an \texttt{ABM}. An \texttt{action} is a lambda function that takes an agent state (the state of the agent that is performing the action) and an \texttt{ABM} (the environment the agent finds itself in) and returns an \texttt{ABM} that is the result of performing the action. Note that the \texttt{ABM} passed to the action by the \texttt{foreach} method is the \texttt{ABM} with the current agent removed.
 
 An \texttt{observable<T>} is a lambda function that takes an \texttt{ABM} and returns an observation of type \texttt{T}.
 
-A \texttt{behaviour} is a set of \texttt{<rate, action>} pairs, where \texttt{rate} is a lambda function that takes an agent state and the \texttt{ABM} and returns a floating point number giving the rate of the behaviour.
+A \texttt{Behaviour} class consists of a set of \texttt{<rate, action>} pairs, where \texttt{rate} is a lambda function that takes an agent state and returns a floating point number giving the rate of the behaviour.
 
-Time in the model can be moved forward using the \texttt{Behaviour::integrateTime(abm, Dt)} method, which integrates the abm forward in thim by where \texttt{Dt} units of time and returns the result.
+Time in the model can be moved forward using the \texttt{Behaviour::integrateTime(abm, Dt)} method, which integrates the abm forward by \texttt{Dt} units of time and returns the resulting \texttt{ABM}.
 
 
 \section{A probabilistic interpretation of an \texttt{ABM}}
 
-A probability distribution over the states of an agent based model is formally a member of a symmetric Fock space on the state of the agents, $T$, which we'll write as $\mathcal{F}(T)$. Surprisingly, we can express everything we need to using just two operators on this space; the \textit{annihilation operator} $a_k$ and the \textit{creation operator} $a_k^\dag$.
+An \texttt{ABM} represents a probability distribution over the states of an agent based model. For the mathematically precise, an \texttt{ABM} belongs to a symmetric Fock space on the state of the agents, $T$, which we'll write as $\mathcal{F}(T)$. However, it is not at all obvious how we could go about representing such a mathematical object as a data structure for numerical computation.
+
+We'll start by naming two special distributions: the distribution that is definitely the empty set (i.e. with probability $1$, there are no agents in the system), which we'll write as $\emptyset$, and the state that has zero probability for all states, which we'll write as $\mathbf{0}$
+
+Surprisingly, we can express everything we need with these two states and two Fock space operators; the \textit{annihilation operator} $a_k$ and the \textit{creation operator} $a_k^\dag$.
 
 The creation operator, $a_k^\dag$, represents the addition of an agent in state $k$ to every state in the probability distribution. By definition, the probability of the ABM being empty after the action of a creation operator is zero.
 
@@ -83,37 +87,47 @@ a_k a_q^\dag - a_q^\dag a_k = \delta_{kq}
 \label{symcommute}
 \end{equation}
 \begin{equation}
-a_k\mathbf{1} = \mathbf{0}
+a_k\emptyset = \mathbf{0}
 \label{adagzero} 
 \end{equation}
-where $\delta_{kq}$ is the Kronecker delta function and we use $\mathbf{1}$ to represent the ABM probability distribution representing an empty ABM with probability 1 and $\mathbf{0}$ to represent the distribution with all states having zero probability.
+where $\delta_{kq}$ is the Kronecker delta function\footnote{to be precise, the $1$ and $0$ of the Kronecker delta function should be replaced by the identity operator and the operator that always returns $\mathbf{0}$, but for notational simplicity we'll allow the free interpretation of numbers as operators that multiply all probabilities of an ABM distribution by that number.}.
 
 For a given (non-probabilistic) ABM, we define the \textit{occupation number} of agent state $s$ to be the number of agents in the ABM that are in that state. The annihilation operator $a_s$ multiplies the probability of each ABM state by the occupation number of $s$ and removes one agent in state $s$.
 
-We can see that this behaviour follows from the properties above using a recursive proof. Suppose that $a_k a_k^\dag S = nS$ then, from equation \ref{symcommute}
+We can see that this behaviour follows from the properties above using a recursive proof. Suppose that $a_k a_k^\dag S = nS$ for some integer $n$ then, from equation \ref{symcommute},
 \[
 a_k a_k^\dag a_k^\dag S = (1 + a_k^\dag a_k)a_k^\dag S = (n+1)a_k^\dag S
 \]
 We can start the recursion using equations \ref{symcommute} and \ref{adagzero}
 \[
-a_k a_k^\dag \mathbf{1} = (1 + a_k^\dag a_k)\mathbf{1} = \mathbf{1}
+a_k a_k^\dag \emptyset = (1 + a_k^\dag a_k)\emptyset = 1\emptyset
 \]
+
+We can now interpret the \texttt{add(s)} operation as the creation operator $a^\dag_s$ and the \texttt{foreach(A,r)} operator as the operator
+\[
+F(A,r) = \int_{k\in S} (A_k - a_k^\dag)a_kr_k  dk
+\] 
+where $S$ is the set of all agent states.
 
 \subsection{Single agent}
 We start with the simplest possible agent based dynamical system: a system which is either empty or there is a single, stateless agent. Suppose that at time $t=0$ the agent is definitely present and between time $t$ and $t+dt$ the agent leaves the system with probability $rdt$. Here's the program that represents this system
-\begin{verbatim}
-  abm = ABM()
+\begin{lstlisting}
+  ABM abm
   abm.add(void)
   
-  b = Behaviour()
+  Behaviour b
   b.add({1.0}, (state, abm) -> {
     return abm
   })
   return b.integrateTime(abm, T)
-\end{verbatim}
+\end{lstlisting}
 remember that the ABM passed to the action in the bahaviour is the ABM minus the agent whose behaviour we're considering. So in this case, it's the empty ABM and returning this is equivalent to the agent removing itself from the system.
 
-Starting from the first line of the program, we create a new ABM which is definitely empty, so is in the state $\mathbf{1}$. We then add an agent, after which the ABM will be in state $a^\dag \mathbf{1}$. Next we create a behaviour. The action is just the ``do nothing'' action, which we can think of as the identity operator, $1$. We'll think of a behaviour as an operator that takes a probability distribution over ABMs and returns a rate of change of that probability distribution.
+Starting from the first line of the program, we create a new ABM which is definitely empty, so is in the state $\emptyset$. We then add an agent, after which the ABM will be in state $a^\dag \emptyset$. Next we create a behaviour. The action is just the ``do nothing'' action, which is just the identity operator, $1$. The behaviour of an agent in state $k$ can be expressed as the operator
+\[
+B_k(r,A) = (A_k - a_k^\dag)a_kr_k
+\]
+which takes a probability distribution over ABMs and returns a rate of change of that probability distribution due to agents having that behaviour.
 
 ----------------------- TODO -------------
 
@@ -319,12 +333,23 @@ foreach(x in S0 suchthat
 It turns out that the number operator can be used in a quite natural way to represent this nested \texttt{foreach} operator.
 
 If we let $a^\dag_S$, $a^\dag_I$ and $a^\dag_R$ represent suseptible, infected and recovered people respectively, then the Hamiltonian we're after is just
+\begin{comment}
 \[
 H = \mathcal{H}_{S\beta}(a^\dag_Ia^{\dag-1}_SN_I) = (a^\dag_Ia^{\dag-1}_SN_I - 1)N_S\beta
 \]
+\end{comment}
+\[
+H = (a^\dag_Ia^{\dag-1}_S - 1)N_IN_S\beta
+\]
+
 so, the Hamiltonian for the whole model is just
+\begin{comment}
 \[
 H = \mathcal{H}_{S\beta}(a^\dag_Ia^{\dag-1}_SN_I) + \mathcal{H}_{I\gamma}(a^\dag_Ra^{\dag-1}_I)
+\]
+\end{comment}
+\[
+H = (a^\dag_Ia^{\dag-1}_S - 1)N_IN_S\beta + \mathcal{H}_{I\gamma}(a^\dag_Ra^{\dag-1}_I)
 \]
 and the equation of motion for the probability distribution over states is, as always
 \[
