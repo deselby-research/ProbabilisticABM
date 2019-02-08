@@ -22,7 +22,7 @@ In order to do modelling well we need to do calibration, data assimilation and u
 
 \section{Introduction: The problem}
 
-In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system and are able to define an observation operator for each observation type that goes from the state of the system to the observation. We would like to gain information about a the posterior distribution of a (hitherto unobserved) observable at some time in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That information may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
+In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system and are able to define an observation operator for each observation type that defines the conditional probability of making an observaton given the state of the system. We would like to gain information about a the posterior distribution of a (hitherto unobserved) observable at some time in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That information may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
 
 \subsection{Defining agents}
 We will proceed by specifying our knowledge of the behaviour of an agent as a computer program written from the point of view of an agent. In order to express any incompleteness in our knowledge of the behaviour, we suppose there is a set of global paramaters, which we do not know but which we have a prior distribution for, that may  infulence an agent's behaviour. In addition, we may make the agent's behaviour stochastic in order to express our uncertainty in the agent's behaviour. By doing this, we can track the effect of our uncertainty in the agent's behaviour on the uncertainty in the aggregate behaviour of the system.
@@ -50,7 +50,7 @@ In order to implement an agent based dynamical system in an object oriented prog
 \hline
 \texttt{observe(o,v)} & observe that the observable \texttt{o} has value \texttt{v} and return the resulting \texttt{ABM}\\
 \hline
-\texttt{evaluate(o)} & Calculate the expectation value of obervation operator o\\ 
+\texttt{evaluate(e)} & Calculate the expectation value of the function e\\ 
 \hline
 \end{tabular}
 
@@ -58,7 +58,7 @@ A \texttt{Behaviour} class consists of a set of \texttt{actions} and \texttt{int
 
 \section{A probabilistic interpretation of an \texttt{ABM}}
 
-An \texttt{ABM} object represents a probability distribution over the states of an agent based model. To be mathematically precise, an \texttt{ABM} belongs to a symmetric Fock space on the state space of the agents, $T$, which we'll write as $\mathcal{F}(T)$. However, it is not at all obvious how we could go about representing such a mathematical object as a data structure for numerical computation.
+An \texttt{ABM} object represents a probability distribution over the states of an agent based model. To be mathematically precise, an \texttt{ABM} belongs to a symmetric Fock space on the state space of the agents, $T$, which we'll write as $\mathcal{F}(T)$. However, a Fock space has infinite dimensionality so it is not at all obvious how we could go about representing such a mathematical object as a data structure of manageable size for numerical computation.
 
 We'll start by naming two special distributions: the distribution that is definitely the empty set (i.e. with probability $1$ there are no agents in the system), which we'll write as $\emptyset$, and the state that has zero probability for all states, which we'll write as $\mathbf{0}$.
 
@@ -98,7 +98,16 @@ We can start the recursion using equations \ref{symcommute} and \ref{adagzero}
 a_k a_k^\dag \emptyset = (1 + a_k^\dag a_k)\emptyset = 1\emptyset
 \]
 
-We can now interpret the \texttt{add(s)} operation as the creation operator $a^\dag_s$.
+We can now interpret the \texttt{add(s)} operation as the creation operator $a^\dag_s$. When the same operator is applied multiple times, we will use the power notation, e.g. $a_s a_s = a^2_s$.
+
+A probability distribution over an ABM can be represented as a sum of creation operators on the empty set. The result looks something like a polynomial:
+\[
+P = \sum_{\mathbf{n}\in \mathbb{N}^{|k|}} p_\mathbf{n} \prod_k a_k^{\dag n_k}\emptyset
+\]
+where $\mathbf{n} = (n_1...n_{|k|})$ and $p_\mathbf{n}$ is the probability that there are $n_1$ agents in state $1$, $n_2$ agents in state $2$ etc.
+
+For ease of notation, from now on we will omit the trailing $\emptyset$ on distributions when this is not ambiguous.
+
 
 An \texttt{Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
 \[
@@ -119,7 +128,7 @@ So, a \texttt{Behaviour} is also an operator from an ABM distribution to a rate 
 \[
 \frac{\partial P}{\partial t} = HP
 \]
-and we see that the \texttt{Behaviour} takes the place of the Hamiltonian when seen as a dynamical system. This is significant because the distribution, $P$, will more often than not become very difficult to represent as a data structure, but the Hamiltonian is very easy to represent and construct from the model code. It also means that we can express the meaning of the \texttt{integrate} method as
+and we see that the \texttt{Behaviour} takes the place of the Hamiltonian when seen as a dynamical system. Given this, we can now express the meaning of the \texttt{integrate} method as
 \begin{equation}
 P(T) = \int_0^t HP \, dt = e^{tH}P(0)
 \label{mastereq}
@@ -129,6 +138,34 @@ where we define the exponential of an operator to be
 e^{tH} = \sum_{k=0}^\infty \frac{(tH)^k}{k!}
 \]
 and $H^n$ is just $n$ repeated applications of $H$ (taking care to respect the order of non-commutative operators).
+
+Let the dot product of two ABM probability distributions be defined as
+\[
+\left(\sum_\mathbf{n} c_\mathbf{n} a^{\dag \mathbf{n}}\right) \cdot \left(\sum_\mathbf{m} d_\mathbf{m} a^{\dag \mathbf{m}}\right) = \sum_\mathbf{k} c_\mathbf{k}d_\mathbf{k}
+\]
+where $\mathbf{n} = (n_1...n_N)$ and we use the convenience notation
+\[
+a^{\dag \mathbf{n}} = \prod_i a_i^{\dag n_i}
+\]
+so that, for example
+\[
+a^{\dag \mathbf{n}} \cdot P = p_\mathbf{n}
+\]
+is just the probability that $P$ is in the state with occupation number $\mathbf{n}$.
+
+
+If we let an observable, $P(v|s)$, be defined as the conditional probability of making a particular observation, $v$ given the state, $s$, of the ABM,  then we can define the \texttt{observe} method as the operator $O_{P(v|s)}$ such that
+\[
+O_{P(v|s)}P = \frac{1}{P(v)} \int_S s P(v|s) (s\cdot P) \,ds 
+\]
+where the integration ranges over the ABM states. The observation operator has the effect of applying a Bayesian update to a distribution in order to reflect how knowledge of the observation's value updates our belief about the distribution of the system. The prior probability $P(v)$ is often not known so we define an unnormalised version of the observation operator $\hat{O}_{P(v|s)}$ which omits it (i.e. takes its value to be $1$).
+
+WThe \texttt{evaluate} method is defined as
+\[
+\mathbf{E}[f]P = \int_S f(s) (s\cdot P) \,ds
+\]
+
+With the above interpretations, we can see how a distribution over an ABM, which belongs to an infinite dimensional Fock space, can be represented in a data structure whose size is of the order of the size of the computer program that defines the ABM's behaviour, and we can see how such a representation can be systematically derived from the program.
 
 \section{Some analytic examples}
 As a demonstration, let's look at some very simple ABMs which, with the help of the formalism we have developed, we can solve analytically.
@@ -183,14 +220,7 @@ So, the probability that the agent exists (i.e. state $a^\dag\emptyset$) reduces
 
 \subsection{Many agents with state}
 
-We can now show how our operators extend very elegantly to systems with more than one agent and add state to the agents. A probability distribution for a set of agents can be represented as a set of operators on the empty set, we are left with something like a polynomial:
-\[
-P = \sum_{\mathbf{n}\in \mathbb{N}^{|k|}} p_\mathbf{n} \prod_k a_k^{\dag n_k}\emptyset
-\]
-where $\mathbf{n} = (n_1...n_{|k|})$ and $p_\mathbf{n}$ is the probability that there are $n_1$ agents in state $1$, $n_2$ agents in state $2$ etc.
-
-For ease of notation, from now on we will omit the trailing $\emptyset$ on distributions when this is not ambiguous.
-
+We can now show how our operators extend very elegantly to systems with more than one agent and add state to the agents. 
 We can see immediately that our creation operator works as we would expect:
 \[
 a_k^\dag a_k^{\dag n} = a_k^{\dag n+1}
@@ -306,6 +336,8 @@ H = (a_I^{\dag 2} - a_I^\dag a_S^\dag)a_I a_S\beta + (a_R^\dag - a_I^\dag)a_I\ga
 \]
 Although this is a differential equation, it's worth pointing out explicitly that it is representing discrete interactions between agents. So, it is still valid for small numbers of agents and correctly captures things like disease eradication, unlike the standard differential version of the SIR model, which is only accurate for large numbers of agents.
 
+Although this cannot be solved analytically, we can see that it has the expected behaviour. For example, if there are no infected agents, the $a_I$ operators will return $0$ and the rate of change will be zero.
+
 \subsection{Arithmetic}
 
 If an agent has numerical variables in its state, we can represent arithmetic on those variables with a change of state operation. For example, if an agent has two integers, $a$ and $b$ in its state, we can represent the operation $a = a + b$ as
@@ -314,6 +346,29 @@ H = (a^\dag_{[a+b,b]} - a_{[a,b]}^\dag)a_{[a,b]}
 \]
 The same method can be used to apply any operator on any number of variables.
 
+\section{Transformations}
+
+It will often be useful to transform the ABM distriution between different representations so we'll build up a way of doing this now.
+
+First of all, we'll construct the expectation operator which returns the sum of all probabilities in a distribution. We can formally define this as
+\[
+\mathbf{E}[\, ] = \emptyset \cdot e^{\int_S a_s \, ds}
+\]
+which, if we take the expansion of the exponential, can be seen to have the effect of integrating over all space.
+
+Define an $n^{th}$ moment of a distribution $P$ as
+\[
+m^{(n)}(s_1...s_n) = \mathbf{E}[a_1...a_n P]
+\]
+the $n^{th}$ moment is the marginal probability of finding an agent in state $s_1$ and an agent in state $s_2$ etc. irrespective of the total number of agents in the system. Where there are multiple agents in the same state, the probability is multiplied by the number of distinct combinations of agents. So, if there is an interaction that requires a set of agents in given states, the moment will tell you the expectation value of the rate at which that interaction will occur in the whole system if the agent-based interaction rate is 1.
+
+We can now build an infinite moment heirarchy
+\[
+M = \sum_{n=0}^\infty \int_{S^n}  m^{(n)}(s_1...s_n)A_{s_1}^\dag...A_{s_n}^\dag\emptyset 
+\]
+where $A_{s_1}^\dag$ is the moment creation operator.
+
+
 \section{The path integral and conditional probability}
 
 The time integrated probability 
@@ -321,20 +376,7 @@ The time integrated probability
 P(t) = e^{tH}P(0)
 \label{timeint}
 \end{equation}
-can be given an alternative interpretation, as a path integral. In order to see this, we need to introduce the dot product of two ABM probability distributions, which we define as
-\[
-\left(\sum_\mathbf{n} c_\mathbf{n} a^{\dag \mathbf{n}}\right) \cdot \left(\sum_\mathbf{m} d_\mathbf{m} a^{\dag \mathbf{m}}\right) = \sum_\mathbf{k} c_\mathbf{k}d_\mathbf{k}
-\]
-where $\mathbf{n} = (n_1...n_N)$ and we use the convenience notation
-\[
-a^{\dag \mathbf{n}} = \prod_i a_i^{\dag n_i}
-\]
-so that, for example
-\[
-a^{\dag \mathbf{n}} \cdot P = p_\mathbf{n}
-\]
-is just the probability that $P$ is in the state with occupation number $\mathbf{n}$.
-
+can be given an alternative interpretation, as a path integral. 
 Now, going back to the time integral in equation \ref{timeint}, suppose $a^{\dag A}$ and $a^{\dag B}$ are states of an ABM, we can express the probability that the ABM will end up in state $B$ at time $t$ given that it was in state $A$ at $t=0$ as
 \[
 P(B|A) = a^{\dag B}\cdot e^{tH} a^{\dag A}
@@ -351,6 +393,10 @@ a^{\dag B}\cdot e^{tH} a^{\dag A} = a^{\dag B}\cdot e^{0.5tH} e^{0.5tH} a^{\dag 
 \]
 [this comes out of the linearity of the operators and the definition of dot product]
 
+Using the same principle, we can split it into as many pieces as we please
+\[
+P(B|A) = \int_C
+\]
 
 \begin{comment}
 \subsection{Continuous states and the uncertainty principle}
