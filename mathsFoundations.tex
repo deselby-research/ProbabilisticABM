@@ -1,5 +1,5 @@
 \documentclass[letterpaper,twocolumn,10pt]{article}
-\usepackage{usenix,epsfig,comment,amssymb}
+\usepackage{usenix,epsfig,comment,amssymb,listings}
 \setlength{\parskip}{1.8mm}
 \setlength{\parindent}{0mm}
 \begin{document}
@@ -8,7 +8,7 @@
 
 \author{
 {\rm Daniel Tang}\\
-Deselby research institute
+Leeds Institute for Data Analytics
 }
 
 \maketitle
@@ -22,7 +22,7 @@ In order to do modelling well we need to do calibration, data assimilation and u
 
 \section{Introduction: The problem}
 
-In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system as a whole and are able to define an observation operator for each observation type that goes from the state of the system to the observation. We would like to know something about a (hitherto unobserved) observable at some time which may be in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That something may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
+In this paper we will consider the following problem: Suppose we have a complex system that can be described in terms of interacting agents. Suppose also that we have some (possibly incomplete) knowledge of the behaviour of those agents. Suppose we also have a set of real-world, noisy observations of the aggreagate behaviour of the system and are able to define an observation operator for each observation type that defines the conditional probability of making an observaton given the state of the system. We would like to gain information about a the posterior distribution of a (hitherto unobserved) observable at some time in the past, present or future, given our knowledge of the behaviour of the agents, our observations and our observation operators. That information may be an expectation value, a modal value, or a distribution chosen from a family that minimises the KL divergence. (or the modal trajectory in time)
 
 \subsection{Defining agents}
 We will proceed by specifying our knowledge of the behaviour of an agent as a computer program written from the point of view of an agent. In order to express any incompleteness in our knowledge of the behaviour, we suppose there is a set of global paramaters, which we do not know but which we have a prior distribution for, that may  infulence an agent's behaviour. In addition, we may make the agent's behaviour stochastic in order to express our uncertainty in the agent's behaviour. By doing this, we can track the effect of our uncertainty in the agent's behaviour on the uncertainty in the aggregate behaviour of the system.
@@ -30,40 +30,39 @@ We will proceed by specifying our knowledge of the behaviour of an agent as a co
 \subsection{Defining observation operators}
 Similarly, we will define observation operators as computer programs that take a state of the system as input and return an observation (i.e. a real number or vector of reals). The observation operator will itself be stochastic in order to represent the noise in the observation.
 
-We can connect our data to the observation operators by storing the oputput of an observation operator in a variable and allowing an \texttt{observe(x,v)} command which should be interpreted as ``we observe the variable \texttt{x} to have value \texttt{v}''.
+We can connect real-world observations to observations of the model by means of an \texttt{observe(x,v)} command which should be interpreted as ``we observe the variable \texttt{x} to have value \texttt{v}''.
 
 In this way, our whole problem can be specified in a single computer program that looks very much like a normal simulation which, if executed, would generate an instance of our data and an instance of the observable we're interested in. The values generated would probably not match our actual data, but there is a positive, if small, probability that they would match.
 
-Our problem can now be cast as one of doing inference on this computer program. That is, finding the expectation value of the observable of interest given that the generated data matches our actual observations.
+Our problem can now be cast as one of doing inference on this computer program. That is, finding the expectation value of the observable of interest given that the generated data matches our real-world observations.
 
 \section{Agent based dynamical systems}
-We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are to remove an agent and to create a new agent. Surprisingly, this will be enough to express all agent behaviours.
+We introduce the concept of an \textit{agent based dynamical system} which consists of a set of interacting \textit{agents}. Each agent has a state and can interact with other agents. At any given time, $t$, each agent has a propensity, $r$, to perform an action such that, in the infinitesimal slice of time, $[t, t+dt]$, there is a probability $rdt$ that the agent performs the action. The only actions an agent can perform are to create a new agent or iterate over agents that have a given property. Surprisingly, we will show that this will be enough to express all agent behaviours.
 
 \section{Object oriented implementation of an agent based dynamical system}
 In order to implement an agent based dynamical system in an object oriented programming language, we have a class, \texttt{ABM}, which is templated on the agent state type \texttt{T}. This class represents a probability distribution over ABM states and has three methods:
 
-\begin{tabular}{|l|p{4.9cm}|}
+\begin{tabular}{|l|p{4.5cm}|}
 \hline
 \texttt{add(s)} & add an agent in state \texttt{s} to the ABM and return the modified ABM\\
 \hline
-\texttt{foreach(a)} & execute action \texttt{a} on every agent and return the result\\
+\texttt{integrate(B,T)} & integrate the ABM over T units of time, using behaviour \texttt{B} for the agents\\
 \hline
 \texttt{observe(o,v)} & observe that the observable \texttt{o} has value \texttt{v} and return the resulting \texttt{ABM}\\
 \hline
+\texttt{evaluate(e)} & Calculate the expectation value of the function e\\ 
+\hline
 \end{tabular}
 
-An \texttt{action} is a lambda function that takes an agent state (the state of the agent that is performing the action) and an \texttt{ABM} (the environment the agent finds itself in) and returns an \texttt{ABM} that is the result of performing the action. When passed to a \texttt{foreach} method, the \texttt{ABM} passed to the action is the \texttt{ABM} with the current agent removed.
-
-An \texttt{observable<T>} is a lambda function that takes an \texttt{ABM} and returns an observation of type \texttt{T}.
-
-A \texttt{behaviour} is a set of \texttt{<rate, action>} pairs, where \texttt{rate} is a lambda function that takes an agent state and the \texttt{ABM} and returns a floating point number giving the rate of the behaviour.
-
-Time in the model can be moved forward using the \texttt{Behaviour::integrateTime(abm, Dt)} method, which integrates the abm forward in thim by where \texttt{Dt} units of time and returns the result.
-
+A \texttt{Behaviour} class consists of a set of \texttt{actions} and \texttt{interactions}. An \texttt{action} is a triplet $(t,r,l)$, where $t$ is the trigger which defines which agents the action applies to, as a function of the agent's state, $r$ is the rate at which the action happens once it is triggered and $l$ is a lambda function that performs the action. $l$ takes the current state of the acting agent, $k$, and a distribution that represents the agent's environment (i.e the distribution of the other agents in the system, given that there is an agent in state $k$) and returns the ABM distribution after the action is performed.  An \texttt{interaction} is very much like an action but the trigger is a function of two agent states and $l$ can refer to both of those states.
 
 \section{A probabilistic interpretation of an \texttt{ABM}}
 
-A probability distribution over the states of an agent based model is formally a member of a symmetric Fock space on the state of the agents, $T$, which we'll write as $\mathcal{F}(T)$. Surprisingly, we can express everything we need to using just two operators on this space; the \textit{annihilation operator} $a_k$ and the \textit{creation operator} $a_k^\dag$.
+An \texttt{ABM} object represents a probability distribution over the states of an agent based model. To be mathematically precise, an \texttt{ABM} belongs to a symmetric Fock space on the state space of the agents, $T$, which we'll write as $\mathcal{F}(T)$. However, a Fock space has infinite dimensionality so it is not at all obvious how we could go about representing such a mathematical object as a data structure of manageable size for numerical computation.
+
+We'll start by naming two special distributions: the distribution that is definitely the empty set (i.e. with probability $1$ there are no agents in the system), which we'll write as $\emptyset$, and the state that has zero probability for all states, which we'll write as $\mathbf{0}$.
+
+Surprisingly, we can express everything we need with these two states and just two Fock space operators; the \textit{annihilation operator}, $a_k$, and the \textit{creation operator}, $a_k^\dag$.
 
 The creation operator, $a_k^\dag$, represents the addition of an agent in state $k$ to every state in the probability distribution. By definition, the probability of the ABM being empty after the action of a creation operator is zero.
 
@@ -83,280 +82,323 @@ a_k a_q^\dag - a_q^\dag a_k = \delta_{kq}
 \label{symcommute}
 \end{equation}
 \begin{equation}
-a_k\mathbf{1} = \mathbf{0}
+a_k\emptyset = \mathbf{0}
 \label{adagzero} 
 \end{equation}
-where $\delta_{kq}$ is the Kronecker delta function and we use $\mathbf{1}$ to represent the ABM probability distribution representing an empty ABM with probability 1 and $\mathbf{0}$ to represent the distribution with all states having zero probability.
+where $\delta_{kq}$ is the Kronecker delta function\footnote{To be precise, the $1$ and $0$ of the Kronecker delta function should be replaced by the identity operator and the operator that always returns $\mathbf{0}$, but for notational simplicity we'll allow the free interpretation of numbers as operators that multiply all probabilities of an ABM distribution by that number.}.
 
-For a given (non-probabilistic) ABM, we define the \textit{occupation number} of agent state $s$ to be the number of agents in the ABM that are in that state. The annihilation operator $a_s$ multiplies the probability of each ABM state by the occupation number of $s$ and removes one agent in state $s$.
+For a given (non-probabilistic) ABM, we define the \textit{occupation number} of agent state $s$ to be the number of agents that are in that state. The annihilation operator $a_s$ multiplies the probability of each ABM state by the occupation number of $s$ and removes one agent in state $s$.
 
-We can see that this behaviour follows from the properties above using a recursive proof. Suppose that $a_k a_k^\dag S = nS$ then, from equation \ref{symcommute}
+This behaviour follows from the properties above. Using a recursive proof, suppose that $a_k a_k^\dag S = nS$ for some integer $n$ then, from equation \ref{symcommute},
 \[
 a_k a_k^\dag a_k^\dag S = (1 + a_k^\dag a_k)a_k^\dag S = (n+1)a_k^\dag S
 \]
 We can start the recursion using equations \ref{symcommute} and \ref{adagzero}
 \[
-a_k a_k^\dag \mathbf{1} = (1 + a_k^\dag a_k)\mathbf{1} = \mathbf{1}
+a_k a_k^\dag \emptyset = (1 + a_k^\dag a_k)\emptyset = 1\emptyset
 \]
 
-\subsection{Single agent}
-We start with the simplest possible agent based dynamical system: a system which is either empty or there is a single, stateless agent. Suppose that at time $t=0$ the agent is definitely present and between time $t$ and $t+dt$ the agent leaves the system with probability $rdt$. Here's the program that represents this system
-\begin{verbatim}
-  abm = ABM()
-  abm.add(void)
-  
-  b = Behaviour()
-  b.add({1.0}, (state, abm) -> {
-    return abm
-  })
-  return b.integrateTime(abm, T)
-\end{verbatim}
-remember that the ABM passed to the action in the bahaviour is the ABM minus the agent whose behaviour we're considering. So in this case, it's the empty ABM and returning this is equivalent to the agent removing itself from the system.
+We can now interpret the \texttt{add(s)} operation as the creation operator $a^\dag_s$. When the same operator is applied multiple times, we will use the power notation, e.g. $a_s a_s = a^2_s$.
 
-Starting from the first line of the program, we create a new ABM which is definitely empty, so is in the state $\mathbf{1}$. We then add an agent, after which the ABM will be in state $a^\dag \mathbf{1}$. Next we create a behaviour. The action is just the ``do nothing'' action, which we can think of as the identity operator, $1$. We'll think of a behaviour as an operator that takes a probability distribution over ABMs and returns a rate of change of that probability distribution.
-
------------------------ TODO -------------
-
- Given an empty state and an agent that is currently outside of the system that has a propensity, $r$, to enter the system, then in time slice $[t, t+dt]$ there is a probability $rdt$ that the state will switch from empty to having an agent in it. So in time $dt$ the probability of the empty state goes down by $rdt$ and the probability of there being an agent goes up by $rdt$. So the rate of change of the state is givcen by
+A probability distribution over an ABM can be represented as a sum of creation operators on the empty set. The result looks something like a polynomial:
 \[
-H_{a^\dag} = \frac{\partial}{dt} = (a^\dag - 1)r
+P = \sum_{\mathbf{n}\in \mathbb{N}^{|k|}} p_\mathbf{n} \prod_k a_k^{\dag n_k}\emptyset
 \]
-Similarly, for the annihilation operator. If we start with an agent in the system, the probability of there being an agent decreases by $rdt$ while the probability of the state being empty increases by the same amount. We can achieve this with the operator
-\[
-H_a = \frac{\partial}{\partial t} = (a - a^{\dag}a)r
-\]
-We'll call $H_{a\dag}$ and $H_a$ the \textit{Hamiltonians} for their respective operators. Again, we'll see later that by choosing this form for the Hamiltonians we make things very elegant when we come to generalise to many agents.
+where $\mathbf{n} = (n_1...n_{|k|})$ and $p_\mathbf{n}$ is the probability that there are $n_1$ agents in state $1$, $n_2$ agents in state $2$ etc.
 
-Once we have the Hamiltonian for a probability distribution, the time evolution of that probability distribution is completely defined by the equation
+For ease of notation, from now on we will omit the trailing $\emptyset$ on distributions when this is not ambiguous.
+
+
+An \texttt{Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
+\[
+A(t,r,l) = \int_{t(k)} (l_k - a_k^\dag)a_kr \,dk
+\] 
+where the integral reverts to a sum in the case of discrete state variables.
+
+An \texttt{Interaction} object is very similar to an \texttt{Action} but with a double integral
+\[
+I(t,r,l) = \int \int_{t(j,k)} (l_{jk} - a_j^\dag a_k^\dag)a_j a_k r\;  dj\; dk
+\] 
+
+A \texttt{Behaviour} object is just the sum of its \texttt{Actions} and \texttt{Interactions}:
+\[
+H = \sum_n A_n + \sum_m I_m
+\]
+So, a \texttt{Behaviour} is also an operator from an ABM distribution to a rate of change. In this way, we can write the equation of motion of a probabilistic ABM as
 \[
 \frac{\partial P}{\partial t} = HP
 \]
-which is the probabilistic dynamics' analogue of Schr\"{o}dinger's equation. This equation has a very general solution
-\[
-P(t) = e^{tH}P(0)
-\]
-where the exponent of an operator is defined as
+and we see that the \texttt{Behaviour} takes the place of the Hamiltonian when seen as a dynamical system. Given this, we can now express the meaning of the \texttt{integrate} method as
+\begin{equation}
+P(T) = \int_0^t HP \, dt = e^{tH}P(0)
+\label{mastereq}
+\end{equation}
+where we define the exponential of an operator to be
 \[
 e^{tH} = \sum_{k=0}^\infty \frac{(tH)^k}{k!}
 \]
-and eponentiation of an operator is just repeated application (taking care to respect the order of non-commutative operators).
+and $H^n$ is just $n$ repeated applications of $H$ (taking care to respect the order of non-commutative operators).
 
-Going back now to the agent that has propensity $r$ to annihilate itself, the equation of motion is
+Let the dot product of two ABM probability distributions be defined as
 \[
-\frac{\partial P}{\partial t} = H_aP = \left(\frac{\partial }{\partial a^\dag} - a^\dag\frac{\partial }{\partial a^\dag}\right)rP
+\left(\sum_\mathbf{n} c_\mathbf{n} a^{\dag \mathbf{n}}\right) \cdot \left(\sum_\mathbf{m} d_\mathbf{m} a^{\dag \mathbf{m}}\right) = \sum_\mathbf{k} c_\mathbf{k}d_\mathbf{k}
 \]
-Solving this for $P(0) = a^\dag$ gives
+where $\mathbf{n} = (n_1...n_N)$ and we use the convenience notation
 \[
-P(t) = e^{rt((1-a^\dag)\frac{\partial}{\partial a^\dag})}a^\dag
+a^{\dag \mathbf{n}} = \prod_i a_i^{\dag n_i}
+\]
+so that, for example
+\[
+a^{\dag \mathbf{n}} \cdot P = p_\mathbf{n}
+\]
+is just the probability that $P$ is in the state with occupation number $\mathbf{n}$.
+
+
+If we let an observable, $P(v|s)$, be defined as the conditional probability of making a particular observation, $v$ given the state, $s$, of the ABM,  then we can define the \texttt{observe} method as the operator $O_{P(v|s)}$ such that
+\[
+O_{P(v|s)}P = \frac{1}{P(v)} \int_S s P(v|s) (s\cdot P) \,ds 
+\]
+where the integration ranges over the ABM states. The observation operator has the effect of applying a Bayesian update to a distribution in order to reflect how knowledge of the observation's value updates our belief about the distribution of the system. The prior probability $P(v)$ is often not known so we define an unnormalised version of the observation operator $\hat{O}_{P(v|s)}$ which omits it (i.e. takes its value to be $1$).
+
+WThe \texttt{evaluate} method is defined as
+\[
+\mathbf{E}[f]P = \int_S f(s) (s\cdot P) \,ds
+\]
+
+With the above interpretations, we can see how a distribution over an ABM, which belongs to an infinite dimensional Fock space, can be represented in a data structure whose size is of the order of the size of the computer program that defines the ABM's behaviour, and we can see how such a representation can be systematically derived from the program.
+
+\section{Some analytic examples}
+As a demonstration, let's look at some very simple ABMs which, with the help of the formalism we have developed, we can solve analytically.
+
+\subsection{Single agent}
+We start with the simplest possible agent based dynamical system: a system which is either empty or there is a single, stateless agent. Suppose that at time $t=0$ the agent is definitely present and between time $t$ and $t+dt$ the agent leaves the system with probability $dt$. So, we would expect the probability that the agent exists to start at $1$ and reduce exponentially according to $e^{-t}$ as time progresses.
+
+ Here's the program that represents this system
+\begin{lstlisting}
+  ABM abm
+  abm.add(void)
+  
+  Behaviour b
+  b.add({true}, {1.0}, (state, abm) -> {
+    return abm
+  })
+  return b.integrateTime(abm, T)
+\end{lstlisting}
+remember that the ABM passed to the action in the bahaviour is the ABM minus the agent whose behaviour we're considering. So in this case, it's the empty ABM and returning this is equivalent to the agent removing itself from the system.
+
+Starting from the first line of the program, we create a new ABM which is definitely empty, so is in the state $\emptyset$. We then add an agent, after which the ABM will be in state $a^\dag \emptyset$. Next we create a behaviour and add an action to it. The action is applicable to all agents (i.e. the only agent in the system) and occurs at a rate of 1 per unit time. The act itself is just the ``do nothing'' action, which is just the identity operator, $1$. So, the behaviour can be expressed as the operator
+\[
+H = (1 - a^\dag)a
+\]
+so, the equation of motion is
+\[
+\frac{\partial P}{\partial t} = HP = (1 - a^\dag )aP
+\]
+Solving this for $P(0) = a^\dag\emptyset$ gives
+\[
+P(t) = e^{t(1-a^\dag)a}a^\dag\emptyset
 \]
 \[
- = \sum_{k=0}^\infty \frac{\left(rt(1-a^\dag)\frac{\partial}{\partial a^\dag}\right)^k}{k!}a^\dag
+ = \sum_{k=0}^\infty \frac{\left(t(1-a^\dag)a\right)^k}{k!}a^\dag\emptyset
 \]
 \[
-= \sum_{k=0}^\infty \frac{(-rt)^k\left((a^\dag-1)\frac{\partial}{\partial a^\dag}\right)^k}{k!}a^\dag
+= \sum_{k=0}^\infty \frac{(-t)^k\left((a^\dag-1)a\right)^k}{k!}a^\dag\emptyset
 \]
-but since $\frac{\partial^n}{\partial a^{\dag n}} = 0$ for $n>1$
+but since $a^na^\dag\emptyset = \mathbf{0}$ for $n>1$
 \[
-\left((a^\dag-1)\frac{\partial}{\partial a^\dag}\right)^k = (a^\dag-1)\frac{\partial}{\partial a^\dag}
+\left((a^\dag-1)a\right)^ka^\dag\emptyset = (a^\dag-1)aa^\dag\emptyset
 \]
 for $k>0$, so
 \[
-P(t) = 1 + \sum_{k=0}^\infty \frac{(-rt)^k}{k!}(a^\dag-1)
+P(t) = \left(1 + \sum_{k=0}^\infty \frac{(-t)^k}{k!}(a^\dag-1)\right)\emptyset
 \]
-where the initial $1$ accounts for the case when $k=0$. We can now turn the sum back into an exponent to give
+where the initial $1$ is a correction to the sum in the case that $k=0$. We can now turn the sum back into an exponential to give
 \[
-P(t) = (1 - e^{-rt}) + e^{-rt}a^\dag
+P(t) = (1 + e^{-t}(a^\dag -1))\emptyset =  (1 - e^{-t})\emptyset + e^{-t}a^\dag\emptyset
 \]
-So the probability that the agent exists reduces exponentially as time progresses. This is exactly what we would expect.
+So, the probability that the agent exists (i.e. state $a^\dag\emptyset$) reduces exponentially as time progresses, exactly as we expected, and the probability of the empty state increases exponentially so that the sum over both states remains at $1$.
 
-\subsection{Many agents}
+\subsection{Many agents with state}
 
-We can now show how our operators extend very elegantly to systems with more than one agent. In this case, we represent the state that there are definitely $n$ agents in the system as $P = a^{\dag n}$. A probability distribution for a set of agents can therefore represented by a polynomial
+We can now show how our operators extend very elegantly to systems with more than one agent and add state to the agents. 
+We can see immediately that our creation operator works as we would expect:
 \[
-P = \sum_{n=0}^\infty p_n a^{\dag n}
+a_k^\dag a_k^{\dag n} = a_k^{\dag n+1}
 \]
-where $p_n$ is the probability that there are $n$ agents, and
+This also applies to distributions. Suppose there's a $0.5$ probability that the system is empty and a $0.5$ probability that there's one agent, so $P = 0.5 + 0.5a^\dag$. So
 \[
-\sum_{n=0}^\infty p_n = 1
-\]
-By choosing this representation, we can see immediately that our creation operator works on definite states:
-\[
-a^\dag a^{\dag n} = a^{\dag n+1}
-\]
-Even better, it works on probabilistic states too. For example, suppose there's a $0.5$ probability that the system is empty and a $0.5$ probability that there's one agent, so $P = 0.5 + 0.5a^\dag$. In this case
-\[
-a^\dag (0.5 + 0.5a^\dag) = 0.5a^\dag + 0.5a^{\dag 2}
+a^\dag P = a^\dag (0.5 + 0.5a^\dag) = 0.5a^\dag + 0.5a^{\dag 2}
 \]
 So, after applying the creation operator, there's an equal probability of there being either one or two agents, i.e. the operator simultaneously adds an agent to all possible states.
 
-If we start with an empty system (i.e. $P(0) = 1$) and add agents at a constant rate we'd expect the Hamiltonian to be given by
+\subsection{Poisson model}
+Suppose we start with a system with one agent in state 0 (i.e. $P(0) = a_0^\dag$) and that that single agent adds new agents in state $1$ at a constant rate, $r$. This is just a Poisson process, so we would expect the distribution over the number of agents in state $1$ to be distributed according to the Poisson distribution.
+
+The program for this model would be
+
+\begin{lstlisting}
+  ABM abm
+  abm.add(0)
+  
+  Behaviour b
+  b.add(state -> state==0, {r}, 
+       (state, abm) -> {
+         abm.add(0)
+         abm.add(1)
+         return abm
+       })
+  return b.integrateTime(abm, T)
+\end{lstlisting}
+Using our rules for constructing the equation for behaviour, for this program we have
 \[
-\frac{\partial P}{\partial t} = H_{a\dag}P = (a^\dag - 1)rP
+\frac{\partial P}{\partial t} = (a_0^\dag a_1^\dag - a_0^\dag)a_0r
 \]
-This can again be solved analytically:
+This can again be integrated analytically:
 \[
-P(t) = e^{tH} = e^{-rt(1-a^\dag)} = e^{-rt}e^{rta^\dag}
+P(t) = e^{tH}P(0) = e^{-rt (1-a^\dag)a_0^\dag a_0}a_0^\dag
 \]
+but since there's always exactly one agent in state $0$, $a_0^\dag a_0$ is just the identity operator so
 \[
-= e^{-rt}\sum_k \frac{(rt)^k}{k!}a^{\dag k}
+P(t)  = e^{-rt}e^{rta_1^\dag}a_0^\dag = e^{-rt}\sum_k \frac{(rt)^k}{k!}a_1^{\dag k} a_0^\dag
 \]
-so, the probability of there being $k$ agents (i.e. the coefficient of the $k^{th}$ power of $a^\dag$) is 
+so, the probability of there being $k$ agents in state $1$ at time $t$ (i.e. the coefficient of the $k^{th}$ power of $a_1^\dag$) is 
 \[
 c_k = \frac{(rt)^ke^{-rt}}{k!}
 \]
-which is just the Poisson distribution, as we would expect.
+which is just the Poisson distribution, as we expected.
 
-Now let's try the annihilation operator on $P = 0.5a^\dag + 0.5a^{\dag 2}$:
-\[
-a (0.5a^\dag + 0.5a^{\dag 2}) = 0.5 + a^\dag
-\]
-We don't get $0.5 + 0.5a^\dag$ as you may have expected. Instead, for a distribution $P = \sum_n p_na^{\dag n}$ we get
-\[
-a \sum_n p_na^{\dag n} = \sum_n n p_n a^{\dag n-1}
-\]
-which isn't even a valid probability distribution. Howerver, this behaviour can be harnessed to make a very useful operator
-\[
-N = a^\dag a
-\]
-which in quantum field theory is called the number operator because it multiplies the probability of each state by the number of agents in that state
-\[
-a^\dag a \sum_n p_na^{\dag n} = \sum_n n p_n a^{\dag n}
-\]
-We can now understand the Hamiltonian of the annihilation operator in a new light
-\[
-H_a = (a - a^\dag a)r = (a^{\dag -1} - 1)Nr
-\]
-where $a^{\dag -1}$ is the inverse of the creation operator, which we'll call the agent-based annihilation operator. In this form, we can understand the $a^{\dag -1}$ term as the transition operator for a single agent's propensity. The number operator $N$ has the effect of applying this operator to all the agents in the system, as if we'd executed a \texttt{foreach} loop in a computer program.
+\subsection{Binomial model}
+Suppose we start with $n$ agents and each agent has a propensity, $r$, to annihilate itself. We would expect the distribution over the number of remaining agents to follow a binomial distribution, with an exponentially decaying probability of survival, since we are effectively taking $n$ independent flips of a weighted coin to decide whether each agent has annihilated itself or not.
 
-This works for any operator that represents the transition function for an agent's propensity. Because it's so useful, well define a higher order function which takes an agent action $T$ and returns the Hamiltonian that applies this propensity to all agents in a probabilistic state
-\[
-\mathcal{H}_r(T) = (T - 1)Nr
-\]
-we'll call this the \textit{foreach} operator.
+The program for this, and the resulting behaviour, would be the same as in the example we gave for the single agent case, but this time we add more agents to the initial state.
 
-To illustrate this, suppose we start with $n$ agents and each agent has a propensity, $r$, to annihilate itself. In pseudocode this may look something like
-\begin{verbatim}
-foreach(a in S) {
-  if(random() < r*dt) delete(a)
-}
-\end{verbatim}
+\begin{lstlisting}
+  ABM abm
+  for(i in 1...n) {
+	  abm.add(void)
+  }
+  
+  Behaviour b
+  b.add({true}, {r}, (state, abm) -> {
+    return abm
+  })
+  return b.integrateTime(abm, T)
+\end{lstlisting}
 
-We can create the Hamiltonian for this
+The behaviour is expressed as
 \[
-\frac{\partial}{\partial t} = \mathcal{H}(a^{\dag -1}) = (a^{\dag-1} - 1)Nr
+H = (1 - a^\dag)ar
 \]
-Expanding this gives
-\[
-H = (a^{\dag-1} - 1)a^\dag ar = (a - a^\dag a)r
-\]
-which is exactly the Hamiltonian from the single agent case, but now we understand why it has this form and why it will also work in the case of many agents.
-
-The only difference here is the boundary condition. Instead of $S(0) = a^\dag$ as in the single agent case, we now have $P(0) = a^{\dag n}$. The solution to this is
+The boundary condition this time is $P(0) = a^{\dag n}$. The solution to this is
 \[
 P(t) = \sum_m{n\choose m}e^{-rtm}(1-e^{-rt})^{n-m}a^{\dag m}
 \]
-The coefficients of $a^\dag$ (i.e. the probabilities that there are $m$ agents) make up a Binomial distribution, which, again, is what we would expect.
+The coefficients of $a^\dag$ (i.e. the probabilities that there are $m$ agents) make up a Binomial distribution, which, again, is what we expected.
 
-The above examples, although very simple, demonstrate how we can define a Hamiltonian operator in terms of the behaviour of a single agent then apply it to each agent in a system and ultimately describe the aggregate dynamics of a probability distribution over the whole system.
+The above examples, although very simple, demonstrate how we can start with a computer program which specifies the behaviour of a single agent, convert this into an operator, expressed in terms of creation and annihilation operators, which can then be used to specify the rate of change of a probability distribution over the whole system, then integrate that operator to find the probability distribution of the system at some time in the future.
 
-
-
-\subsection{Agent states}
-
-So far, the agents we've been considering haven't had any internal state. We'll start simple again by giving agents a binary state which can be either $0$ or $1$. We'll represent an agent in state $0$ as $a^\dag_0$ and an agent in state $1$ as $a^\dag_1$. A system with $n$ agents in state $a^\dag_0$ and $m$ agents in state $a^\dag_1$ will be represented as $a^{\dag n}_0 a^{\dag m}_1$, so a probability distribution over all states is again a polynomial, but this time in two variables. We define annihilation operators for each agent state:
-\[
-a_0 = \frac{\partial}{\partial a^\dag_0}
-\]
-\[
-a_1 = \frac{\partial}{\partial a^\dag_1}
-\]
-This induces two number operators $N_0 = a_0^\dag a_0$ and $N_1 = a_1^\dag a_1$ and two foreach operators $\mathcal{H}_{0r}(T) = (T-1)N_0r$ and $\mathcal{H}_{1r} = (T-1)N_1r$ which loop over agents in state $0$ and $1$ respectively.
-
-A change of state from $x$ to $y$ can be represented as an agent in state $x$ annihilating itself while simultaneously creating a new agent in state $y$, $a_y^\dag a_x^{\dag-1}$.
-
-Let's illustrate this with a system of $n$ agents who each have a propensity $r$ to flip to the opposite state. In pseudocode we want something like
-\begin{verbatim}
-S0  = S
-foreach(x in S0 suchthat S0.state(x)==0) {
-  if(random() < r*dt) S.state(x) = 1
-}
-foreach(x in S0 suchthat S0.state(x)==1) {
-  if(random() < r*dt) S.state(x) = 0
-}
-\end{verbatim}
- This can be expressed as a Hamiltonian
-\[
-H = r\mathcal{H}_{0r}(a^\dag_1 a^{\dag -1}_0) + r\mathcal{H}_{1r}(a^\dag_0 a^{\dag -1}_1)
-\]
-expanding this gives
-\[
-H = r\left((a^\dag_1 - a^\dag_0)\frac{\partial}{\partial a^\dag_0} + (a^\dag_0 - a^\dag_1)\frac{\partial}{\partial a^\dag_1}\right)
-\]
-If we suppose that at time $t = 0$ all agents are in state $a^\dag_1$ then we can solve the governing equation $\frac{\partial P}{\partial t} = HP$ to give
-\[
-P(t) = 2^{-n} \sum_{m=0}^n {n\choose m} (1-e^{-2rt})^{n-m}(1+e^{-2rt})^m a^{\dag n-m}_0 a^{\dag m}_1
-\]
-[TODO: add proof]
-
-We can represent an agent with more than one variable in it's state quite naturally by allowing vectors in the subscripts of $a^\dag$. So, for example, an agent with two binary values, $a$ and $b$ could be referred to as $a^\dag_{[a,b]}$.
-
-\subsection{Interacting agents}
+\subsection{Interacting agents: SIR model}
 
 Now let's get agents to interact. Suppose we have a conpartmental model of infectious disease spread. Suppose there's a population of $n$ people. Each person can be one of suseptible, infected or recovered. Infected people have a propensity, $\beta$, to meet and infect a suseptible person, in which case the suseptible person becomes infected. Also, infected people have a propensity, $\gamma$ to recover.
 
-In order to represent the interaction of infected people with suseptible, we want a Hamiltonian that would be equivalent to pseudocode something like
-\begin{verbatim}
-foreach(x in S0 suchthat 
-        S0.state(x)==Suseptible) {
-  foreach(y in S0 suchthat
-          S0.state(y) == Infected) {
-    if(random() < beta*dt)
-      S.state(x) = Infected
+The program for this would look something like
+\begin{lstlisting}
+  ABM abm
+  for(i in 1...ns) {
+	  abm.add(S)
   }
-}
-\end{verbatim}
-
-It turns out that the number operator can be used in a quite natural way to represent this nested \texttt{foreach} operator.
-
-If we let $a^\dag_S$, $a^\dag_I$ and $a^\dag_R$ represent suseptible, infected and recovered people respectively, then the Hamiltonian we're after is just
-\[
-H = \mathcal{H}_{S\beta}(a^\dag_Ia^{\dag-1}_SN_I) = (a^\dag_Ia^{\dag-1}_SN_I - 1)N_S\beta
-\]
-so, the Hamiltonian for the whole model is just
-\[
-H = \mathcal{H}_{S\beta}(a^\dag_Ia^{\dag-1}_SN_I) + \mathcal{H}_{I\gamma}(a^\dag_Ra^{\dag-1}_I)
-\]
-and the equation of motion for the probability distribution over states is, as always
-\[
-\frac{\partial P}{\partial t} = HP
-\]
-Although this is a differential equation, it's worth pointing out explicitly that it is representing discrete interactions between agents. So, it captures things like disease eradication when the number of infected agents is small, unlike the standard differential version of the SIR model, which is only accurate for large numbers of agents.
-
-Notice also that the different number operators are able to single out agents based on their state. If we allow higher-order operators, we can extend this idea to any predicate on the state of an agent, so that we can loop over any describable subset of agents. For example, suppose agents are located on a 2D grid and each agent has a state $\mathbf{v} = (x,y)$ giving the agent's position on that grid. We could express the program
-\begin{verbatim}
-foreach(a in S0) {
-  foreach(b in S0 suchthat 
-    norm(a.v-b.v)<4) {
-    call F(a.v,b.v)
+  for(i in 1...ni) {
+	  abm.add(I)
   }
-}
-\end{verbatim}
-as
+  for(i in 1...nr) {
+	  abm.add(R)
+  }
+  
+  Behaviour b
+  b.add((s1,s2) -> {s1==S && s2==I}, 
+        {beta},
+        (state1, state2, abm) -> {
+  	abm.add(I) // replace self
+  	abm.add(I) // replace other
+  	           // as an infected
+    return abm
+  })
+  b.add(s -> {s == I}, {gamma},
+        (state, abm) -> {
+    abm.add(R) // agent recovers
+  })
+  return b.integrateTime(abm, T)
+\end{lstlisting}
+
+If we let $a^\dag_S$, $a^\dag_I$ and $a^\dag_R$ represent suseptible, infected and recovered people respectively, then the Hamiltonian of the above behaviour is
 \[
-H = \sum_{(a_v\in S)}\sum_{(b_v\in \{v | |a_v-v| < 4\})} \mathcal{H}_{a_v}(F(a_v,b_v)N_{b_v})
+H = (a_I^{\dag 2} - a_I^\dag a_S^\dag)a_I a_S\beta + (a_R^\dag - a_I^\dag)a_I\gamma
 \]
+Although this is a differential equation, it's worth pointing out explicitly that it is representing discrete interactions between agents. So, it is still valid for small numbers of agents and correctly captures things like disease eradication, unlike the standard differential version of the SIR model, which is only accurate for large numbers of agents.
+
+Although this cannot be solved analytically, we can see that it has the expected behaviour. For example, if there are no infected agents, the $a_I$ operators will return $0$ and the rate of change will be zero.
+
 \subsection{Arithmetic}
 
 If an agent has numerical variables in its state, we can represent arithmetic on those variables with a change of state operation. For example, if an agent has two integers, $a$ and $b$ in its state, we can represent the operation $a = a + b$ as
 \[
-a^\dag_{[a+b,b]}a^{\dag-1}_{[a,b]}
-\]
-and so the Hamiltonian for an agent that has a unit propensity to perform this operation is
-\[
-H = \mathcal{H}_{[a,b]}(a^\dag_{[a+b,b]}a^{\dag-1}_{[a,b]}) = (a^\dag_{[a+b,b]}a^{\dag-1}_{[a,b]}-1)N_{[a,b]}
+H = (a^\dag_{[a+b,b]} - a_{[a,b]}^\dag)a_{[a,b]}
 \]
 The same method can be used to apply any operator on any number of variables.
 
+\section{Transformations}
+
+It will often be useful to transform the ABM distriution between different representations so we'll build up a way of doing this now.
+
+First of all, we'll construct the expectation operator which returns the sum of all probabilities in a distribution. We can formally define this as
+\[
+\mathbf{E}[\, ] = \emptyset \cdot e^{\int_S a_s \, ds}
+\]
+which, if we take the expansion of the exponential, can be seen to have the effect of integrating over all space.
+
+Define an $n^{th}$ moment of a distribution $P$ as
+\[
+m^{(n)}(s_1...s_n) = \mathbf{E}[a_1...a_n P]
+\]
+the $n^{th}$ moment is the marginal probability of finding an agent in state $s_1$ and an agent in state $s_2$ etc. irrespective of the total number of agents in the system. Where there are multiple agents in the same state, the probability is multiplied by the number of distinct combinations of agents. So, if there is an interaction that requires a set of agents in given states, the moment will tell you the expectation value of the rate at which that interaction will occur in the whole system if the agent-based interaction rate is 1.
+
+We can now build an infinite moment heirarchy
+\[
+M = \sum_{n=0}^\infty \int_{S^n}  m^{(n)}(s_1...s_n)A_{s_1}^\dag...A_{s_n}^\dag\emptyset 
+\]
+where $A_{s_1}^\dag$ is the moment creation operator.
+
+
+\section{The path integral and conditional probability}
+
+The time integrated probability 
+\begin{equation}
+P(t) = e^{tH}P(0)
+\label{timeint}
+\end{equation}
+can be given an alternative interpretation, as a path integral. 
+Now, going back to the time integral in equation \ref{timeint}, suppose $a^{\dag A}$ and $a^{\dag B}$ are states of an ABM, we can express the probability that the ABM will end up in state $B$ at time $t$ given that it was in state $A$ at $t=0$ as
+\[
+P(B|A) = a^{\dag B}\cdot e^{tH} a^{\dag A}
+\]
+we can now split the exponential
+\[
+a^{\dag B}\cdot e^{tH} a^{\dag A} = a^{\dag B}\cdot e^{0.5tH} e^{0.5tH} a^{\dag A}
+\]
+\[
+ = \int_C (a^{\dag B}\cdot e^{0.5tH}a^{\dag C}) (a^{\dag C} \cdot e^{0.5tH}a^{\dag A})\,dB
+\]
+\[
+= \int_C P(B|C)P(C|A) \,dB
+\]
+[this comes out of the linearity of the operators and the definition of dot product]
+
+Using the same principle, we can split it into as many pieces as we please
+\[
+P(B|A) = \int_C
+\]
+
+\begin{comment}
 \subsection{Continuous states and the uncertainty principle}
 
 So far, we've only considered agents with a finite number of discrete states. We may want to endow the agent with a real number as part of its state, in which case the agent can be in any one of an uncountable infinity of states and we'd need a polynomial in an infinite number of variables to represent this.
@@ -396,7 +438,7 @@ Given this, we can represent any probability density that has finite information
  \[
  P = \int_{\Psi\in\mathcal{P}(\psi)} f(\Psi)
  \]
-
+\end{comment}
 \section{Making observations and doing inference}
 
 If we have a prior $P(S)$ over system states and an observation operator $O$ that goes from a probability distribution over a system state to a probability distribution over the reals and we observe that the obervation operator has value $o$ then we can define the posterior
