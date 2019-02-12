@@ -354,19 +354,73 @@ First of all, we'll construct the expectation operator which returns the sum of 
 \[
 \mathbf{E}[\, ] = \emptyset \cdot e^{\int_S a_s \, ds}
 \]
-which, if we take the expansion of the exponential, can be seen to have the effect of integrating over all space.
+which, if we take the expansion of the exponential, can be seen to have the effect of integrating over the whole Fock space.
 
-Define an $n^{th}$ moment of a distribution $P$ as
+We'll now transform to a moment representation, where the moment of a distribution $P$ is defined as
 \[
-m^{(n)}(s_1...s_n) = \mathbf{E}[a_1...a_n P]
+m(s_1^{j_1}...s_n^{j_n})[P] = \frac{\mathbf{E}[a_{s_1}^{j_1}...a_{s_n}^{j_n}P]}{(j_1!)...(j_n!)} 
 \]
-the $n^{th}$ moment is the marginal probability of finding an agent in state $s_1$ and an agent in state $s_2$ etc. irrespective of the total number of agents in the system. Where there are multiple agents in the same state, the probability is multiplied by the number of distinct combinations of agents. So, if there is an interaction that requires a set of agents in given states, the moment will tell you the expectation value of the rate at which that interaction will occur in the whole system if the agent-based interaction rate is 1.
+for convenience, we'll use the shorthand notation
+\[
+m(s_1^{j_1}...s_n^{j_n})[P] = m(S^J)[P] = \frac{\mathbf{E}[a_S^JP]}{J!}
+\]
+To help our intuitive understanding of the moments, we note that the moment, $m(s)$, is just the average $s$-occupation number. We now extend the idea of occupation number to pairs of states $(s_1,s_2)$ so that the $(s_1,s_2)$-occupation number is the number of distinct pairs of agents whose states are $s_1$ and $s_2$ respectively. So the $(s_1,s_2)$-occupation number of state $...s_1^ns_2^m...$ is $mn$. If we're after pairs of agents in the same state, $m(s^2)$ from a state $...s^n...$, then there are $\frac{n(n-1)}{2}$ \textit{distinct} pairs. In the same way, we can extend occupation number to any number of agent states. The moments can now be seen to be the expectations of the occupation numbers.
 
-We can now build an infinite moment heirarchy
+So, if there is an interaction that requires a set of agents in given states, the moment will tell you the expectation value of the rate at which that interaction will occur in the whole system if the agent-based interaction rate is 1.
+
+We can now build an moment heirarchy transform which transforms a distribution that is expressed in terms of the creation operators into a distribution that is expressed in terms of a \textit{moment}-space creation operator, $A_s^\dag$ 
 \[
-M = \sum_{n=0}^\infty \int_{S^n}  m^{(n)}(s_1...s_n)A_{s_1}^\dag...A_{s_n}^\dag\emptyset 
+\mathbf{M}[P] = \sum_{n=0}^\infty \int_{s_1...s_n,m_1...m_n} m(a_{s_1}^{j_1}...a_{s_n}^{j_n})[P] A_{s_1}^{\dag j_1}...A_{s_n}^{\dag j_n}\emptyset 
 \]
-where $A_{s_1}^\dag$ is the moment creation operator.
+We can now derive the relationship between the moment-space and Fock-space creation and annihilation operators.
+\[
+\mathbf{M}[a_x^\dag P] = \sum_{n=0}^\infty \int m(a_S^J a_x^\dag)[P] A_S^{\dag J}\emptyset 
+\]
+but by the commutation relation on Fock-space creation operators,
+\[
+a_x^j a_x^\dag = a_x^{(j-1)}a_x^\dag a_x + a_x^{(j-1)}
+\]
+so
+\[
+a_x^j a_x^\dag = a_x^\dag a_x^j + j a_x^{(j-1)}
+\]
+but for $j>0$
+\[
+\frac{\mathbf{E}[j a_x^{(j-1)}P]}{j!} = \frac{\mathbf{E}[a^{(j-1)}P]}{(j-1)!} = m(a^{j-1})[P]
+\]
+so
+\[
+\mathbf{M}[a_x^\dag P] = \sum_{n=0}^\infty \int m(a_x^\dag a_S^J )[P] A_S^{\dag J}\emptyset  + \sum_{n=0}^\infty \int_{j_x > 0} m(a_x^{-1}a_S^J)[P] A_S^{\dag J}\emptyset 
+\]
+But since $\mathbf{E}[a_x^\dag  a_{s_1}...a_{s_n}P] = \mathbf{E}[a_{s_1}...a_{s_n}P]$
+\[
+\mathbf{M}[a_x^\dag P] = \mathbf{M}[P] + A_x^\dag \sum_{n=0}^\infty \int_{j_x>0} m(a_x^{-1}a_S^J)[P] A_x^{\dag -1}A_S^{\dag J}\emptyset 
+\]
+\[
+= (1+A_x^\dag)\mathbf{M}[P]
+\]
+Similarly with the annihilation operator
+\[
+\mathbf{M}[a_x P] = \sum_{n=0}^\infty \int \frac{\mathbf{E}[a_S^J a_x P]}{J!} A_{S}^{\dag J}\emptyset 
+\]
+\[
+= \sum_{n=0}^\infty \int \frac{\mathbf{E}[a_S^J a_x P]}{J!} A_{S}^{\dag J} A_x A_x^\dag \emptyset 
+\]
+which, if we define the moment-annihilation operator to have the commutation relation
+\[
+A_kA_q^\dag - A_q^\dag A_k = \delta_{kq}
+\]
+in the same way as the Fock-space annihilation operator, then
+\[
+= \sum_{n=0}^\infty \int \frac{\mathbf{E}[a_S^J a_x P]}{J!}  \frac{1}{j_x+1}A_x A_{S}^{\dag J} A_x^\dag \emptyset 
+\]
+\[
+= A_x \sum_{n=0}^\infty \int m(a_S^J a_x) [P]  A_{S}^{\dag J} A_x^\dag \emptyset 
+\]
+so
+\[
+\mathbf{M}[a_x P] = A_x\mathbf{M}[P]
+\]
 
 
 \section{The path integral and conditional probability}
@@ -376,27 +430,47 @@ The time integrated probability
 P(t) = e^{tH}P(0)
 \label{timeint}
 \end{equation}
-can be given an alternative interpretation, as a path integral. 
-Now, going back to the time integral in equation \ref{timeint}, suppose $a^{\dag A}$ and $a^{\dag B}$ are states of an ABM, we can express the probability that the ABM will end up in state $B$ at time $t$ given that it was in state $A$ at $t=0$ as
+can be given an alternative interpretation as a path integral. To do this, we start by expressing $P(0)$ as a sum
 \[
-P(B|A) = a^{\dag B}\cdot e^{tH} a^{\dag A}
+P(0) = \int (a_{s_1}^\dag...a_{s_n}^\dag\emptyset \, ds_1...ds_n \cdot P(0))a_{s_1}^{\dag}...a_{s_n}^{\dag}
+\]
+\[
+ = \int (a_S^\dag \cdot P(0)) a_S^\dag \, dS
+\]
+so
+\[
+P(t) = e^{tH}\int (a_S^{\dag} \cdot P(0)) a_S^{\dag} \, dS
+\]
+if we expand into another sum
+\[
+P(t) = \int a_C^\dag \cdot \left(e^{tH}\int a_S^{\dag} \cdot P(0) a_S^{\dag} \, dS\right) a_C^\dag \, dC
+\]
+rearranging
+\[
+P(t) = \int \int \left(a_C^\dag \cdot e^{tH} a_S^{\dag}\right)\left( a_S^{\dag} \cdot P(0) \right) a_C^\dag \, dS\, dC
+\]
+The first term above can be interpreted as the probability that the system ends in state $C$ at time $t$ given that it started in state $S$ at $t=0$. 
+\[
+P(C|S) = \left(a_C^\dag \cdot e^{tH} a_S^{\dag}\right)
 \]
 we can now split the exponential
 \[
-a^{\dag B}\cdot e^{tH} a^{\dag A} = a^{\dag B}\cdot e^{0.5tH} e^{0.5tH} a^{\dag A}
+a_C^\dag\cdot e^{tH} a_S^{\dag} = a_C^{\dag}\cdot e^{0.5tH} e^{0.5tH} a_S^{\dag}
 \]
 \[
- = \int_C (a^{\dag B}\cdot e^{0.5tH}a^{\dag C}) (a^{\dag C} \cdot e^{0.5tH}a^{\dag A})\,dB
+ = \int_I (a_C^{\dag}\cdot e^{0.5tH}a_I^{\dag}) (a_I^{\dag} \cdot e^{0.5tH}a_S^{\dag})\,dI
 \]
 \[
-= \int_C P(B|C)P(C|A) \,dB
+= \int_I P(C|I)P(I|S) \,dI
 \]
 [this comes out of the linearity of the operators and the definition of dot product]
 
 Using the same principle, we can split it into as many pieces as we please
 \[
-P(B|A) = \int_C
+P(C_N|C_1) = \int_{C_{1...N}} \prod_{n=1}^{N-1} (a_{C_{n+1}}^\dag \cdot e^\frac{tH}{N}a_{C_n}^\dag) \,dC_{1...N}
 \]
+
+
 
 \begin{comment}
 \subsection{Continuous states and the uncertainty principle}
