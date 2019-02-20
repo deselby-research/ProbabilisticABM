@@ -109,13 +109,13 @@ where $\mathbf{n} = (n_1...n_{|k|})$ and $p_\mathbf{n}$ is the probability that 
 For ease of notation, from now on we will omit the trailing $\emptyset$ on distributions when this is not ambiguous.
 
 
-An \texttt{Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
+An \texttt{deselby.Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
 \[
 A(t,r,l) = \int_{t(k)} (l_k - a_k^\dag)a_kr \,dk
 \] 
 where the integral reverts to a sum in the case of discrete state variables.
 
-An \texttt{Interaction} object is very similar to an \texttt{Action} but with a double integral
+An \texttt{Interaction} object is very similar to an \texttt{deselby.Action} but with a double integral
 \[
 I(t,r,l) = \int \int_{t(j,k)} (l_{jk} - a_j^\dag a_k^\dag)a_j a_k r\;  dj\; dk
 \] 
@@ -422,6 +422,7 @@ so
 \mathbf{M}[a_x P] = A_x\mathbf{M}[P]
 \]
 
+This provides a very convenient, easily automated way of going from a computer program of an ABM to the dynamics of the moments of the model. At its simplest, this provides a way of automatically generating the moment closure for an ABM.
 
 \section{The path integral and conditional probability}
 
