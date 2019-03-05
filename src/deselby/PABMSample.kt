@@ -1,43 +1,36 @@
 package deselby
 
+import deselby.std.HashMultiset
 import java.util.*
 import kotlin.collections.HashSet
 import kotlin.math.ln
 
 class PABMSample<AGENT> : PABM<AGENT> {
-    class ActRecord<A>(val act :Act<A>, val subjects : HashSet<A>, val objects : HashSet<A>, var rate : Double) {
-        constructor(act : Act<A>) : this(act, HashSet<A>(), HashSet<A>(), 0.0)
+    class ActRecord<A>(val act :Act<A>, val subjects : HashMultiset<A>, val objects : HashMultiset<A>, var rate : Double) {
+        constructor(act : Act<A>) : this(act, HashMultiset<A>(), HashMultiset<A>(), 0.0)
 
-        fun addSubject(agent : A) : Boolean {
-            if(subjects.add(agent)) {
-                recalcRate()
-                return true
-            }
-            return false
+        fun addSubject(agent : A, n : Int) {
+            subjects.add(agent, n)
+            recalcRate()
         }
 
-        fun removeSubject(agent : A) : Boolean {
-            if(subjects.remove(agent)) {
-                recalcRate()
-                return true
-            }
-            return false
+
+        fun removeSubject(agent : A, n : Int) : Boolean {
+            val success = subjects.remove(agent, n)
+            recalcRate()
+            return success
         }
 
-        fun addObject(agent : A) : Boolean {
-            if(objects.add(agent)) {
-                recalcRate()
-                return true
-            }
-            return false
+        fun addObject(agent : A, n : Int) {
+            objects.add(agent, n)
+            recalcRate()
         }
 
-        fun removeObject(agent : A) : Boolean {
-            if(objects.remove(agent)) {
-                recalcRate()
-                return true
-            }
-            return false
+
+        fun removeObject(agent : A, n : Int) : Boolean {
+            val success = objects.remove(agent,n)
+            recalcRate()
+            return success
         }
 
         fun recalcRate() {
@@ -49,20 +42,24 @@ class PABMSample<AGENT> : PABM<AGENT> {
     }
 
     val acts = ArrayList<ActRecord<AGENT>>()
-    val agents = HashSet<AGENT>()
+    val agents = HashMultiset<AGENT>()
     val rand = Random()
 
     override fun add(a: AGENT): PABM<AGENT> {
-        agents.add(a)
-        addAgentToActRecords(a)
+        return add(a,1)
+    }
+
+    override fun add(a: AGENT, n: Int): PABM<AGENT> {
+        agents.add(a,n)
+        addAgentsToActRecords(a,n)
         return this
     }
 
     private fun remove(a : AGENT) : PABM<AGENT> {
         agents.remove(a)
         for(act in acts) {
-            act.removeSubject(a)
-            if(act.act is Interaction) act.removeObject(a)
+            act.removeSubject(a,1)
+            if(act.act is Interaction) act.removeObject(a,1)
         }
         return this
     }
@@ -110,15 +107,15 @@ class PABMSample<AGENT> : PABM<AGENT> {
             acts.add(ActRecord(act))
         }
         for(agent in agents) {
-            addAgentToActRecords(agent)
+            addAgentsToActRecords(agent.key, agent.value)
         }
     }
 
-    fun addAgentToActRecords(agent : AGENT) {
+    fun addAgentsToActRecords(agent : AGENT, n : Int) {
         for(actRecord in acts) {
-            if(actRecord.act.subjectSelector(agent)) actRecord.addSubject(agent)
+            if(actRecord.act.subjectSelector(agent)) actRecord.addSubject(agent, n)
             if(actRecord.act is Interaction && actRecord.act.objectSelector(agent)) {
-                actRecord.addObject(agent)
+                actRecord.addObject(agent, n)
             }
         }
     }
