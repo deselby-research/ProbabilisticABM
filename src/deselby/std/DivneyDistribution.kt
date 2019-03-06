@@ -60,9 +60,7 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
 
     // shift in dim d by distance s (must be +-1)
     private fun shift(d : Int, s : Int) {
-        val flatCoeffs = coeffs.asDoubleArray()
-        for(i in 0..flatCoeffs.lastIndex) {
-            val ndIndex = coeffs.toNDIndex(i)
+        for(ndIndex in coeffs.indexSet) {
             val n = ndIndex[d]
             var m = ndIndex[d]
             val cI = coeffs[ndIndex]
@@ -99,8 +97,8 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
                     if(data[i]<0) s += "-"
                     printPlus = true
                 }
-                val exponents = coeffs.toNDIndex(i)
-                if (data[i] != 1.0 || exponents.sum()==0) s += data[i].absoluteValue.toString()
+                val exponents = coeffs.Index(i)
+                if (data[i] != 1.0 || exponents.toFlatIndex()==0) s += data[i].absoluteValue.toString()
                 for (j in 0..exponents.lastIndex) {
                     if (exponents[j] > 0) {
                         s += "${(j + 'a'.toByte()).toChar()}"

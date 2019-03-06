@@ -1,4 +1,5 @@
 import deselby.std.DeselbyDistribution
+import deselby.std.FallingFactorial
 import org.junit.jupiter.api.Test
 
 class DeselbyDistributionTest {
@@ -6,6 +7,13 @@ class DeselbyDistributionTest {
     fun TestCreationAnnihilation() {
         val p = DeselbyDistribution(listOf(2.0,4.0))
         println(p.create(0).annihilate(0))
+    }
+
+    @Test
+    fun TestMultiplicationByFactorial() {
+        val p = DeselbyDistribution(listOf(2.0,4.0))
+        println(p * FallingFactorial(0,2) * FallingFactorial(0,1))
+
     }
 
     @Test

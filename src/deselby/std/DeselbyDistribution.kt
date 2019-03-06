@@ -1,7 +1,7 @@
 package deselby.std
 
 import kotlin.math.absoluteValue
-import kotlin.math.max
+import kotlin.math.min
 
 class DeselbyDistribution private constructor(private val lambda : List<Double>, var coeffs : DoubleNDArray) {
 
@@ -55,6 +55,27 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return DeselbyDistribution(lambda, coeffs * other)
     }
 
+    // multiply this by a falling factorial
+    operator fun times(factorial : FallingFactorial) : DeselbyDistribution {
+        val newGeometry = dimension.mapIndexed { i, v ->
+            if(i == factorial.variableId) v+factorial.order else v
+        }
+        val newCoeffs = DoubleNDArray(newGeometry, {0.0})
+        for(ndIndex in coeffs.indexSet) {
+            val delta = ndIndex[factorial.variableId]
+            var ck = coeffs[ndIndex] // modified coefficient
+            val writeIndex = newCoeffs.Index(ndIndex)
+            writeIndex[factorial.variableId] = factorial.order + delta
+            for(k in 0..min(delta,factorial.order)) {
+                newCoeffs[writeIndex] += ck
+                --writeIndex[factorial.variableId]
+                ck *= (factorial.order-k)*(delta-k)/(k+1.0)
+            }
+        }
+        return DeselbyDistribution(lambda, newCoeffs)
+    }
+
+
     fun isCompatible(other : DeselbyDistribution) : Boolean {
         if(dimension.size != other.dimension.size) return false
         if(lambda != other.lambda && !lambda.foldIndexed(true,{i,b,v -> b && v == other.lambda[i]})) return false
@@ -73,13 +94,11 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
                     if(data[i]<0) s += "-"
                     printPlus = true
                 }
-                val ndIndex = coeffs.toNDIndex(i)
+                val ndIndex = coeffs.Index(i)
                 if (data[i] != 1.0) s += data[i].absoluteValue.toString()
-                s += "P${ndIndex.asList()}"
+                s += "P$ndIndex"
             }
         }
         return s
     }
-
-
 }
