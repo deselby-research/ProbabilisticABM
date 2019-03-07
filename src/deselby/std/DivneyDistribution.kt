@@ -97,8 +97,8 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
                     if(data[i]<0) s += "-"
                     printPlus = true
                 }
-                val exponents = coeffs.Index(i)
-                if (data[i] != 1.0 || exponents.toFlatIndex()==0) s += data[i].absoluteValue.toString()
+                val exponents = coeffs.toNDIndex(i)
+                if (data[i] != 1.0 || i==0) s += data[i].absoluteValue.toString()
                 for (j in 0..exponents.lastIndex) {
                     if (exponents[j] > 0) {
                         s += "${(j + 'a'.toByte()).toChar()}"

@@ -6,7 +6,9 @@ class DeselbyDistributionTest {
     @Test
     fun TestCreationAnnihilation() {
         val p = DeselbyDistribution(listOf(2.0,4.0))
-        println(p.create(0).annihilate(0))
+        val acp = p.create(0).annihilate(0)
+        println(acp)
+        assert(acp.toString() == "P[0, 0] + 2.0P[1, 0]")
     }
 
     @Test
@@ -18,15 +20,14 @@ class DeselbyDistributionTest {
 
     @Test
     fun TestSIRModel() {
-        var p0 = DeselbyDistribution(listOf(20.0,40.0, 2.0))
-        val ddt = SIRHamiltonian(p0)
-        val d2dt2 = SIRHamiltonian(ddt)
-        val d3dt3 = SIRHamiltonian(d2dt2)
-        val d4dt4 = SIRHamiltonian(d3dt3)
-        println(ddt)
-        println(d2dt2)
-        println(d3dt3)
-        println(d4dt4)
+        var p = DeselbyDistribution(listOf(20.0,40.0, 2.0))
+     //   println(SIRHamiltonian(p))
+        for(t in 1..100) {
+            p += SIRHamiltonian(p)*0.001
+            p = p.truncateBelow(1e-6)
+            println(p.dimension)
+        }
+//        println(p)
     }
 
     fun SIRHamiltonian(p : DeselbyDistribution) : DeselbyDistribution {
@@ -38,6 +39,14 @@ class DeselbyDistributionTest {
         val recovery = p0 * gamma
         val recovery2 = recovery.create(1)
         return infection.create(1).create(1) - infection2 + recovery.create(2) - recovery2
+    }
+
+    @Test
+    fun TestTruncation() {
+        var p = DeselbyDistribution(listOf(20.0,40.0, 0.001))
+        val q = p.create(0).create(1).create(2).annihilate(0).annihilate(1).annihilate(2)
+        println(q)
+        println(q.truncateBelow(1.0))
     }
 
 }

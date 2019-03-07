@@ -35,7 +35,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     //
     fun annihilate(d : Int) : DeselbyDistribution {
         val newCoeffs = DoubleNDArray(dimension, {ndIndex ->
-            lambda[d]*coeffs[ndIndex] + (++ndIndex[d])*coeffs[ndIndex]
+            lambda[d]*(coeffs[ndIndex]) + (++ndIndex[d])*(coeffs.getOrNull(ndIndex)?:0.0)
         })
         return DeselbyDistribution(lambda, newCoeffs)
     }
@@ -64,7 +64,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         for(ndIndex in coeffs.indexSet) {
             val delta = ndIndex[factorial.variableId]
             var ck = coeffs[ndIndex] // modified coefficient
-            val writeIndex = newCoeffs.Index(ndIndex)
+            val writeIndex = ndIndex.copyOf()
             writeIndex[factorial.variableId] = factorial.order + delta
             for(k in 0..min(delta,factorial.order)) {
                 newCoeffs[writeIndex] += ck
@@ -82,6 +82,24 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return true
     }
 
+    // return a copy of this with the smallest dimensions that
+    // remove only terms that satisfy the given predicate
+    fun shrinkTo(pred : (Double) -> Boolean) : DeselbyDistribution {
+        val truncatedDimension = dimension.toIntArray()
+        for(d in 0 until truncatedDimension.size) {
+            while(truncatedDimension[d]>0 &&
+                    coeffs.slice(d, truncatedDimension[d]-1).fold(true, {acc, v ->
+                        acc && pred(v)
+                    })) {
+                --truncatedDimension[d]
+            }
+        }
+        return DeselbyDistribution(lambda, DoubleNDArray(truncatedDimension.asList(), {coeffs[it]}))
+    }
+
+    fun truncateBelow(cutoff : Double) = shrinkTo({it.absoluteValue < cutoff})
+//    fun truncateBelow(cutoff : Double) = shrinkTo({true})
+
     override fun toString() : String {
         var s = ""
         val data = coeffs.asDoubleArray()
@@ -94,9 +112,9 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
                     if(data[i]<0) s += "-"
                     printPlus = true
                 }
-                val ndIndex = coeffs.Index(i)
+                val ndIndex = coeffs.toNDIndex(i)
                 if (data[i] != 1.0) s += data[i].absoluteValue.toString()
-                s += "P$ndIndex"
+                s += "P${ndIndex.asList()}"
             }
         }
         return s
