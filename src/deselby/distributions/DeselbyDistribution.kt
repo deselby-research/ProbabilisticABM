@@ -1,5 +1,7 @@
-package deselby.std
+package deselby.distributions
 
+import deselby.std.DoubleNDArray
+import deselby.std.FallingFactorial
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
@@ -12,7 +14,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
 
     constructor(lambda : List<Double>) : this(
             DoubleArray(lambda.size, {lambda[it]} ).asList(),
-            DoubleNDArray(IntArray(lambda.size,{1}).asList(), {1.0})
+            DoubleNDArray(IntArray(lambda.size, { 1 }).asList(), { 1.0 })
     )
 
 
@@ -20,8 +22,8 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         val incrementedGeometry = dimension.mapIndexed { i, v ->
             if(i == d) v+1 else v
         }
-        val shiftedCoeffs = DoubleNDArray(incrementedGeometry, {ndIndex ->
-            if(ndIndex[d] == 0) 0.0 else {
+        val shiftedCoeffs = DoubleNDArray(incrementedGeometry, { ndIndex ->
+            if (ndIndex[d] == 0) 0.0 else {
                 ndIndex[d] -= 1
                 coeffs[ndIndex]
             }
@@ -34,8 +36,8 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     // aP(lambda,D) = lambda*P(lambda,D) + DP(lambda,D-1)
     //
     fun annihilate(d : Int) : DeselbyDistribution {
-        val newCoeffs = DoubleNDArray(dimension, {ndIndex ->
-            lambda[d]*(coeffs[ndIndex]) + (++ndIndex[d])*(coeffs.getOrNull(ndIndex)?:0.0)
+        val newCoeffs = DoubleNDArray(dimension, { ndIndex ->
+            lambda[d] * (coeffs[ndIndex]) + (++ndIndex[d]) * (coeffs.getOrNull(ndIndex) ?: 0.0)
         })
         return DeselbyDistribution(lambda, newCoeffs)
     }
@@ -60,7 +62,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         val newGeometry = dimension.mapIndexed { i, v ->
             if(i == factorial.variableId) v+factorial.order else v
         }
-        val newCoeffs = DoubleNDArray(newGeometry, {0.0})
+        val newCoeffs = DoubleNDArray(newGeometry, { 0.0 })
         for(ndIndex in coeffs.indexSet) {
             val delta = ndIndex[factorial.variableId]
             var ck = coeffs[ndIndex] // modified coefficient
@@ -94,11 +96,10 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
                 --truncatedDimension[d]
             }
         }
-        return DeselbyDistribution(lambda, DoubleNDArray(truncatedDimension.asList(), {coeffs[it]}))
+        return DeselbyDistribution(lambda, DoubleNDArray(truncatedDimension.asList(), { coeffs[it] }))
     }
 
     fun truncateBelow(cutoff : Double) = shrinkTo({it.absoluteValue < cutoff})
-//    fun truncateBelow(cutoff : Double) = shrinkTo({true})
 
     override fun toString() : String {
         var s = ""
@@ -113,7 +114,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
                     printPlus = true
                 }
                 val ndIndex = coeffs.toNDIndex(i)
-                if (data[i] != 1.0) s += data[i].absoluteValue.toString()
+                if (data[i].absoluteValue != 1.0) s += data[i].absoluteValue.toString()
                 s += "P${ndIndex.asList()}"
             }
         }

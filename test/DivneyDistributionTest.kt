@@ -1,10 +1,10 @@
-import deselby.std.DivneyDistribution
+import deselby.distributions.DivneyDistribution
 import org.junit.jupiter.api.Test
 
 public class DivneyDistributionTest {
     @Test
     fun TestCreationAnnihilation() {
-        val p = DivneyDistribution(listOf(2.0,4.0))
+        val p = DivneyDistribution(listOf(2.0, 4.0))
         p.annihilate(0)
         p.annihilate(1)
         p.create(0)
@@ -15,7 +15,7 @@ public class DivneyDistributionTest {
 
     @Test
     fun TestSIRModel() {
-        var p0 = DivneyDistribution(listOf(20.0,40.0, 2.0))
+        var p0 = DivneyDistribution(listOf(20.0, 40.0, 2.0))
         val ddt = SIRHamiltonian(p0)
         val d2dt2 = SIRHamiltonian(ddt)
         val d3dt3 = SIRHamiltonian(d2dt2)

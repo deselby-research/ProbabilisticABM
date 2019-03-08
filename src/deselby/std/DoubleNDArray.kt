@@ -21,6 +21,8 @@ class DoubleNDArray {
         data = DoubleArray(strideArray.last()*dimension.last(), {init(toNDIndex(it))})
     }
 
+    constructor(dimension : IntArray, init : (IntArray) -> Double) : this(dimension.asList(), init)
+
 
     protected constructor(indexSet : NDIndexSet, stride : IntArray, init : (IntArray) -> Double) {
         this.indexSet = indexSet

@@ -1,5 +1,6 @@
-package deselby.std
+package deselby.distributions
 
+import deselby.std.DoubleNDArray
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -7,7 +8,7 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
 
     constructor(lambda : List<Double>) : this(
             DoubleArray(lambda.size,{lambda[it]}).asList(),
-            DoubleNDArray(IntArray(lambda.size,{1}).asList(), {1.0})
+            DoubleNDArray(IntArray(lambda.size, { 1 }).asList(), { 1.0 })
     )
 
     // Transform P'(x_d) = P(x_d - 1) * x_d/lambda_d
@@ -78,10 +79,11 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
     private fun multiplyByx(d : Int) {
         val newDimension = coeffs.dimension.toMutableList()
         newDimension[d] += 1
-        coeffs = DoubleNDArray(newDimension,{ exponents ->
-            if(exponents[d] == 0) 0.0 else {
-            exponents[d] -= 1
-            coeffs[exponents]}
+        coeffs = DoubleNDArray(newDimension, { exponents ->
+            if (exponents[d] == 0) 0.0 else {
+                exponents[d] -= 1
+                coeffs[exponents]
+            }
         })
     }
 
@@ -116,7 +118,7 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
     }
 
     fun copyOf() : DivneyDistribution {
-        return DivneyDistribution(lambda, DoubleNDArray(coeffs.dimension, {coeffs[it]}))
+        return DivneyDistribution(lambda, DoubleNDArray(coeffs.dimension, { coeffs[it] }))
     }
 
     fun numberOfCoeffsAbove(delta : Double) : Int {
