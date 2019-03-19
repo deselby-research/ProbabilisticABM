@@ -77,6 +77,20 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return DeselbyDistribution(lambda, newCoeffs)
     }
 
+    // observe that the variable with id 'variableId' has value 'm'
+    // given that the probability of detection is 'p'
+    // this amounts to multiplying this by the binomial distribution
+    // P'(k) = Binom(p,m,k)P(k)
+    // But Binom(p,m,k)P(l,k) = exp(-pl)(p/(1-p))^m/m! * (k)_m P((1-p)l,k)
+    fun binomialObserve(p : Double, m : Int, variableId : Int) : DeselbyDistribution {
+        var multiplier = 1.0
+        val p1p = p/(1.0-p)
+        for(i in 1..m) multiplier *= p1p/i
+        val result = this*FallingFactorial(variableId, m)*multiplier
+        val newLambda = DoubleArray(lambda.size, {i -> if(i==variableId) (1.0-p)*lambda[i] else lambda[i]})
+        return DeselbyDistribution(newLambda.asList(), result.coeffs)
+    }
+
 
     fun isCompatible(other : DeselbyDistribution) : Boolean {
         if(dimension.size != other.dimension.size) return false
