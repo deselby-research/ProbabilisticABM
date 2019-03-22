@@ -1,17 +1,19 @@
 package deselby.distributions
 
 import deselby.std.LambdaList
+import java.util.*
 import kotlin.math.absoluteValue
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.reflect.jvm.internal.impl.protobuf.GeneratedMessageLite
 
-class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Double>) {
+class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Double>) : FockState<Int, GeneratorPolynomial> {
     val size : Int
     get() = coeffs.size
 
     constructor() : this(hashMapOf(listOf<Int>() to 1.0))
 
-    fun create(d : Int) : GeneratorPolynomial = create(d,1)
+    override fun create(d : Int) : GeneratorPolynomial = create(d,1)
 
     fun create(d : Int, n : Int) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>()
@@ -25,7 +27,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
     }
 
 
-    fun annihilate(d : Int) : GeneratorPolynomial {
+    override fun annihilate(d : Int) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>()
         coeffs.forEach { occupationNo, prob ->
             if(occupationNo.size > d && occupationNo[d] > 0) {
@@ -39,7 +41,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         return GeneratorPolynomial(result)
     }
 
-    operator fun plus(other : GeneratorPolynomial) : GeneratorPolynomial {
+    override operator fun plus(other : GeneratorPolynomial) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>(coeffs)
         other.coeffs.forEach { otherIndex, otherVal ->
             result.merge(otherIndex, otherVal , Double::plus)
@@ -47,7 +49,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         return GeneratorPolynomial(result)
     }
 
-    operator fun minus(other : GeneratorPolynomial) : GeneratorPolynomial {
+    override operator fun minus(other : GeneratorPolynomial) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>(coeffs)
         other.coeffs.forEach { otherIndex, otherVal ->
             result.merge(otherIndex, -otherVal , Double::plus)
@@ -55,7 +57,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         return GeneratorPolynomial(result)
     }
 
-    operator fun times(const : Double) : GeneratorPolynomial {
+    override operator fun times(const : Double) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>()
         coeffs.forEach { occupationNo, prob ->
             result[occupationNo] = prob*const
@@ -68,6 +70,45 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
     operator fun set(index : List<Int>, v : Double) {
         coeffs[index] = v
     }
+
+    // randomly chooses a single monomial from this polynomial with probability proportional to
+    // its coefficient and returns a GeneratorPolynomial with just that monomial in, with
+    // coefficient of 1
+    // assumes that this polynomial is normalised
+    fun sample() : GeneratorPolynomial {
+        val targetCumulativeProb = Random().nextDouble()
+        var cumulativeProb = 0.0
+        val iterator = coeffs.iterator()
+        var entry : MutableMap.MutableEntry<List<Int>,Double>? = null
+        while(cumulativeProb <= targetCumulativeProb && iterator.hasNext()) {
+            entry = iterator.next()
+            cumulativeProb += entry.value
+        }
+        val result = GeneratorPolynomial(HashMap())
+        if(entry != null) result[entry.key] = 1.0
+        return result
+    }
+
+    // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the state that is transitioned
+    // to from this.
+    fun sampleNext(hamiltonian : (FockState<Int,GeneratorPolynomial>) -> GeneratorPolynomial) : Pair<Double,GeneratorPolynomial> {
+        val p0 = if(this.size == 1) this else this.sample()
+        val H = hamiltonian(p0)
+        if(H.size == 0) return Pair(Double.POSITIVE_INFINITY, this)
+        val currentState = p0.coeffs.keys.first()
+        val totalRate = -(H[currentState]?:throw(IllegalArgumentException()))
+        H.coeffs.remove(currentState)
+        return Pair(
+                -ln(1.0 - Random().nextDouble())/totalRate,
+                (H*(1.0/totalRate)).sample()
+        )
+    }
+
+    // the sum of all coefficients
+    fun norm1() : Double {
+        return coeffs.values.sum()
+    }
+
 
     override fun toString() : String {
         var s = ""

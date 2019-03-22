@@ -78,6 +78,15 @@ class DoubleNDArray {
         }
     }
 
+    fun dotprod(other : DoubleNDArray) : Double {
+        if(dimension != other.dimension) throw(IllegalArgumentException())
+        var dp = 0.0
+        for(i in 0 until size) {
+            dp += data[i]*other.data[i]
+        }
+        return dp
+    }
+
     fun <R> fold(initial : R, operation : (R, Double) -> R) : R =
         data.fold(initial, operation)
 
