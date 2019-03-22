@@ -5,7 +5,7 @@ import deselby.std.FallingFactorial
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-class DeselbyDistribution private constructor(private val lambda : List<Double>, var coeffs : DoubleNDArray) {
+class DeselbyDistribution private constructor(private val lambda : List<Double>, var coeffs : DoubleNDArray) : FockState<Int, DeselbyDistribution> {
 
     val dimension : List<Int>
         get() {
@@ -18,7 +18,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     )
 
 
-    fun create(d : Int) : DeselbyDistribution {
+    override fun create(d : Int) : DeselbyDistribution {
         val incrementedGeometry = dimension.mapIndexed { i, v ->
             if(i == d) v+1 else v
         }
@@ -35,7 +35,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     // transform using identity
     // aP(lambda,D) = lambda*P(lambda,D) + DP(lambda,D-1)
     //
-    fun annihilate(d : Int) : DeselbyDistribution {
+    override fun annihilate(d : Int) : DeselbyDistribution {
         val newCoeffs = DoubleNDArray(dimension, { ndIndex ->
             lambda[d] * (coeffs[ndIndex]) + (++ndIndex[d]) * (coeffs.getOrNull(ndIndex) ?: 0.0)
         })
@@ -43,18 +43,22 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     }
 
 
-    operator fun plus(other : DeselbyDistribution) : DeselbyDistribution {
+    override operator fun plus(other : DeselbyDistribution) : DeselbyDistribution {
         if(!isCompatible(other)) throw(IllegalArgumentException("Distributions are incompatible"))
         return DeselbyDistribution(lambda, coeffs + other.coeffs)
     }
 
-    operator fun minus(other : DeselbyDistribution) : DeselbyDistribution {
+    override operator fun minus(other : DeselbyDistribution) : DeselbyDistribution {
         if(!isCompatible(other)) throw(IllegalArgumentException("Distributions are incompatible"))
         return DeselbyDistribution(lambda, coeffs - other.coeffs)
     }
 
-    operator fun times(other : Double) : DeselbyDistribution {
+    override operator fun times(other : Double) : DeselbyDistribution {
         return DeselbyDistribution(lambda, coeffs * other)
+    }
+
+    operator fun div(other : Double) : DeselbyDistribution {
+        return DeselbyDistribution(lambda, coeffs / other)
     }
 
     // multiply this by a falling factorial
@@ -77,6 +81,7 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return DeselbyDistribution(lambda, newCoeffs)
     }
 
+
     // observe that the variable with id 'variableId' has value 'm'
     // given that the probability of detection is 'p'
     // this amounts to multiplying this by the binomial distribution
@@ -91,6 +96,26 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return DeselbyDistribution(newLambda.asList(), result.coeffs)
     }
 
+
+    fun integrate(hamiltonian : (FockState<Int,DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
+        var p = this
+        var time = 0.0
+        while(time < T) {
+            p = (p + hamiltonian(p)*dt).truncateBelow(1e-8)
+            time += dt
+        }
+        return p
+    }
+
+
+    // returns this + perturbation, where the lambdas of the result are changed so as to
+    // minimise the cartesian norm of the coefficients of the perturbation
+    fun perturbWithLambda(perturbation : DeselbyDistribution) : DeselbyDistribution {
+        val dP_dL = Array(dimension.size, {i ->
+            this.annihilate(i).create(i)/this.lambda[i] - this
+        })
+        return this
+    }
 
     fun isCompatible(other : DeselbyDistribution) : Boolean {
         if(dimension.size != other.dimension.size) return false
