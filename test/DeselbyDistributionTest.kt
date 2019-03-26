@@ -19,6 +19,17 @@ class DeselbyDistributionTest {
     }
 
     @Test
+    fun TestLambdaOptimisation() {
+        val p = DeselbyDistribution(listOf(20.0, 40.0, 2.0))
+        val dP = SIRHamiltonian(p)*0.001
+        println(dP)
+//        println(p.lambda)
+        val pp = p.perturbWithLambda2(dP)
+        println(pp)
+        println(pp.lambda)
+    }
+
+    @Test
     fun TestSIRModel() {
         var p = DeselbyDistribution(listOf(20.0, 40.0, 2.0))
      //   println(SIRHamiltonian(p))

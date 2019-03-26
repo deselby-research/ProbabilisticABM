@@ -23,6 +23,7 @@ class DoubleNDArray {
 
     constructor(dimension : IntArray, init : (IntArray) -> Double) : this(dimension.asList(), init)
 
+    constructor(dimension : NDIndexSet, init : (IntArray) -> Double) : this(dimension.dimension, init)
 
     protected constructor(indexSet : NDIndexSet, stride : IntArray, init : (IntArray) -> Double) {
         this.indexSet = indexSet
@@ -48,11 +49,8 @@ class DoubleNDArray {
 
 
     fun binaryOp(other : DoubleNDArray, mapFunc : (Double, Double) -> Double) : DoubleNDArray {
-        if(dimension.size != other.dimension.size)
-            throw(IllegalArgumentException("Can't perform binary operation on DoubleNDArrays of differing dimensionality"))
-        val dimensionUnion = IntArray(dimension.size,{ d -> max(dimension[d], other.dimension[d]) })
         val thisNDArray = this
-        return DoubleNDArray(dimensionUnion.asList(), { unionIndex ->
+        return DoubleNDArray(indexSet.rectangularUnion(other.indexSet), { unionIndex ->
                     mapFunc(thisNDArray.getOrNull(unionIndex)?:0.0, other.getOrNull(unionIndex)?:0.0)
                 })
     }
@@ -79,10 +77,15 @@ class DoubleNDArray {
     }
 
     fun dotprod(other : DoubleNDArray) : Double {
-        if(dimension != other.dimension) throw(IllegalArgumentException())
         var dp = 0.0
-        for(i in 0 until size) {
-            dp += data[i]*other.data[i]
+        if(dimension != other.dimension) {
+            for(index in indexSet.rectangularIntersection(other.indexSet)) {
+                dp += this[index]*other[index]
+            }
+        } else {
+            for (i in 0 until size) {
+                dp += data[i] * other.data[i]
+            }
         }
         return dp
     }
