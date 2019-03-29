@@ -1,10 +1,5 @@
-import deselby.ProbabilisticSet
-import deselby.operators.Annihilate
-import deselby.operators.Create
+import deselby.distributions.DeselbyLambdaOptimiser
+import org.apache.commons.math3.distribution.PoissonDistribution
 
 fun main(args : Array<String>) {
-    var probABM = ProbabilisticSet<Int>()
-
-    Create(1) * Create(2) * Annihilate(1)
-
 }

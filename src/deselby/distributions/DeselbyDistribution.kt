@@ -2,10 +2,16 @@ package deselby.distributions
 
 import deselby.std.DoubleNDArray
 import deselby.std.FallingFactorial
+import koma.ndarray.NDArray
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.LUDecomposition
+import java.lang.Math.pow
+import java.util.*
 import kotlin.math.absoluteValue
+import kotlin.math.exp
 import kotlin.math.min
 
-class DeselbyDistribution private constructor(private val lambda : List<Double>, var coeffs : DoubleNDArray) : FockState<Int, DeselbyDistribution> {
+class DeselbyDistribution private constructor(val lambda : List<Double>, var coeffs : DoubleNDArray) : FockState<Int, DeselbyDistribution> {
 
     val dimension : List<Int>
         get() {
@@ -67,18 +73,23 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
             if(i == factorial.variableId) v+factorial.order else v
         }
         val newCoeffs = DoubleNDArray(newGeometry, { 0.0 })
+        val l = lambda[factorial.variableId]
         for(ndIndex in coeffs.indexSet) {
             val delta = ndIndex[factorial.variableId]
-            var ck = coeffs[ndIndex] // modified coefficient
+            var ck = coeffs[ndIndex]*pow(l,1.0*factorial.order) // this pow might get big!!!
             val writeIndex = ndIndex.copyOf()
             writeIndex[factorial.variableId] = factorial.order + delta
-            for(k in 0..min(delta,factorial.order)) {
+            for(q in 0..min(delta,factorial.order)) {
                 newCoeffs[writeIndex] += ck
                 --writeIndex[factorial.variableId]
-                ck *= (factorial.order-k)*(delta-k)/(k+1.0)
+                ck *= (factorial.order-q)*(delta-q)/((q+1.0)*l)
             }
         }
         return DeselbyDistribution(lambda, newCoeffs)
+    }
+
+    inline fun dotprod(other : DeselbyDistribution) : Double {
+        return coeffs.dotprod(other.coeffs)
     }
 
 
@@ -86,14 +97,20 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
     // given that the probability of detection is 'p'
     // this amounts to multiplying this by the binomial distribution
     // P'(k) = Binom(p,m,k)P(k)
-    // But Binom(p,m,k)P(l,k) = exp(-pl)(p/(1-p))^m/m! * (k)_m P((1-p)l,k)
+    // But Binom(p,m,k)P(l,k) = exp(-pl)(p/(1-p))^m/m! * (k)_m (1-p)^Delta P((1-p)l,k)
     fun binomialObserve(p : Double, m : Int, variableId : Int) : DeselbyDistribution {
-        var multiplier = 1.0
+        val lambdap = (1.0-p)*lambda[variableId]
+        val newLambda = DoubleArray(lambda.size, {i -> if(i==variableId) lambdap else lambda[i]})
+        var multiplier = exp(-p*lambda[variableId])
         val p1p = p/(1.0-p)
         for(i in 1..m) multiplier *= p1p/i
-        val result = this*FallingFactorial(variableId, m)*multiplier
-        val newLambda = DoubleArray(lambda.size, {i -> if(i==variableId) (1.0-p)*lambda[i] else lambda[i]})
-        return DeselbyDistribution(newLambda.asList(), result.coeffs)
+//        println("final multiplier = $multiplier")
+        val premultipliedCoeffs = this.coeffs.mapIndexed({index, x ->
+            x*multiplier*pow(1.0-p, 1.0*index[variableId])
+        })
+        val premultipliedDist = DeselbyDistribution(newLambda.asList(), premultipliedCoeffs)
+//        println("premultiplied dist = $premultipliedDist")
+        return premultipliedDist * FallingFactorial(variableId, m)
     }
 
 
@@ -107,6 +124,19 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         return p
     }
 
+    fun integrateWithLambdaOptimisation(hamiltonian : (FockState<Int,DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
+        var p = this
+        var time = 0.0
+        while(time < T) {
+            val dp = hamiltonian(p)*dt
+            p = p.perturbWithLambda(dp).truncateBelow(1e-6)
+//            p = p + dp
+//            p = p.optimizeLambda().truncateBelow(1e-6)
+            time += dt
+        }
+        return p
+    }
+
 
     // returns this + perturbation, where the lambdas of the result are changed so as to
     // minimise the cartesian norm of the coefficients of the perturbation
@@ -114,8 +144,94 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
         val dP_dL = Array(dimension.size, {i ->
             this.annihilate(i).create(i)/this.lambda[i] - this
         })
-        return this
+
+        val Y = Array2DRowRealMatrix(Array(dimension.size, { i ->
+            DoubleArray(1, {perturbation.dotprod(dP_dL[i])})
+        }))
+
+        val M = Array2DRowRealMatrix(Array(dimension.size, { i ->
+            DoubleArray(dimension.size, {j ->
+                dP_dL[i].dotprod(dP_dL[j])})
+        }))
+
+        val DL = LUDecomposition(M).solver.inverse.multiply(Y)
+
+        val newLambda = DoubleArray(dimension.size, {i ->
+            lambda[i] + DL.getEntry(i,0)
+        })
+        var newCoeffs = coeffs + perturbation.coeffs
+        dP_dL.forEachIndexed({ i, dP_dLi ->
+            newCoeffs -= dP_dLi.coeffs * DL.getEntry(i, 0)
+        })
+
+        return DeselbyDistribution(newLambda.asList(), newCoeffs)
     }
+
+    // returns this + perturbation, where the lambdas of the result are changed so as to
+    // nullify the first order rates of change.
+    fun perturbWithLambda2(perturbation : DeselbyDistribution) : DeselbyDistribution {
+        val dP_dL = Array(dimension.size, {i ->
+            this.create(i) - this
+        })
+
+        val zeroIndex = IntArray(dimension.size, {0})
+        val DL = DoubleArray(dimension.size, {i ->
+            val oneIndex = IntArray(dimension.size, {j -> if(j==i) 1 else 0})
+            val dP1_dLi = coeffs[zeroIndex] + (1.0/lambda[i] - 1.0)*coeffs.getOrElse(oneIndex,{0.0})
+            perturbation.coeffs[oneIndex] / dP1_dLi
+        })
+
+        val newLambda = DoubleArray(dimension.size, {i ->
+            lambda[i] + DL[i]
+        })
+        var newPerturbation = perturbation.coeffs
+        dP_dL.forEachIndexed({ i, dP_dLi ->
+            newPerturbation -= dP_dLi.coeffs * DL[i]
+        })
+
+        val newCoeffs = coeffs + newPerturbation
+
+        return DeselbyDistribution(newLambda.asList(), newCoeffs)
+    }
+
+    // returns this + perturbation, where the lambdas of the result are changed so as to
+    // minimise the weighted cartesian norm of the coefficients of the resulting polynomial
+    //
+    // assumes lambda is very close to optimisation initially
+//    fun optimizeLambda() : DeselbyDistribution {
+//        val P = this
+//        val dP_dL = Array(P.dimension.size, {i ->
+//            P.annihilate(i).create(i)/P.lambda[i] - P
+//        })
+//
+//        val Y = Array2DRowRealMatrix(Array(dimension.size, { i ->
+//            DoubleArray(1, {P.dotprod(dP_dL[i])})
+//        }))
+//
+//        val M = Array2DRowRealMatrix(Array(dimension.size, { i ->
+//            DoubleArray(dimension.size, {j ->
+//                dP_dL[i].dotprod(dP_dL[j])})
+//        }))
+//
+//        var DL = LUDecomposition(M).solver.inverse.multiply(Y)
+//
+//        if(DL.frobeniusNorm > 1e-3) {
+//            DL = DL.scalarMultiply(1e-3/DL.frobeniusNorm)
+//        }
+//        println(DL.frobeniusNorm)
+//
+//        val newLambda = DoubleArray(dimension.size, {i ->
+//            lambda[i] + DL.getEntry(i,0)
+//        })
+//        var newCoeffs = P.coeffs
+//        dP_dL.forEachIndexed({ i, dP_dLi ->
+//            newCoeffs -= dP_dLi.coeffs * DL.getEntry(i, 0)
+//        })
+//
+//        return DeselbyDistribution(newLambda.asList(), newCoeffs)
+//    }
+
+
 
     fun isCompatible(other : DeselbyDistribution) : Boolean {
         if(dimension.size != other.dimension.size) return false
@@ -140,8 +256,21 @@ class DeselbyDistribution private constructor(private val lambda : List<Double>,
 
     fun truncateBelow(cutoff : Double) = shrinkTo({it.absoluteValue < cutoff})
 
+    fun renormalise() {
+        val sumOfCoeffs = coeffs.asDoubleArray().sum()
+        coeffs.timesAssign(1.0/sumOfCoeffs)
+    }
+
+    // Marginalise out all but the given dimension
+    fun marginaliseTo(dim : Int) : DeselbyDistribution {
+        val coeffs = DoubleNDArray(intArrayOf(dimension[dim]), {i ->
+            coeffs.slice(dim, i[0]).fold(0.0, Double::plus)
+        })
+        return DeselbyDistribution(listOf(lambda[dim]), coeffs)
+    }
+
     override fun toString() : String {
-        var s = ""
+        var s = "L$lambda:"
         val data = coeffs.asDoubleArray()
         var printPlus = false
         for(i in 0..data.lastIndex) {

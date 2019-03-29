@@ -38,4 +38,20 @@ class NDIndexSet(private val dim : IntArray): Set<IntArray> {
 
     override fun iterator() = NDIterator()
 
+    fun rectangularUnion(other : NDIndexSet) : NDIndexSet {
+        if(dimension.size != other.dimension.size)
+            throw(IllegalArgumentException("Union of NDIndexSets with differing dimensionality: This is probably not what you intended to do"))
+        return NDIndexSet(IntArray(dimension.size,{ d ->
+            kotlin.math.max(dimension[d], other.dimension[d])
+        }))
+    }
+
+    fun rectangularIntersection(other : NDIndexSet) : NDIndexSet {
+        if(dimension.size != other.dimension.size)
+            throw(IllegalArgumentException("Intersection of NDIndexSets with differing dimensionality: This is probably not what you intended to do"))
+        return NDIndexSet(IntArray(dimension.size,{ d ->
+            kotlin.math.min(dimension[d], other.dimension[d])
+        }))
+    }
+
 }
