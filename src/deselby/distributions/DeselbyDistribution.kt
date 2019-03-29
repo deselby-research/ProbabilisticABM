@@ -104,12 +104,12 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         var multiplier = exp(-p*lambda[variableId])
         val p1p = p/(1.0-p)
         for(i in 1..m) multiplier *= p1p/i
-        println("final multiplier = $multiplier")
+//        println("final multiplier = $multiplier")
         val premultipliedCoeffs = this.coeffs.mapIndexed({index, x ->
             x*multiplier*pow(1.0-p, 1.0*index[variableId])
         })
         val premultipliedDist = DeselbyDistribution(newLambda.asList(), premultipliedCoeffs)
-        println("premultiplied dist = $premultipliedDist")
+//        println("premultiplied dist = $premultipliedDist")
         return premultipliedDist * FallingFactorial(variableId, m)
     }
 
@@ -171,7 +171,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // nullify the first order rates of change.
     fun perturbWithLambda2(perturbation : DeselbyDistribution) : DeselbyDistribution {
         val dP_dL = Array(dimension.size, {i ->
-            this.annihilate(i).create(i)/this.lambda[i] - this
+            this.create(i) - this
         })
 
         val zeroIndex = IntArray(dimension.size, {0})
@@ -195,7 +195,8 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     }
 
     // returns this + perturbation, where the lambdas of the result are changed so as to
-    // minimise the cartesian norm of the coefficients of the resulting polynomial
+    // minimise the weighted cartesian norm of the coefficients of the resulting polynomial
+    //
     // assumes lambda is very close to optimisation initially
 //    fun optimizeLambda() : DeselbyDistribution {
 //        val P = this
@@ -260,12 +261,12 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         coeffs.timesAssign(1.0/sumOfCoeffs)
     }
 
-    // Marginalise out the given dimension
-    fun marginalise(dim : Int) {
-        val newDimension = IntArray(dimension.size - 1, { i ->
-            if(i<dim) dimension[i] else dimension[i+1]
+    // Marginalise out all but the given dimension
+    fun marginaliseTo(dim : Int) : DeselbyDistribution {
+        val coeffs = DoubleNDArray(intArrayOf(dimension[dim]), {i ->
+            coeffs.slice(dim, i[0]).fold(0.0, Double::plus)
         })
-        // TODO: Finish this
+        return DeselbyDistribution(listOf(lambda[dim]), coeffs)
     }
 
     override fun toString() : String {

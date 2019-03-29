@@ -24,14 +24,16 @@ fun main(args : Array<String>) {
 //    println(SIRHamiltonian(p))
 
     var t = 0.0
+    var nObs = 0
     while(t < totalTime) {
         p = p.integrateWithLambdaOptimisation(::SIRHamiltonian, observationInterval, 0.001)
-        println("before observation :$p")
-        p = p.binomialObserve(r, observations[0], 1) //.truncateBelow(1e-5)
+     //   println("before observation :${p.marginaliseTo(1)}")
+        println("Observing ${observations[nObs]}")
+        p = p.binomialObserve(r, observations[nObs++], 1) //.truncateBelow(1e-5)
         p.renormalise()
         p = p.truncateBelow(1e-5)
         t += observationInterval
-        println("after observation :$p")
+        println("after observation :${p.marginaliseTo(1)}")
         println(p.coeffs.fold(0.0, { a, b -> max(a, abs(b)) }))
         println(p.dimension)
     }
