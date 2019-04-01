@@ -22,10 +22,10 @@ fun main(args: Array<String>) {
     println(y)
     println(M * x)
 
-    val M2 = Array2DRowRealMatrix(Array(3, {i ->
+    val M2 = Array2DRowRealMatrix(Array(3, {
         DoubleArray(3, { Random().nextDouble() })
     }) )
-    val y2 = Array2DRowRealMatrix(Array(3, {i ->
+    val y2 = Array2DRowRealMatrix(Array(3, {
         DoubleArray(1, { Random().nextDouble() })
     }) )
 
