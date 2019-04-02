@@ -19,9 +19,9 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
     fun create(d : Int, n : Int) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>()
         coeffs.forEach { occupationNo, prob ->
-            val newOccupationNo = IntArray(max(occupationNo.size,d+1), {i ->
+            val newOccupationNo = IntArray(max(occupationNo.size,d+1)) {i ->
                 if(i == d) (occupationNo.getOrNull(i)?:0) + n else occupationNo.getOrNull(i)?:0
-            })
+            }
             result[newOccupationNo.asList()] = prob
         }
         return GeneratorPolynomial(result)
@@ -33,9 +33,9 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         coeffs.forEach { occupationNo, prob ->
             if(occupationNo.size > d && occupationNo[d] > 0) {
                 val nDim = if(occupationNo[d] == 1) occupationNo.size else max(occupationNo.size, d+1)
-                val newOccupationNo = IntArray(nDim, { i ->
+                val newOccupationNo = IntArray(nDim) { i ->
                     if (i == d) (occupationNo.getOrNull(i) ?: 0) - 1 else occupationNo.getOrNull(i) ?: 0
-                })
+                }
                 result[newOccupationNo.asList()] = prob*occupationNo[d]
             }
         }
@@ -126,6 +126,4 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         }
         return s
     }
-
-
 }

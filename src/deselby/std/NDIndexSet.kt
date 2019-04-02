@@ -26,7 +26,7 @@ class NDIndexSet(private val dim : IntArray): Set<IntArray> {
 
     constructor(size : Int, init : (Int) -> Int) : this(IntArray(size, init))
 
-    override fun contains(index: IntArray) = index.foldIndexed(true) { dimension, inBounds, d ->
+    override fun contains(element: IntArray) = element.foldIndexed(true) { dimension, inBounds, d ->
         inBounds && d < dim[dimension]
     }
 

@@ -64,8 +64,8 @@ class PABMSample<AGENT> : PABM<AGENT> {
         return this
     }
 
-    override fun integrate(T: Double): PABM<AGENT> {
-        var remainingTime = T
+    override fun integrate(t: Double): PABM<AGENT> {
+        var remainingTime = t
 
         var totalActRate = acts.sumByDouble { it.rate }
         remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative value

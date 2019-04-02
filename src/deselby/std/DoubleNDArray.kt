@@ -40,11 +40,11 @@ class DoubleNDArray {
     }
 
 
-    open fun map(mapFunc : (Double) -> Double) =
+    fun map(mapFunc : (Double) -> Double) =
         DoubleNDArray(indexSet, strideArray, DoubleArray(data.size, { i -> mapFunc(data[i])}))
 
 
-    open fun mapIndexed(mapFunc : (IntArray, Double) -> Double) =
+    fun mapIndexed(mapFunc : (IntArray, Double) -> Double) =
         DoubleNDArray(indexSet, strideArray, DoubleArray(data.size, { i -> mapFunc(toNDIndex(i),data[i])}))
 
 
@@ -134,7 +134,7 @@ class DoubleNDArray {
 //    }
 
 
-    open fun toFlatIndex(index : IntArray) : Int? {
+    fun toFlatIndex(index : IntArray) : Int? {
         var i = 0
         for(d in 0 until index.size) {
             val id = index[d]

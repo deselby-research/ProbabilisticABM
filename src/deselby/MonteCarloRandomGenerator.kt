@@ -1,8 +1,9 @@
 package deselby
 
-import org.apache.commons.math3.special.Erf
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
+import org.apache.commons.math3.special.Erf
+import kotlin.math.sqrt
 
 class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = ArrayList(),
                                 val rand : RandomGenerator = MersenneTwister()) : RandomGenerator {
@@ -23,11 +24,10 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
     // by a randSource.size dimensional Gaussian with no correlation and
     // SD of sigma (i.e. correlation matrix of sigma times the identity matrix)
     fun perturbWithGaussian(sigma : Double) : MonteCarloRandomGenerator {
-            return MonteCarloRandomGenerator (randSource.size, { i ->
-//                val perturbed = (Erf.erf(uniformToGaussian(randSource[i]) + rand.nextGaussian()*sigma) + 1.0)/2.0
-                val perturbed = (randSource[i] + rand.nextGaussian()*sigma + 1.0).rem(1.0)
-                perturbed
-            })
+            return MonteCarloRandomGenerator (randSource.size) { i ->
+                val y = (randSource[i] + rand.nextGaussian()*sigma).rem(1.0)
+                if(y<0.0) y+1.0 else y
+            }
     }
 
     override fun nextDouble(): Double {
@@ -71,7 +71,7 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
     }
 
     inline fun uniformToGaussian(uniform : Double) : Double {
-        return Erf.erfInv(uniform*2.0 - 1.0)
+        return sqrt(2.0) * Erf.erfInv(uniform*2.0 - 1.0)
     }
 
 }

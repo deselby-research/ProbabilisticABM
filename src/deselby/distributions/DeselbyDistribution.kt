@@ -59,8 +59,8 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         return DeselbyDistribution(lambda, coeffs - other.coeffs)
     }
 
-    override operator fun times(other : Double) : DeselbyDistribution {
-        return DeselbyDistribution(lambda, coeffs * other)
+    override operator fun times(const : Double) : DeselbyDistribution {
+        return DeselbyDistribution(lambda, coeffs * const)
     }
 
     operator fun div(other : Double) : DeselbyDistribution {
@@ -88,7 +88,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         return DeselbyDistribution(lambda, newCoeffs)
     }
 
-    inline fun dotprod(other : DeselbyDistribution) : Double {
+    fun dotprod(other : DeselbyDistribution) : Double {
         return coeffs.dotprod(other.coeffs)
     }
 

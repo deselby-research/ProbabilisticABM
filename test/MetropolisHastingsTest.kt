@@ -1,7 +1,4 @@
-import deselby.MetropolisHastings
-import deselby.MonteCarloRandomGenerator
-import deselby.mean
-import deselby.standardDeviation
+import deselby.*
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.junit.jupiter.api.Test
@@ -9,36 +6,40 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class MetropolisHastingsTest {
 
     @Test
     fun GaussianSample() {
-        val mu = 0.0
-        val sd = 1.0
+        val observation = 5.0
+        val noiseSD = sqrt(2.0)
         val sampler = MetropolisHastings { rand ->
-            val x = (rand.nextDouble()*2.0 - 1.0)*5.0*sd + mu
-            val p = NormalDistribution(mu,sd).density(x)
-            Pair(p, x)
+            val x = rand.nextGaussian()*sqrt(2.0) + 4.0
+            val obs = Observations()
+            obs.gaussian(x, noiseSD, observation)
+            Pair(obs, x)
         }
 
         sampler.sampleWithGaussianProposal(100000, 0.1)
         val nmu = sampler.mean()
         val nsd = sampler.standardDeviation()
-        println(nmu - mu)
-        println(nsd - sd)
-        assert(abs(nmu - mu) < 0.1)
-        assert(abs(nsd - sd) < 0.05)
+        println(nmu - 4.5)
+        println(nsd - 1.0)
+        assert(abs(nmu - 4.5) < 0.1)
+        assert(abs(nsd - 1.0) < 0.05)
 //       println(sampler)
-//        printHistogram(-4.0, 4.0, 80, sampler)
+//        printHistogram(2.5, 6.5, 80, sampler)
     }
 
     @Test
     fun randomGenerator() {
         val rand = MonteCarloRandomGenerator()
-        val gaussian = DoubleArray(10000, {rand.nextGaussian()})
+        val gaussian = DoubleArray(100000, {rand.nextGaussian()})
 //        println(gaussian.asList())
-        printHistogram(-4.0,4.0,40, gaussian.asList())
+        println(gaussian.sum()/gaussian.size)
+        println(gaussian.sumByDouble({x -> x*x})/gaussian.size)
+//        printHistogram(-4.0,4.0,40, gaussian.asList())
     }
 
 
@@ -54,6 +55,5 @@ class MetropolisHastingsTest {
             val binVal = min + i*(max-min)/nBins
             println("$binVal ${bins[i]}")
         }
-
     }
 }
