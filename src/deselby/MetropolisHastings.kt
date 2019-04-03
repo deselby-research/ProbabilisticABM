@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 class MetropolisHastings<T>(val model : (RandomGenerator) -> Pair<Observations,T>) : ArrayList<T>() {
     val rand = MersenneTwister()
 
-    fun sampleWithGaussianProposal(numSamples : Int, sigma : Double) {
+    fun sampleWithGaussianProposal(numSamples : Int, sigma : Double = 0.1) {
         var mcRand = MonteCarloRandomGenerator()
         clear()
         var lastLogProb = Double.NEGATIVE_INFINITY
@@ -29,17 +29,18 @@ class MetropolisHastings<T>(val model : (RandomGenerator) -> Pair<Observations,T
         }
     }
 
-    inline fun expectation(f : (T) -> Double) = sumByDouble(f)/size
+    fun expectation(f : (T) -> Double) = sumByDouble(f)/size
 }
 
-fun MetropolisHastings<Double>.mean() : Double {
-    return expectation { it }
+fun MetropolisHastings<out Number>.mean() : Double {
+    return expectation { it.toDouble() }
 }
 
-fun MetropolisHastings<Double>.standardDeviation() : Double {
+fun MetropolisHastings<out Number>.standardDeviation() : Double {
     val mu  = mean()
     return sqrt(expectation {
-        val delta = it - mu
+        val delta = it.toDouble() - mu
         delta * delta
     })
 }
+

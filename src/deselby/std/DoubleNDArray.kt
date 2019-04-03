@@ -41,11 +41,11 @@ class DoubleNDArray {
 
 
     fun map(mapFunc : (Double) -> Double) =
-        DoubleNDArray(indexSet, strideArray, DoubleArray(data.size, { i -> mapFunc(data[i])}))
+        DoubleNDArray(indexSet, strideArray, DoubleArray(data.size) { i -> mapFunc(data[i])})
 
 
     fun mapIndexed(mapFunc : (IntArray, Double) -> Double) =
-        DoubleNDArray(indexSet, strideArray, DoubleArray(data.size, { i -> mapFunc(toNDIndex(i),data[i])}))
+        DoubleNDArray(indexSet, strideArray, DoubleArray(data.size) { i -> mapFunc(toNDIndex(i),data[i])})
 
 
     fun binaryOp(other : DoubleNDArray, mapFunc : (Double, Double) -> Double) : DoubleNDArray {
@@ -90,8 +90,21 @@ class DoubleNDArray {
         return dp
     }
 
-    fun <R> fold(initial : R, operation : (R, Double) -> R) : R =
-        data.fold(initial, operation)
+    inline fun <R> fold(initial : R, operation : (R, Double) -> R) : R = asDoubleArray().fold(initial, operation)
+
+    inline fun <R> foldIndexed(initial : R, operation : (IntArray, R, Double) -> R) : R =
+            asDoubleArray().foldIndexed(initial) { index, acc, x ->
+                operation(toNDIndex(index), acc, x)
+            }
+
+    inline fun forEach(func : (Double) -> Unit) = asDoubleArray().forEach(func)
+
+
+    inline fun forEachIndexed(func : (IntArray, Double) -> Unit) =
+        asDoubleArray().forEachIndexed { flatIndex, d ->
+            func(toNDIndex(flatIndex), d)
+        }
+
 
 
 //    open fun sum() = data.sum()
@@ -129,9 +142,6 @@ class DoubleNDArray {
     }
 
 
-//    fun forEachIndexed(func : (IntArray, Double) -> Unit) {
-//        data.forEachIndexed { flatIndex, d -> func(toNDIndex(flatIndex), d) }
-//    }
 
 
     fun toFlatIndex(index : IntArray) : Int? {

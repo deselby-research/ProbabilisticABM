@@ -1,16 +1,17 @@
 package experiments
 
-import deselby.MetropolisHastings
-import deselby.MonteCarloRandomGenerator
+import deselby.*
 import deselby.distributions.DeselbyDistribution
 import deselby.distributions.FockState
 import deselby.distributions.GeneratorPolynomial
+import deselby.std.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.distribution.PoissonDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 class SIRState(var S : Int, var I : Int, var R : Int) {
     constructor(p : GeneratorPolynomial) : this(
@@ -27,42 +28,52 @@ fun main(args : Array<String>) {
     val observationInterval = 1.0
     val totalTime = 5.0
     val r = 0.9 // probability of detection of infected
-    var realStartState = SIRState(35,5,0)
+    val realStartState = SIRState(35,5,0)
     val observations = generateObservations(realStartState, observationInterval, r, totalTime)
-
-    var p = DeselbyDistribution(listOf(40.0, 7.0)) // initial prior
-    var t = 0.0
-    var nObs = 0
-    while(t < totalTime) {
-        p = p.integrateWithLambdaOptimisation(::SIRHamiltonian, observationInterval, 0.001)
-     //   println("before observation :${p.marginaliseTo(1)}")
-        println("Observing ${observations[nObs]}")
-        p = p.binomialObserve(r, observations[nObs++], 1) //.truncateBelow(1e-5)
-        p.renormalise()
-        p = p.truncateBelow(1e-5)
-        t += observationInterval
-        println("after observation :${p.marginaliseTo(1)}")
-        println(p.coeffs.fold(0.0) { a, b -> max(a, abs(b)) })
-        println(p.dimension)
-    }
-
-
+    deselbyPosterior(observations)
+    metropolisHastingsPosterior(observations)
 }
 
-fun metropolisHastingsPosterior() {
+fun deselbyPosterior(observations : Array<Int>) {
     val observationInterval = 1.0
-    val totalTime = 5.0
     val r = 0.9 // probability of detection of infected
-    var realStartState = SIRState(35,5,0)
-    val observations = generateObservations(realStartState, observationInterval, r, totalTime)
+
+    var p = DeselbyDistribution(listOf(40.0, 7.0)) // initial prior
+    for(nObs in 0 until observations.size) {
+        p = p.integrateWithLambdaOptimisation(::SIRHamiltonian, observationInterval, 0.001)
+        //   println("before observation :${p.marginaliseTo(1)}")
+//        println("Observing ${observations[nObs]}")
+        p = p.binomialObserve(r, observations[nObs], 1) //.truncateBelow(1e-5)
+        p.renormalise()
+        p = p.truncateBelow(1e-5)
+//        println("after observation :${p.marginaliseTo(1)}")
+//        println(p.coeffs.fold(0.0) { a, b -> max(a, abs(b)) })
+//        println(p.dimension)
+    }
+    println(observations.asList())
+    println("Ibar = ${p.mean(1)}")
+}
+
+fun metropolisHastingsPosterior(observations : Array<Int>) {
+    val observationInterval = 1.0
+    val totalTime = observationInterval * observations.size
+    val r = 0.9 // probability of detection of infected
 
     var mhRand = MonteCarloRandomGenerator()
 
-//    MetropolisHastings {rand ->
-//        val S = PoissonDistribution(40.0).sample()
-//        val sim = SIRSimulate()
-//        Pair()
-//    }
+    val mcmc = MetropolisHastings {rand ->
+        val initState = SIRState(rand.nextPoisson(40.0), rand.nextPoisson(7.0), 0)
+        val sim = SIRSimulate(initState, observationInterval, totalTime, rand)
+        val observe = Observations()
+        for(i in 0 until sim.size) {
+            observe.binomial(r, sim[i].I, observations[i])
+        }
+        Pair(observe, sim.last().I)
+    }
+
+    mcmc.sampleWithGaussianProposal(100000, 0.1)
+    println(observations.asList())
+    println("Ibar = ${mcmc.mean()} sd = ${mcmc.standardDeviation()}")
 
 }
 
@@ -84,7 +95,7 @@ fun SIRSimulate(startState : SIRState, stepTime : Double, totalTime : Double, ra
         val (dt,pPrime) = p.sampleNext(::SIRHamiltonian, rand)
         p = pPrime
         t += dt
-        while(t > m.size*stepTime) {
+        while(min(t, totalTime) > m.size*stepTime) {
             m.add(SIRState(p))
         }
     }

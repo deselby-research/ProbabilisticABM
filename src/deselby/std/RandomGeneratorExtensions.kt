@@ -1,9 +1,12 @@
 package deselby.std
 
 import org.apache.commons.math3.random.RandomGenerator
+import org.apache.commons.math3.special.Erf
+import org.apache.commons.math3.special.Erf.erf
 import org.apache.commons.math3.special.Gamma
 import kotlin.math.exp
 import kotlin.math.max
+import kotlin.math.sqrt
 
 private object PoissonDistribution {
     // Probability of anything less than k
@@ -25,7 +28,7 @@ fun RandomGenerator.nextPoisson(lambda : Double) : Int {
 
     if(lambda < 100) {
         var P = exp(-lambda)
-        var cumulativeP = 0.0
+        var cumulativeP = P
         while(cumulativeP < target) {
             ++k
             P *= lambda/k
@@ -37,7 +40,7 @@ fun RandomGenerator.nextPoisson(lambda : Double) : Int {
         var lowerK : Int
         var inc = 1
         if(target < exp(-lambda)) return 0
-        k = lambda.toInt() // start close to median
+        k = (sqrt(2.0*lambda)*Erf.erfInv(target*2.0 - 1.0) + lambda + 0.75).toInt() // Start with Gaussian approximation rounded up
         if(target < PoissonDistribution.cdf(k, lambda)) {
             do {
                 k = max(k-inc,0)

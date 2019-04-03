@@ -2,16 +2,16 @@ package deselby.std
 
 class NDIndexSet(private val dim : IntArray): Set<IntArray> {
     override val size: Int
-        get() = dim.fold(1, {acc, v -> acc*v})
+        get() = dim.fold(1) {acc, v -> acc*v}
 
     val dimension : List<Int>
         get() = dim.asList()
 
     inner class NDIterator(private var index : IntArray) : Iterator<IntArray> {
-        constructor() : this(IntArray(dim.size, { i -> if (i == 0) -1 else 0 }))
+        constructor() : this(IntArray(dim.size) { i -> if (i == 0) -1 else 0 })
 
         override fun hasNext() =
-                index.foldIndexed(false, { dimension, acc, i -> acc || (i < dim[dimension] - 1) })
+                index.foldIndexed(false) { dimension, acc, i -> acc || (i < dim[dimension] - 1) }
 
         override fun next(): IntArray {
             var i = 0
@@ -31,27 +31,27 @@ class NDIndexSet(private val dim : IntArray): Set<IntArray> {
     }
 
     override fun containsAll(elements: Collection<IntArray>) =
-            elements.fold(true, {acc, index -> acc && contains(index)})
+            elements.fold(true) {acc, index -> acc && contains(index)}
 
     override fun isEmpty() =
-            dim.isEmpty() || dim.fold(false, {acc, i -> acc || i == 0})
+            dim.isEmpty() || dim.fold(false) { acc, i -> acc || i == 0}
 
     override fun iterator() = NDIterator()
 
     fun rectangularUnion(other : NDIndexSet) : NDIndexSet {
         if(dimension.size != other.dimension.size)
             throw(IllegalArgumentException("Union of NDIndexSets with differing dimensionality: This is probably not what you intended to do"))
-        return NDIndexSet(IntArray(dimension.size,{ d ->
+        return NDIndexSet(IntArray(dimension.size) { d ->
             kotlin.math.max(dimension[d], other.dimension[d])
-        }))
+        })
     }
 
     fun rectangularIntersection(other : NDIndexSet) : NDIndexSet {
         if(dimension.size != other.dimension.size)
             throw(IllegalArgumentException("Intersection of NDIndexSets with differing dimensionality: This is probably not what you intended to do"))
-        return NDIndexSet(IntArray(dimension.size,{ d ->
+        return NDIndexSet(IntArray(dimension.size) { d ->
             kotlin.math.min(dimension[d], other.dimension[d])
-        }))
+        })
     }
 
 }
