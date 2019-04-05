@@ -25,10 +25,10 @@ fun main(args : Array<String>) {
     val beta = 0.1
     val myABM = PABMSample<SIRAgent>()
     val behaviour = Behaviour<SIRAgent>(arrayOf(
-            Action(alpha, {it == SIRAgent.I}, {agent, pabm ->
+            Action(alpha, {it == SIRAgent.I}, { _, pabm ->
                 pabm.add(SIRAgent.R)
             }),
-            Interaction(beta, {it == SIRAgent.I}, {it == SIRAgent.S}, {subj, obj, pabm ->
+            Interaction(beta, {it == SIRAgent.I}, {it == SIRAgent.S}, { _, _, pabm ->
                 pabm.add(SIRAgent.I)
                 pabm.add(SIRAgent.I)
             })

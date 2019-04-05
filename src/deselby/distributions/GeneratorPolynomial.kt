@@ -1,11 +1,12 @@
 package deselby.distributions
 
 import deselby.std.LambdaList
+import org.apache.commons.math3.random.MersenneTwister
+import org.apache.commons.math3.random.RandomGenerator
 import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.ln
 import kotlin.math.max
-import kotlin.reflect.jvm.internal.impl.protobuf.GeneratedMessageLite
 
 class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Double>) : FockState<Int, GeneratorPolynomial> {
     val size : Int
@@ -18,9 +19,9 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
     fun create(d : Int, n : Int) : GeneratorPolynomial {
         val result = HashMap<List<Int>,Double>()
         coeffs.forEach { occupationNo, prob ->
-            val newOccupationNo = IntArray(max(occupationNo.size,d+1), {i ->
+            val newOccupationNo = IntArray(max(occupationNo.size,d+1)) {i ->
                 if(i == d) (occupationNo.getOrNull(i)?:0) + n else occupationNo.getOrNull(i)?:0
-            })
+            }
             result[newOccupationNo.asList()] = prob
         }
         return GeneratorPolynomial(result)
@@ -32,9 +33,9 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         coeffs.forEach { occupationNo, prob ->
             if(occupationNo.size > d && occupationNo[d] > 0) {
                 val nDim = if(occupationNo[d] == 1) occupationNo.size else max(occupationNo.size, d+1)
-                val newOccupationNo = IntArray(nDim, { i ->
+                val newOccupationNo = IntArray(nDim) { i ->
                     if (i == d) (occupationNo.getOrNull(i) ?: 0) - 1 else occupationNo.getOrNull(i) ?: 0
-                })
+                }
                 result[newOccupationNo.asList()] = prob*occupationNo[d]
             }
         }
@@ -75,8 +76,8 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
     // its coefficient and returns a GeneratorPolynomial with just that monomial in, with
     // coefficient of 1
     // assumes that this polynomial is normalised
-    fun sample() : GeneratorPolynomial {
-        val targetCumulativeProb = Random().nextDouble()
+    fun sample(rand : RandomGenerator = MersenneTwister()) : GeneratorPolynomial {
+        val targetCumulativeProb = rand.nextDouble()
         var cumulativeProb = 0.0
         val iterator = coeffs.iterator()
         var entry : MutableMap.MutableEntry<List<Int>,Double>? = null
@@ -91,7 +92,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
 
     // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the state that is transitioned
     // to from this.
-    fun sampleNext(hamiltonian : (FockState<Int,GeneratorPolynomial>) -> GeneratorPolynomial) : Pair<Double,GeneratorPolynomial> {
+    fun sampleNext(hamiltonian : (FockState<Int,GeneratorPolynomial>) -> GeneratorPolynomial, rand : RandomGenerator = MersenneTwister()) : Pair<Double,GeneratorPolynomial> {
         val p0 = if(this.size == 1) this else this.sample()
         val H = hamiltonian(p0)
         if(H.size == 0) return Pair(Double.POSITIVE_INFINITY, this)
@@ -99,8 +100,8 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         val totalRate = -(H[currentState]?:throw(IllegalArgumentException()))
         H.coeffs.remove(currentState)
         return Pair(
-                -ln(1.0 - Random().nextDouble())/totalRate,
-                (H*(1.0/totalRate)).sample()
+                -ln(1.0 - rand.nextDouble())/totalRate,
+                (H*(1.0/totalRate)).sample(rand)
         )
     }
 
@@ -125,6 +126,4 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
         }
         return s
     }
-
-
 }
