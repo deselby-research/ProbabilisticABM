@@ -1,12 +1,11 @@
-package deselby.distributions
+package deselby.distributions.discrete
 
+import deselby.distributions.FockState
 import deselby.std.DoubleNDArray
 import deselby.std.FallingFactorial
-import koma.ndarray.NDArray
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.LUDecomposition
 import java.lang.Math.pow
-import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.exp
 import kotlin.math.min
@@ -114,7 +113,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     }
 
 
-    fun integrate(hamiltonian : (FockState<Int,DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
+    fun integrate(hamiltonian : (FockState<Int, DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
         var p = this
         var time = 0.0
         while(time < T) {
@@ -124,7 +123,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         return p
     }
 
-    fun integrateWithLambdaOptimisation(hamiltonian : (FockState<Int,DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
+    fun integrateWithLambdaOptimisation(hamiltonian : (FockState<Int, DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
         var p = this
         var time = 0.0
         while(time < T) {

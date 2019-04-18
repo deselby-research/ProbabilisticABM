@@ -6,20 +6,34 @@ class DoubleNDArraySlice {
     val indexSet : NDIndexSet
     val dimension : List<Int>
         get() = indexSet.dimension
+    val stride : List<Int>
+        get() = strideArray.asList()
 
     val size : Int
     protected val offset : Int
 
 
     constructor(container : DoubleNDArray, sliceDirection : Int,  sliceOffset: Int) {
-        strideArray = IntArray(container.stride.size-1, {d ->
+        strideArray = IntArray(container.stride.size-1) {d ->
             if(d<sliceDirection) container.stride[d] else container.stride[d+1]
-        })
+        }
         data = container.asDoubleArray()
         indexSet = NDIndexSet(container.dimension.size-1) {d ->
             if(d<sliceDirection) container.dimension[d] else container.dimension[d+1]
         }
         offset = container.stride[sliceDirection]*sliceOffset
+        size = container.size / container.dimension[sliceDirection]
+    }
+
+    private constructor(container : DoubleNDArraySlice, sliceDirection : Int,  sliceOffset: Int, cumulativeOffset : Int) {
+        strideArray = IntArray(container.stride.size-1) {d ->
+            if(d<sliceDirection) container.stride[d] else container.stride[d+1]
+        }
+        data = container.data
+        indexSet = NDIndexSet(container.dimension.size-1) {d ->
+            if(d<sliceDirection) container.dimension[d] else container.dimension[d+1]
+        }
+        offset = container.stride[sliceDirection]*sliceOffset + cumulativeOffset
         size = container.size / container.dimension[sliceDirection]
     }
 
@@ -67,5 +81,10 @@ class DoubleNDArraySlice {
         return s
     }
 
+    fun toDoubleNDArray() : DoubleNDArray {
+        return DoubleNDArray(dimension) {get(it)}
+    }
+
+    fun slice(sliceDirection : Int, sliceOffset : Int) = DoubleNDArraySlice(this, sliceDirection, sliceOffset, offset)
 
 }

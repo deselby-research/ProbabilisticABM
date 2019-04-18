@@ -1,4 +1,4 @@
-package deselby.distributions
+package deselby.distributions.discrete
 
 import org.apache.commons.math3.optim.InitialGuess
 import org.apache.commons.math3.optim.MaxEval
@@ -7,10 +7,8 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunctionGradient
 import org.apache.commons.math3.optim.nonlinear.scalar.gradient.NonLinearConjugateGradientOptimizer
-import java.lang.Math.pow
 import kotlin.math.abs
 import kotlin.math.exp
-import kotlin.math.min
 
 class DeselbyLambdaOptimiser(val C : DoubleArray) {
     fun opt() : Double {

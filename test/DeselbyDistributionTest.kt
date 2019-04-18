@@ -1,4 +1,4 @@
-import deselby.distributions.DeselbyDistribution
+import deselby.distributions.discrete.DeselbyDistribution
 import deselby.std.FallingFactorial
 import org.junit.jupiter.api.Test
 

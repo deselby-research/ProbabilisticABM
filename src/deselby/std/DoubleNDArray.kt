@@ -2,9 +2,9 @@ package deselby.std
 
 import kotlin.math.max
 
-class DoubleNDArray {
-    private val strideArray    : IntArray
-    private val data      : DoubleArray
+open class DoubleNDArray {
+    protected val strideArray    : IntArray
+    protected val data      : DoubleArray
     val indexSet : NDIndexSet
     val dimension : List<Int>
         get() = indexSet.dimension
@@ -17,7 +17,7 @@ class DoubleNDArray {
 
     constructor(dimension : List<Int>, init : (IntArray) -> Double) {
         indexSet = NDIndexSet(IntArray(dimension.size, {dimension[it]}))
-        strideArray = dimensionToStride(dimension)
+        strideArray = indexSet.toStride()
         data = DoubleArray(strideArray.last()*dimension.last(), {init(toNDIndex(it))})
     }
 
@@ -25,11 +25,14 @@ class DoubleNDArray {
 
     constructor(dimension : NDIndexSet, init : (IntArray) -> Double) : this(dimension.dimension, init)
 
+    protected constructor(copy : DoubleNDArray) : this(copy.indexSet, copy.strideArray, copy.data)
+
     protected constructor(indexSet : NDIndexSet, stride : IntArray, init : (IntArray) -> Double) {
         this.indexSet = indexSet
         strideArray = stride
         data = DoubleArray(strideArray.last()*dimension.last(), {init(toNDIndex(it))})
     }
+
 
 
     protected constructor(indexSet : NDIndexSet, stride : IntArray, data : DoubleArray) {
@@ -50,9 +53,9 @@ class DoubleNDArray {
 
     fun binaryOp(other : DoubleNDArray, mapFunc : (Double, Double) -> Double) : DoubleNDArray {
         val thisNDArray = this
-        return DoubleNDArray(indexSet.rectangularUnion(other.indexSet), { unionIndex ->
+        return DoubleNDArray(indexSet.rectangularUnion(other.indexSet)) { unionIndex ->
                     mapFunc(thisNDArray.getOrNull(unionIndex)?:0.0, other.getOrNull(unionIndex)?:0.0)
-                })
+                }
     }
 
 
@@ -133,13 +136,13 @@ class DoubleNDArray {
     fun asDoubleArray() = data
 
 
-    private fun dimensionToStride(dim : List<Int>) : IntArray {
-        val stride = IntArray(dim.size, {1})
-        for(i in 1 until stride.size) {
-            stride[i] = stride[i-1]*dim[i-1]
-        }
-        return stride
-    }
+//    private fun dimensionToStride(dim : List<Int>) : IntArray {
+//        val stride = IntArray(dim.size, {1})
+//        for(i in 1 until stride.size) {
+//            stride[i] = stride[i-1]*dim[i-1]
+//        }
+//        return stride
+//    }
 
 
 
@@ -166,6 +169,11 @@ class DoubleNDArray {
     }
 
     fun slice(sliceDirection : Int, sliceOffset : Int) = DoubleNDArraySlice(this, sliceDirection, sliceOffset)
+
+    fun reinterpretShape(newShape : NDIndexSet) : DoubleNDArray {
+        if(newShape.size != data.size) throw(ArrayIndexOutOfBoundsException("New shape does not fit the size of the data"))
+        return DoubleNDArray(newShape, newShape.toStride(), data)
+    }
 
     override fun toString() : String {
         var s = ""

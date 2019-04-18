@@ -1,4 +1,4 @@
-package deselby.distributions
+package deselby.distributions.discrete
 
 import deselby.std.DoubleNDArray
 import kotlin.math.absoluteValue

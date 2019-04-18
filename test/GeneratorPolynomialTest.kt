@@ -1,4 +1,4 @@
-import deselby.distributions.GeneratorPolynomial
+import deselby.distributions.discrete.GeneratorPolynomial
 import org.junit.jupiter.api.Test
 
 class GeneratorPolynomialTest {

@@ -54,4 +54,11 @@ class NDIndexSet(private val dim : IntArray): Set<IntArray> {
         })
     }
 
+    fun toStride() : IntArray {
+        val stride = IntArray(dim.size) {1}
+        for(i in 1 until stride.size) {
+            stride[i] = stride[i-1]*dim[i-1]
+        }
+        return stride
+    }
 }

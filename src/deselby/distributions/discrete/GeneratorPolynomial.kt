@@ -1,6 +1,6 @@
-package deselby.distributions
+package deselby.distributions.discrete
 
-import deselby.std.LambdaList
+import deselby.distributions.FockState
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
 import java.util.*
@@ -92,7 +92,7 @@ class GeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,Dou
 
     // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the state that is transitioned
     // to from this.
-    fun sampleNext(hamiltonian : (FockState<Int,GeneratorPolynomial>) -> GeneratorPolynomial, rand : RandomGenerator = MersenneTwister()) : Pair<Double,GeneratorPolynomial> {
+    fun sampleNext(hamiltonian : (FockState<Int, GeneratorPolynomial>) -> GeneratorPolynomial, rand : RandomGenerator = MersenneTwister()) : Pair<Double, GeneratorPolynomial> {
         val p0 = if(this.size == 1) this else this.sample()
         val H = hamiltonian(p0)
         if(H.size == 0) return Pair(Double.POSITIVE_INFINITY, this)

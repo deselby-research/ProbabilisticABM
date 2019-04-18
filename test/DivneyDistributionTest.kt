@@ -1,4 +1,4 @@
-import deselby.distributions.DivneyDistribution
+import deselby.distributions.discrete.DivneyDistribution
 import org.junit.jupiter.api.Test
 
 public class DivneyDistributionTest {

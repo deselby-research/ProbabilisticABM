@@ -1,16 +1,13 @@
 package experiments
 
 import deselby.*
-import deselby.distributions.DeselbyDistribution
+import deselby.distributions.discrete.DeselbyDistribution
 import deselby.distributions.FockState
-import deselby.distributions.GeneratorPolynomial
+import deselby.distributions.discrete.GeneratorPolynomial
 import deselby.std.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
-import org.apache.commons.math3.distribution.PoissonDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
-import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 
 class SIRState(var S : Int, var I : Int, var R : Int) {
