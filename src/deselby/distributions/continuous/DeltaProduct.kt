@@ -7,7 +7,7 @@ class DeltaProduct(val parameterId : Int, val dist : SemiSymmetricDistribution) 
         }
         dimensions[parameterId] = false
         val integratedDist = dist.integrate(dimensions)
-
+        return integratedDist.symmetrise(parameterId)
     }
 
     override fun lower(nDimensions: Int): SymmetricDistribution {

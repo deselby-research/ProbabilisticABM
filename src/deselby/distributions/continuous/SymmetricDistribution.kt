@@ -4,7 +4,7 @@ import deselby.std.DoubleNDArray
 
 class SymmetricDistribution : FourierDistribution {
 
-    constructor(nDimensions : Int, edgeSize : Int = 1, init : (IntArray) -> Double = {0.0}) : super(IntArray(nDimensions){edgeSize}, init)
+    constructor(nDimensions : Int, edgeSize : Int = 1, init : (IntArray) -> Double = {0.0}) : super(nDimensions, {edgeSize}, init)
 
     constructor(copy : DoubleNDArray) : super(copy)
 
@@ -14,7 +14,7 @@ class SymmetricDistribution : FourierDistribution {
 
     operator fun plus(other : SymmetricDistribution) = SymmetricDistribution(super.plus(other))
 
-    fun degree() : Int = dimension.size
+    fun degree() : Int = shape.size
 
 
 }

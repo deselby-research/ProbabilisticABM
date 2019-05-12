@@ -1,8 +1,8 @@
 package deselby.distributions.continuous
 
-class LiftedDeselbyDistribution(val rho : ContinuousDistribution, val subsets : List<SemiSymmetricDistribution>) {
+class LiftedDeselbyDistribution(val rho : FourierDistribution, val subsets : List<SemiSymmetricDistribution>) {
 
-    constructor(rho: ContinuousDistribution, size: Int, creator: (Int) -> SemiSymmetricDistribution) :
+    constructor(rho: FourierDistribution, size: Int, creator: (Int) -> SemiSymmetricDistribution) :
             this(rho, Array<SemiSymmetricDistribution>(size) { i ->
                 creator(i)
             }.asList())

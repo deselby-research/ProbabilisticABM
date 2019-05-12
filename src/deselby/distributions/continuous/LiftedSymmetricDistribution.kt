@@ -1,8 +1,7 @@
 package deselby.distributions.continuous
 
 import deselby.std.DoubleNDArray
-import deselby.std.DoubleNDArraySlice
-import deselby.std.NDIndexSet
+import deselby.std.NDRange
 import kotlin.math.max
 
 class LiftedSymmetricDistribution : FourierDistribution, SemiSymmetricDistribution {
@@ -12,7 +11,7 @@ class LiftedSymmetricDistribution : FourierDistribution, SemiSymmetricDistributi
         this.nLifted = nLifted
     }
 
-    constructor(nLifted : Int, dimension : IntArray, init : (IntArray) -> Double) : super(dimension, init) {
+    constructor(nLifted : Int, shape : List<Int>, init : (IntArray) -> Double) : super(shape, init) {
         this.nLifted = nLifted
     }
 
@@ -21,23 +20,23 @@ class LiftedSymmetricDistribution : FourierDistribution, SemiSymmetricDistributi
     }
 
     override fun nameDimension(name : Int) : LiftedSymmetricDistribution {
-        if(indexSet.dimension[name] != 1) throw(ArrayIndexOutOfBoundsException("That name does not exist or has already been used"))
-        val newShape = NDIndexSet(indexSet.dimension.size-1) {i ->
-            if(i == name) indexSet.dimension.last() else indexSet.dimension[i]
+        if(shapeArray[name] != 1) throw(ArrayIndexOutOfBoundsException("That name does not exist or has already been used"))
+        val newShape = IntArray(shapeArray.size-1) {i ->
+            if(i == name) shapeArray.last() else shapeArray[i]
         }
-        return LiftedSymmetricDistribution(nLifted, reinterpretShape(newShape))
+        return LiftedSymmetricDistribution(nLifted, reShape(newShape))
     }
 
+    // to integrate along a shape, just take zeroth element
     override fun integrate(dimensions: BooleanArray) : LiftedSymmetricDistribution {
-        var integratedDist : DoubleNDArraySlice? = null
-        for(dim in 0 until dimensions.size) {
-            if(dimensions[dim]) integratedDist = integratedDist?.slice(dim, 0)?:slice(dim, 0)
-        }
-        return if(integratedDist != null) {
-            LiftedSymmetricDistribution(nLifted, integratedDist.toDoubleNDArray())
-        } else {
-            this
-        }
+        val slice = NDRange(shapeArray.size) { if(dimensions[it]) 0..0 else 0 until shapeArray[it] }
+        val dimensionsNotIntegrated = dimensions
+                .asSequence()
+                .mapIndexed{ i, toIntegrate -> if(toIntegrate) null else i}
+                .filterNotNull()
+                .toList()
+        val newShape = IntArray(dimensionsNotIntegrated.size) { shapeArray[dimensionsNotIntegrated[it]] }
+        return LiftedSymmetricDistribution(nLifted, this[slice].reShape(*newShape))
     }
 
     override fun lower(nDimensions: Int) : SymmetricDistribution {
@@ -45,18 +44,18 @@ class LiftedSymmetricDistribution : FourierDistribution, SemiSymmetricDistributi
     }
 
     fun symmetrise(parameterId : Int) : LiftedSymmetricDistribution {
-        val newSymmetricSize = if(nLifted == dimension.size) dimension[parameterId] else max(dimension[parameterId], dimension.last())
-        val newDimemsion = IntArray(dimension.size + 1) {i ->
-            when { // swap parameterId dimension to last dimension
+        val newSymmetricSize = if(nLifted == shape.size) shape[parameterId] else max(shape[parameterId], shape.last())
+        val newShape = IntArray(shape.size + 1) { i ->
+            when { // swap parameterId shape to last shape
                 i==parameterId -> 1
-                i<nLifted -> dimension[i]
+                i<nLifted -> shape[i]
                 else -> newSymmetricSize
             }
         }
-        return LiftedSymmetricDistribution(nLifted, newDimemsion) {ndi ->
+        return LiftedSymmetricDistribution(nLifted, newShape.asList()) { ndi ->
             var sum = 0.0
-            for(transposedDimension in nLifted..newDimemsion.size) {
-                val transposedIndex = IntArray(dimension.size) {i ->
+            for(transposedDimension in nLifted..newShape.size) {
+                val transposedIndex = IntArray(shape.size) { i ->
                     if(i == parameterId) ndi[transposedDimension] else if(i < transposedDimension) ndi[i] else ndi[i+1]
                 }
                 sum += get(transposedIndex)

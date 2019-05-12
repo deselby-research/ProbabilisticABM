@@ -12,9 +12,9 @@ import kotlin.math.min
 
 class DeselbyDistribution private constructor(val lambda : List<Double>, var coeffs : DoubleNDArray) : FockState<Int, DeselbyDistribution> {
 
-    val dimension : List<Int>
+    val shape : List<Int>
         get() {
-            return coeffs.dimension
+            return coeffs.shape
         }
 
     constructor(lambda : List<Double>) : this(
@@ -24,7 +24,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
 
     override fun create(d : Int) : DeselbyDistribution {
-        val incrementedGeometry = dimension.mapIndexed { i, v ->
+        val incrementedGeometry = shape.mapIndexed { i, v ->
             if(i == d) v+1 else v
         }
         val shiftedCoeffs = DoubleNDArray(incrementedGeometry) { ndIndex ->
@@ -41,7 +41,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // aP(lambda,D) = lambda*P(lambda,D) + DP(lambda,D-1)
     //
     override fun annihilate(d : Int) : DeselbyDistribution {
-        val newCoeffs = DoubleNDArray(dimension) { ndIndex ->
+        val newCoeffs = DoubleNDArray(shape) { ndIndex ->
             lambda[d] * (coeffs[ndIndex]) + (++ndIndex[d]) * (coeffs.getOrNull(ndIndex) ?: 0.0)
         }
         return DeselbyDistribution(lambda, newCoeffs)
@@ -68,7 +68,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
     // multiply this by a falling factorial
     operator fun times(factorial : FallingFactorial) : DeselbyDistribution {
-        val newGeometry = dimension.mapIndexed { i, v ->
+        val newGeometry = shape.mapIndexed { i, v ->
             if(i == factorial.variableId) v+factorial.order else v
         }
         val newCoeffs = DoubleNDArray(newGeometry, { 0.0 })
@@ -140,23 +140,23 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // returns this + perturbation, where the lambdas of the result are changed so as to
     // minimise the cartesian norm of the coefficients of the perturbation
     fun perturbWithLambda(perturbation : DeselbyDistribution) : DeselbyDistribution {
-        val dP_dL = Array(dimension.size) {i ->
+        val dP_dL = Array(shape.size) { i ->
             this.annihilate(i).create(i)/this.lambda[i] - this
         }
 
-        val Y = Array2DRowRealMatrix(Array(dimension.size) { i ->
+        val Y = Array2DRowRealMatrix(Array(shape.size) { i ->
             DoubleArray(1) {perturbation.dotprod(dP_dL[i])}
         })
 
-        val M = Array2DRowRealMatrix(Array(dimension.size) { i ->
-            DoubleArray(dimension.size) {j ->
+        val M = Array2DRowRealMatrix(Array(shape.size) { i ->
+            DoubleArray(shape.size) { j ->
                 dP_dL[i].dotprod(dP_dL[j])
             }
         })
 
         val DL = LUDecomposition(M).solver.inverse.multiply(Y)
 
-        val newLambda = DoubleArray(dimension.size) { i ->
+        val newLambda = DoubleArray(shape.size) { i ->
             lambda[i] + DL.getEntry(i,0)
         }
 
@@ -171,18 +171,18 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // returns this + perturbation, where the lambdas of the result are changed so as to
     // nullify the first order rates of change.
     fun perturbWithLambda2(perturbation : DeselbyDistribution) : DeselbyDistribution {
-        val dP_dL = Array(dimension.size) { i ->
+        val dP_dL = Array(shape.size) { i ->
             this.create(i) - this
         }
 
-        val zeroIndex = IntArray(dimension.size, {0})
-        val DL = DoubleArray(dimension.size) { i ->
-            val oneIndex = IntArray(dimension.size, {j -> if(j==i) 1 else 0})
+        val zeroIndex = IntArray(shape.size, {0})
+        val DL = DoubleArray(shape.size) { i ->
+            val oneIndex = IntArray(shape.size, { j -> if(j==i) 1 else 0})
             val dP1_dLi = coeffs[zeroIndex] + (1.0/lambda[i] - 1.0)*coeffs.getOrElse(oneIndex,{0.0})
             perturbation.coeffs[oneIndex] / dP1_dLi
         }
 
-        val newLambda = DoubleArray(dimension.size) { i ->
+        val newLambda = DoubleArray(shape.size) { i ->
             lambda[i] + DL[i]
         }
         var newPerturbation = perturbation.coeffs
@@ -201,16 +201,16 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // assumes lambda is very close to optimisation initially
 //    fun optimizeLambda() : DeselbyDistribution {
 //        val P = this
-//        val dP_dL = Array(P.dimension.size, {i ->
+//        val dP_dL = Array(P.shape.nDimensions, {i ->
 //            P.annihilate(i).create(i)/P.lambda[i] - P
 //        })
 //
-//        val Y = Array2DRowRealMatrix(Array(dimension.size, { i ->
+//        val Y = Array2DRowRealMatrix(Array(shape.nDimensions, { i ->
 //            DoubleArray(1, {P.dotprod(dP_dL[i])})
 //        }))
 //
-//        val M = Array2DRowRealMatrix(Array(dimension.size, { i ->
-//            DoubleArray(dimension.size, {j ->
+//        val M = Array2DRowRealMatrix(Array(shape.nDimensions, { i ->
+//            DoubleArray(shape.nDimensions, {j ->
 //                dP_dL[i].dotprod(dP_dL[j])})
 //        }))
 //
@@ -221,7 +221,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 //        }
 //        println(DL.frobeniusNorm)
 //
-//        val newLambda = DoubleArray(dimension.size, {i ->
+//        val newLambda = DoubleArray(shape.nDimensions, {i ->
 //            lambda[i] + DL.getEntry(i,0)
 //        })
 //        var newCoeffs = P.coeffs
@@ -235,7 +235,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
 
     fun isCompatible(other : DeselbyDistribution) : Boolean {
-        if(dimension.size != other.dimension.size) return false
+        if(shape.size != other.shape.size) return false
         if(lambda != other.lambda && !lambda.foldIndexed(true,{i,b,v -> b && v == other.lambda[i]})) return false
         return true
     }
@@ -243,16 +243,16 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // return a copy of this with the smallest dimensions that
     // remove only terms that satisfy the given predicate
     fun shrinkTo(pred : (Double) -> Boolean) : DeselbyDistribution {
-        val truncatedDimension = dimension.toIntArray()
-        for(d in 0 until truncatedDimension.size) {
-            while(truncatedDimension[d]>0 &&
-                    coeffs.slice(d, truncatedDimension[d]-1).fold(true) { acc, v ->
-                        acc && pred(v)
-                    }) {
-                --truncatedDimension[d]
+        val truncatedShape = shape.toIntArray()
+        for(d in 0 until truncatedShape.size) {
+            val slice = coeffs.indexSet
+            slice[d] = truncatedShape[d]-1 until truncatedShape[d]
+            while(truncatedShape[d] > 0 && coeffs[slice].fold(true) { acc, v -> acc && pred(v) }) {
+                --truncatedShape[d]
+                slice[d] = truncatedShape[d]-1 until truncatedShape[d]
             }
         }
-        return DeselbyDistribution(lambda, DoubleNDArray(truncatedDimension.asList()) { coeffs[it] })
+        return DeselbyDistribution(lambda, DoubleNDArray(truncatedShape.asList()) { coeffs[it] })
     }
 
     fun truncateBelow(cutoff : Double) = shrinkTo {it.absoluteValue < cutoff}
@@ -262,12 +262,14 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         coeffs.timesAssign(1.0/sumOfCoeffs)
     }
 
-    // Marginalise out all but the given dimension
+    // Marginalise out all but the given dimensions
     fun marginaliseTo(dim : Int) : DeselbyDistribution {
-        val coeffs = DoubleNDArray(intArrayOf(dimension[dim])) {i ->
-            coeffs.slice(dim, i[0]).fold(0.0, Double::plus)
+        val slice = coeffs.indexSet
+        val newCoeffs = DoubleNDArray(listOf(shape[dim])) { i ->
+            slice[dim] = i[0]..i[0]
+            coeffs[slice].fold(0.0, Double::plus)
         }
-        return DeselbyDistribution(listOf(lambda[dim]), coeffs)
+        return DeselbyDistribution(listOf(lambda[dim]), newCoeffs)
     }
 
     fun mean(dim : Int) : Double {

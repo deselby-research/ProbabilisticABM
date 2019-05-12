@@ -45,7 +45,7 @@ fun deselbyPosterior(observations : Array<Int>) {
         p = p.truncateBelow(1e-5)
 //        println("after observation :${p.marginaliseTo(1)}")
 //        println(p.coeffs.fold(0.0) { a, b -> max(a, abs(b)) })
-//        println(p.dimension)
+//        println(p.shape)
     }
     println(observations.asList())
     println("Ibar = ${p.mean(1)}")

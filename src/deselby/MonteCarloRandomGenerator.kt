@@ -21,7 +21,7 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
     }
 
     // perturb the random source so that calls to nextGaussian are updated
-    // by a randSource.size dimensional Gaussian with no correlation and
+    // by a randSource.nDimensions dimensional Gaussian with no correlation and
     // SD of sigma (i.e. correlation matrix of sigma times the identity matrix)
     fun perturbWithGaussian(sigma : Double) : MonteCarloRandomGenerator {
             return MonteCarloRandomGenerator (randSource.size) { i ->

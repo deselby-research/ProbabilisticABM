@@ -28,13 +28,13 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
 
 
     operator fun plus(other : DivneyDistribution) : DivneyDistribution {
-        if(coeffs.dimension.size != other.coeffs.dimension.size) {
+        if(coeffs.shape.size != other.coeffs.shape.size) {
             throw(IllegalArgumentException("Can't add distributions with different dimensions"))
         }
         if(lambda != other.lambda && !lambda.foldIndexed(true,{i,b,v -> b && v == other.lambda[i]})) {
             throw(IllegalArgumentException("Can't add distributions with different lambdas"))
         }
-        val dimensionUnion = IntArray(coeffs.dimension.size,{ d -> max(coeffs.dimension[d], other.coeffs.dimension[d])})
+        val dimensionUnion = IntArray(coeffs.shape.size,{ d -> max(coeffs.shape[d], other.coeffs.shape[d])})
         return DivneyDistribution(lambda, DoubleNDArray(dimensionUnion.asList()) { exponents ->
             coeffs[exponents] + other.coeffs[exponents]
         })
@@ -42,13 +42,13 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
 
 
     operator fun minus(other : DivneyDistribution) : DivneyDistribution {
-        if(coeffs.dimension.size != other.coeffs.dimension.size) {
+        if(coeffs.shape.size != other.coeffs.shape.size) {
             throw(IllegalArgumentException("Can't subtract distributions with different dimensions"))
         }
         if(lambda != other.lambda && !lambda.foldIndexed(true,{i,b,v -> b && v == other.lambda[i]})) {
             throw(IllegalArgumentException("Can't subtract distributions with different lambdas"))
         }
-        val dimensionUnion = IntArray(coeffs.dimension.size,{ d -> max(coeffs.dimension[d], other.coeffs.dimension[d])})
+        val dimensionUnion = IntArray(coeffs.shape.size,{ d -> max(coeffs.shape[d], other.coeffs.shape[d])})
         return DivneyDistribution(lambda, DoubleNDArray(dimensionUnion.asList()) { exponents ->
             coeffs[exponents] - other.coeffs[exponents]
         })
@@ -77,7 +77,7 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
 
     // multiply by x_d
     private fun multiplyByx(d : Int) {
-        val newDimension = coeffs.dimension.toMutableList()
+        val newDimension = coeffs.shape.toMutableList()
         newDimension[d] += 1
         coeffs = DoubleNDArray(newDimension, { exponents ->
             if (exponents[d] == 0) 0.0 else {
@@ -118,7 +118,7 @@ class DivneyDistribution private constructor(private val lambda : List<Double>, 
     }
 
     fun copyOf() : DivneyDistribution {
-        return DivneyDistribution(lambda, DoubleNDArray(coeffs.dimension, { coeffs[it] }))
+        return DivneyDistribution(lambda, DoubleNDArray(coeffs.shape, { coeffs[it] }))
     }
 
     fun numberOfCoeffsAbove(delta : Double) : Int {

@@ -54,7 +54,7 @@ class DeselbyLambdaOptimiser(val C : DoubleArray) {
 
     fun weight(delta : Int) : Double {
 //        return exp(1.0*delta) - 1.0
-//        return if(delta < C.size-1) 0.0 else 1.0
+//        return if(delta < C.nDimensions-1) 0.0 else 1.0
         return 1.0/(1.0 + exp(-1.5*(delta - C.size + 1.0)))
     }
 

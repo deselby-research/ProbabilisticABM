@@ -33,12 +33,12 @@ class DeselbyDistributionTest {
     fun TestSIRModel() {
         var p = DeselbyDistribution(listOf(20.0, 40.0, 2.0))
      //   println(SIRHamiltonian(p))
-        println(p.dimension)
+        println(p.shape)
         println(p)
         for(t in 1..5) {
             p += SIRHamiltonian(p)*0.001
             p = p.truncateBelow(1e-4)
-            println(p.dimension)
+            println(p.shape)
             println(p)
         }
 //        println(p)

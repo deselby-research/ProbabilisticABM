@@ -1,5 +1,6 @@
 package deselby.std
 
+/*
 class NDIndexSet(private val dim : IntArray): Set<IntArray> {
     override val size: Int
         get() = dim.fold(1) {acc, v -> acc*v}
@@ -62,3 +63,4 @@ class NDIndexSet(private val dim : IntArray): Set<IntArray> {
         return stride
     }
 }
+*/

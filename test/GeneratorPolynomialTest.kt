@@ -16,7 +16,7 @@ class GeneratorPolynomialTest {
         val p = GeneratorPolynomial()
         val acp = p.create(0) + p.create(0) - p.create(1)
         println(acp)
-//        assert(acp.size == 1)
+//        assert(acp.nDimensions == 1)
 //        assert(acp[listOf(1,1)] == 2.0)
     }
 

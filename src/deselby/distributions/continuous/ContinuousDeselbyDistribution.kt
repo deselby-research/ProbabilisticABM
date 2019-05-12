@@ -1,8 +1,8 @@
 package deselby.distributions.continuous
 
-class ContinuousDeselbyDistribution(val rho : ContinuousDistribution, val subsets : MutableList<SymmetricDistribution>) {
+class ContinuousDeselbyDistribution(val rho : FourierDistribution, val subsets : MutableList<SymmetricDistribution>) {
 
-    constructor(rho : ContinuousDistribution, nSubsets : Int, creator : (Int) -> SymmetricDistribution) :
+    constructor(rho : FourierDistribution, nSubsets : Int, creator : (Int) -> SymmetricDistribution) :
             this(rho, ArrayList(nSubsets)) {
         for(i in 0 until nSubsets) {
             subsets.add(creator(i))
@@ -26,7 +26,7 @@ class ContinuousDeselbyDistribution(val rho : ContinuousDistribution, val subset
             }
         }
         else ContinuousDeselbyDistribution(rho, subsets.size) { i ->
-            if(i != dist.dimension.size) subsets[i] else subsets[i] + dist
+            if(i != dist.shape.size) subsets[i] else subsets[i] + dist
         }
     }
 
