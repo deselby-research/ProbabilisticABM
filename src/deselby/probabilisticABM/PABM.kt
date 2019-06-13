@@ -1,4 +1,4 @@
-package deselby
+package deselby.probabilisticABM
 
 interface PABM<AGENT> {
     fun add(a : AGENT) : PABM<AGENT>

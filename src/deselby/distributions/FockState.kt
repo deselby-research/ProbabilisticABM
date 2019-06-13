@@ -1,9 +1,10 @@
 package deselby.distributions
 
-interface FockState<AGENTSTATE, DISTRIBUTION : FockState<AGENTSTATE,DISTRIBUTION> > {
-    fun create(d : AGENTSTATE) : DISTRIBUTION
-    fun annihilate(d : AGENTSTATE) : DISTRIBUTION
-    operator fun plus(other : DISTRIBUTION) : DISTRIBUTION
-    operator fun minus(other : DISTRIBUTION) : DISTRIBUTION
-    operator fun times(const : Double) : DISTRIBUTION
+interface FockState<AGENTSTATE, FOCKSTATE : FockState<AGENTSTATE,FOCKSTATE> > {
+    fun create(d : AGENTSTATE) : FOCKSTATE
+    fun annihilate(d : AGENTSTATE) : FOCKSTATE
+    fun count(d : AGENTSTATE) : FOCKSTATE = this.annihilate(d).create(d)
+    operator fun plus(other : FOCKSTATE) : FOCKSTATE
+    operator fun minus(other : FOCKSTATE) : FOCKSTATE
+    operator fun times(const : Double) : FOCKSTATE
 }

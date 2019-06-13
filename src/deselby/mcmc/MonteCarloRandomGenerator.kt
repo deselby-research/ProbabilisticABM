@@ -1,4 +1,4 @@
-package deselby
+package deselby.mcmc
 
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
@@ -24,9 +24,9 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
     // by a randSource.nDimensions dimensional Gaussian with no correlation and
     // SD of sigma (i.e. correlation matrix of sigma times the identity matrix)
     fun perturbWithGaussian(sigma : Double) : MonteCarloRandomGenerator {
-            return MonteCarloRandomGenerator (randSource.size) { i ->
-                val y = (randSource[i] + rand.nextGaussian()*sigma).rem(1.0)
-                if(y<0.0) y+1.0 else y
+            return MonteCarloRandomGenerator(randSource.size) { i ->
+                val y = (randSource[i] + rand.nextGaussian() * sigma).rem(1.0)
+                if (y < 0.0) y + 1.0 else y
             }
     }
 

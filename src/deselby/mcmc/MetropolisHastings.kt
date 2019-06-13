@@ -1,4 +1,4 @@
-package deselby
+package deselby.mcmc
 
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator

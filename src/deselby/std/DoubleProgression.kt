@@ -1,5 +1,6 @@
 package deselby.std
 
+// Extension of Kotlin's integer range (x..y step s) to Doubles.
 class DoubleProgression(override val start : Double, override val endInclusive : Double, val step : Double) : ClosedFloatingPointRange<Double>, Iterable<Double> {
     override fun lessThanOrEquals(a: Double, b: Double) = a <= b
     override fun iterator() = DoubleProgressionIterator(start, endInclusive, step)

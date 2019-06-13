@@ -1,4 +1,4 @@
-package deselby
+package deselby.mcmc
 
 import org.apache.commons.math3.special.Gamma.logGamma
 import org.apache.commons.math3.util.FastMath

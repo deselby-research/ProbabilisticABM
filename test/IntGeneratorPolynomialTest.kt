@@ -1,10 +1,10 @@
-import deselby.distributions.discrete.GeneratorPolynomial
+import deselby.distributions.discrete.IntGeneratorPolynomial
 import org.junit.jupiter.api.Test
 
-class GeneratorPolynomialTest {
+class IntGeneratorPolynomialTest {
     @Test
     fun TestCreationAnnihilation() {
-        val p = GeneratorPolynomial()
+        val p = IntGeneratorPolynomial()
         val acp = p.create(0).create(0).create(1).annihilate(0)
         println(acp)
         assert(acp.size == 1)
@@ -13,7 +13,7 @@ class GeneratorPolynomialTest {
 
     @Test
     fun TestArithmetic() {
-        val p = GeneratorPolynomial()
+        val p = IntGeneratorPolynomial()
         val acp = p.create(0) + p.create(0) - p.create(1)
         println(acp)
 //        assert(acp.nDimensions == 1)
@@ -22,7 +22,7 @@ class GeneratorPolynomialTest {
 
     @Test
     fun TestSIRModel() {
-        var p = GeneratorPolynomial()
+        var p = IntGeneratorPolynomial()
         p = p.create(0, 40).create(1, 20)
         println(SIRHamiltonian(p))
         println(p)
@@ -33,7 +33,7 @@ class GeneratorPolynomialTest {
 //        println(p)
     }
 
-    fun SIRHamiltonian(p : GeneratorPolynomial) : GeneratorPolynomial {
+    fun SIRHamiltonian(p : IntGeneratorPolynomial) : IntGeneratorPolynomial {
         val beta = 0.1
         val gamma = 0.2
         val p0 = p.annihilate(1)

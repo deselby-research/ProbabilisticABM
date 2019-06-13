@@ -1,12 +1,13 @@
-package deselby
+package deselby.probabilisticABM
 
 import deselby.std.HashMultiset
 import java.util.*
-import kotlin.collections.HashSet
 import kotlin.math.ln
 
 class PABMSample<AGENT> : PABM<AGENT> {
-    class ActRecord<A>(val act :Act<A>, val subjects : HashMultiset<A>, val objects : HashMultiset<A>, var rate : Double) {
+
+    // Which agents apply to which acts
+    class ActRecord<A>(val act : Act<A>, val subjects : HashMultiset<A>, val objects : HashMultiset<A>, var rate : Double) {
         constructor(act : Act<A>) : this(act, HashMultiset<A>(), HashMultiset<A>(), 0.0)
 
         fun addSubject(agent : A, n : Int) {
@@ -106,7 +107,7 @@ class PABMSample<AGENT> : PABM<AGENT> {
         for(act in b.acts) {
             acts.add(ActRecord(act))
         }
-        for(agent in agents) {
+        for(agent in agents.memberCountMapEntries()) {
             addAgentsToActRecords(agent.key, agent.value)
         }
     }

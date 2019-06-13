@@ -1,9 +1,9 @@
 package experiments
 
-import deselby.*
 import deselby.distributions.discrete.DeselbyDistribution
 import deselby.distributions.FockState
-import deselby.distributions.discrete.GeneratorPolynomial
+import deselby.distributions.discrete.IntGeneratorPolynomial
+import deselby.mcmc.*
 import deselby.std.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.random.MersenneTwister
@@ -11,12 +11,12 @@ import org.apache.commons.math3.random.RandomGenerator
 import kotlin.math.min
 
 class SIRState(var S : Int, var I : Int, var R : Int) {
-    constructor(p : GeneratorPolynomial) : this(
+    constructor(p : IntGeneratorPolynomial) : this(
             p.annihilate(0).norm1().toInt(),
             p.annihilate(1).norm1().toInt(),
             p.annihilate(2).norm1().toInt()
     )
-    fun toGeneratorPolynomial() = GeneratorPolynomial().create(0,S).create(1,I).create(2,R)
+    fun toGeneratorPolynomial() = IntGeneratorPolynomial().create(0,S).create(1,I).create(2,R)
 }
 
 // Data assimilation into an SIR model (with no birth or death) using Deselby distributions
@@ -58,11 +58,11 @@ fun metropolisHastingsPosterior(observations : Array<Int>) {
 
     var mhRand = MonteCarloRandomGenerator()
 
-    val mcmc = MetropolisHastings {rand ->
+    val mcmc = MetropolisHastings { rand ->
         val initState = SIRState(rand.nextPoisson(40.0), rand.nextPoisson(7.0), 0)
         val sim = SIRSimulate(initState, observationInterval, totalTime, rand)
         val observe = Observations()
-        for(i in 0 until sim.size) {
+        for (i in 0 until sim.size) {
             observe.binomial(r, sim[i].I, observations[i])
         }
         Pair(observe, sim.last().I)

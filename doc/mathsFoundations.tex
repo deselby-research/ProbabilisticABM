@@ -109,13 +109,13 @@ where $\mathbf{n} = (n_1...n_{|k|})$ and $p_\mathbf{n}$ is the probability that 
 For ease of notation, from now on we will omit the trailing $\emptyset$ on distributions when this is not ambiguous.
 
 
-An \texttt{deselby.Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
+An \texttt{experiments.SpatialPredatorPrey.generatorPoly.Action} object represents an operator which takes an ABM distribution and returns a rate of change of an ABM distribution, and can be defined as
 \[
 A(t,r,l) = \int_{t(k)} (l_k - a_k^\dag)a_kr \,dk
 \] 
 where the integral reverts to a sum in the case of discrete state variables.
 
-An \texttt{Interaction} object is very similar to an \texttt{deselby.Action} but with a double integral
+An \texttt{Interaction} object is very similar to an \texttt{experiments.SpatialPredatorPrey.generatorPoly.Action} but with a double integral
 \[
 I(t,r,l) = \int \int_{t(j,k)} (l_{jk} - a_j^\dag a_k^\dag)a_j a_k r\;  dj\; dk
 \] 
@@ -600,6 +600,10 @@ a a^\dag S = (a^\dag a+1)S = (n+1)S
 
 Equations \ref{ccommute} and \ref{acommute} ensure that these results extend to multivariate cases.
 
+
+
+\begin{comment}
+
 \subsection{State approximation: Projecting to lower dimensional spaces}
 
 We can also often approximate a high-dimensional probabilistic state in a lower dimensional space that is more practical to work with.
@@ -610,8 +614,6 @@ We can also often approximate a high-dimensional probabilistic state in a lower 
 \section{Integrating over propensities: The path integral}
 
 \section{Data assimilation}
-
-\begin{comment}
 \section{ABM as a computational paradigm}
 
 We define an ABM as a set of (Turing complete) computational processes, which we call \textit{agents}. Without loss of generality, we assume that each agent is executing the same program, although their internal states may differ. In addition, there is an \textit{environment} which has a finite state and a \textit{public API} through which any agent may perform actions or query for information. Similarly, the each agent has a public API through which the environment may act on the agent or gain information about the state of the agent. The environment can also create or annihilate agents.

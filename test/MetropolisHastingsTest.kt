@@ -1,12 +1,7 @@
-import deselby.*
-import org.apache.commons.math3.distribution.NormalDistribution
-import org.apache.commons.math3.random.MersenneTwister
+import deselby.mcmc.*
 import org.junit.jupiter.api.Test
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.exp
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 class MetropolisHastingsTest {
 
@@ -15,7 +10,7 @@ class MetropolisHastingsTest {
         val observation = 5.0
         val noiseSD = sqrt(2.0)
         val sampler = MetropolisHastings { rand ->
-            val x = rand.nextGaussian()*sqrt(2.0) + 4.0
+            val x = rand.nextGaussian() * sqrt(2.0) + 4.0
             val obs = Observations()
             obs.gaussian(x, noiseSD, observation)
             Pair(obs, x)
