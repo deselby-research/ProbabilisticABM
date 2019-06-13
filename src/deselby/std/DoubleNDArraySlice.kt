@@ -1,71 +1,80 @@
 package deselby.std
 
-class DoubleNDArraySlice {
-    private val strideArray    : IntArray
-    private val data      : DoubleArray
-    val indexSet : NDIndexSet
-    val dimension : List<Int>
-        get() = indexSet.dimension
+import java.lang.IllegalArgumentException
 
-    val size : Int
-    protected val offset : Int
+class DoubleNDArraySlice : DoubleNDArray {
+    var offset : Int
+
+    override val size : Int
+        get() = shape.fold(1, Int::times)
+
+    constructor(base : DoubleNDArraySlice, slice : NDRange) : this(base as DoubleNDArray, slice) {
+        offset += base.offset
+    }
 
 
-    constructor(container : DoubleNDArray, sliceDirection : Int,  sliceOffset: Int) {
-        strideArray = IntArray(container.stride.size-1, {d ->
-            if(d<sliceDirection) container.stride[d] else container.stride[d+1]
-        })
-        data = container.asDoubleArray()
-        indexSet = NDIndexSet(container.dimension.size-1) {d ->
-            if(d<sliceDirection) container.dimension[d] else container.dimension[d+1]
+    constructor(base : DoubleNDArray, slice : NDRange) : super(
+            slice.shape,
+            IntArray(slice.nDimensions) {
+                base.stride[it]*slice[it].step
+            },
+            base.asDoubleArray()
+    ) {
+        offset = base.toFlatIndex(slice.first()) ?:
+                throw(ArrayIndexOutOfBoundsException("Slice contains out of bounds elements"))
+        println("Creating slice with ${slice.first().asList()} to ${slice.last().asList()}")
+        println("offset is $offset")
+        for(i in 0 until slice.nDimensions) {
+            if(slice[i].last >= base.shape[i])
+                throw(ArrayIndexOutOfBoundsException("Slice contains out of bounds elements"))
         }
-        offset = container.stride[sliceDirection]*sliceOffset
-        size = container.size / container.dimension[sliceDirection]
     }
 
-    operator fun get(index : IntArray) : Double {
-        val flatI = toFlatIndex(index)
-        return if(flatI != null) data[flatI] else throw(ArrayIndexOutOfBoundsException())
+    constructor(shapeArray : IntArray, strideArray : IntArray, data : DoubleArray, offset : Int) : super(shapeArray, strideArray, data) {
+        this.offset = offset
     }
 
-    fun getOrNull(index : IntArray) : Double? {
-        val flatI = toFlatIndex(index)
-        return if(flatI != null) data[flatI] else null
+    override fun toFlatIndex(index : IntArray) : Int? {
+        return super.toFlatIndex(index)?.plus(offset)
     }
 
-    fun getOrElse(index : IntArray, default : (IntArray) -> Double) : Double {
-        val flatI = toFlatIndex(index)
-        return if(flatI != null) data[flatI] else default(index)
+    override fun get(slice: NDRange): DoubleNDArraySlice {
+        return DoubleNDArraySlice(this, slice)
     }
 
-    operator fun set(index : IntArray, c : Double) {
-        val flatI = toFlatIndex(index)
-        return if(flatI != null) data[flatI] = c else throw(ArrayIndexOutOfBoundsException())
-    }
 
-    fun <R> fold(initial : R, operation : (R, Double) -> R) : R =
-        indexSet.fold(initial, {acc, ndIndex ->
-            operation(acc, this[ndIndex])
-        })
-
-
-    fun toFlatIndex(index : IntArray) : Int? {
-        var i = 0
-        for(d in 0 until index.size) {
-            val id = index[d]
-            if(id >= indexSet.dimension[d]) return null
-            i += id*strideArray[d]
+    override fun reShape(vararg newShape : Int) : DoubleNDArraySlice {
+        val newStride = IntArray(newShape.size) {1}
+        var oldDim = shapeArray.size-1
+        var dim = newShape.size-1
+        while(dim >= 0) {
+            when {
+                newShape[dim] == shape[oldDim] -> newStride[dim--] = stride[oldDim--]
+                newShape[dim] > shape[oldDim]  ->
+                    if(shape[oldDim] == 1) --oldDim
+                    else throw(IllegalArgumentException("Can't reshape a slice in this way"))
+                newShape[dim] < shape[oldDim]  -> {
+                    var stride = stride[oldDim]
+                    var size = 1
+                    do {
+                        newStride[dim] = stride
+                        size *= newShape[dim]
+                        stride *= newShape[dim--]
+                    } while(size < shape[oldDim] && dim >= 0)
+                    if(size > shape[oldDim]) throw(IllegalArgumentException("Can't reshape a slice in this way"))
+                    --oldDim
+                }
+            }
         }
-        return i + offset
+        return DoubleNDArraySlice(newShape, newStride, data, offset)
     }
 
-    override fun toString() : String {
-        var s = ""
-        for(ndi in indexSet) {
-            s += "${ndi.asList()} -> ${this[ndi]}\n"
-        }
-        return s
-    }
+    override operator fun iterator() = DataIterator()
 
+    inner class DataIterator : Iterator<Double> {
+        val indexIterator = NDRangeIterator(this@DoubleNDArraySlice.indexSet.range)
+        override fun hasNext() = indexIterator.hasNext()
+        override fun next() = this@DoubleNDArraySlice[indexIterator.next()]
+    }
 
 }

@@ -1,26 +1,34 @@
-import deselby.std.nextPoisson
-import org.apache.commons.math3.random.MersenneTwister
-import kotlin.math.exp
-import kotlin.system.measureTimeMillis
+import deselby.std.DoubleNDArray
+import deselby.std.fourierTransformInPlace
 
-fun main(args : Array<String>) {
-    val rand = MersenneTwister()
-    println(measureTimeMillis {
-//        for (i in 1..1000000) {
-//            rand.nextPoisson(99.0)
-//        }
 
-        val target = 1.0
-        val lambda = 200.0
-        var k = 0
-        var P = exp(-lambda)
-        var cumulativeP = P
-        while(cumulativeP < target) {
-            ++k
-            P *= lambda/k
-            cumulativeP += P
+class MyClass(var i : Int, var j : Int) {
+    override fun equals(other : Any?) : Boolean {
+        if(other is MyClass) {
+            if(super.equals(other)) {
+                return true
+            }
+            return other.i == i && other.j == j
         }
-        println("$k $cumulativeP $target")
+        return false
+    }
 
-    })
+
+}
+
+fun main() {
+    val a = ArrayList<MyClass>()
+
+    val x = MyClass(1,2)
+    val y = MyClass(1,2)
+    val z = MyClass(2,2)
+
+
+    a.add(x)
+    if(a.contains(x)) println("contains x")
+    if(a.contains(y)) println("contains y")
+    if(a.contains(z)) println("contains z")
+    if(a.find {it.equals(x)} != null) println("found x")
+    if(a.find {it.equals(y)} != null) println("found y")
+    if(a.find {it.equals(z)} != null) println("found z")
 }

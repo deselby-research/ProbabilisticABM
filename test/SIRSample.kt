@@ -1,7 +1,7 @@
-import deselby.Action
-import deselby.Behaviour
-import deselby.Interaction
-import deselby.PABMSample
+import deselby.probabilisticABM.Action
+import deselby.probabilisticABM.Behaviour
+import deselby.probabilisticABM.Interaction
+import deselby.probabilisticABM.PABMSample
 
 enum class SIRAgent {
     S,
@@ -25,10 +25,10 @@ fun main(args : Array<String>) {
     val beta = 0.1
     val myABM = PABMSample<SIRAgent>()
     val behaviour = Behaviour<SIRAgent>(arrayOf(
-            Action(alpha, {it == SIRAgent.I}, { _, pabm ->
+            Action(alpha, { it == SIRAgent.I }, { _, pabm ->
                 pabm.add(SIRAgent.R)
             }),
-            Interaction(beta, {it == SIRAgent.I}, {it == SIRAgent.S}, { _, _, pabm ->
+            Interaction(beta, { it == SIRAgent.I }, { it == SIRAgent.S }, { _, _, pabm ->
                 pabm.add(SIRAgent.I)
                 pabm.add(SIRAgent.I)
             })
@@ -45,6 +45,6 @@ fun main(args : Array<String>) {
     for(i in 1..100) {
         myABM.integrate(dt)
         for(d in 1..16) dsir.step(dt/16.0)
-        println("${myABM.agents[SIRAgent.S]}\t${myABM.agents[SIRAgent.I]}\t${myABM.agents[SIRAgent.R]}\t${dsir.S}\t${dsir.I}\t${dsir.R}")
+        println("${myABM.agents.count(SIRAgent.S)}\t${myABM.agents.count(SIRAgent.I)}\t${myABM.agents.count(SIRAgent.R)}\t${dsir.S}\t${dsir.I}\t${dsir.R}")
     }
 }

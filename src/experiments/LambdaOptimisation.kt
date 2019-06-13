@@ -1,6 +1,6 @@
 package experiments
 
-import deselby.distributions.DeselbyLambdaOptimiser
+import deselby.distributions.discrete.DeselbyLambdaOptimiser
 import org.apache.commons.math3.distribution.PoissonDistribution
 
 fun main(args : Array<String>) {
