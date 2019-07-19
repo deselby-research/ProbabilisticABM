@@ -6,17 +6,17 @@ import org.apache.commons.math3.random.RandomGenerator
 import java.util.HashMap
 import kotlin.math.ln
 
-class GeneratorPolynomial<ABM : MutableCollection<AGENT>, AGENT> private constructor(val coeffs : ArrayList<WeightedState<ABM>>) : FockState<AGENT, GeneratorPolynomial<ABM, AGENT>> {
+class GeneratorPolynomial<ABM: MutableCollection<AGENT>, AGENT> private constructor(val coeffs: ArrayList<WeightedState<ABM>>): FockState<AGENT, GeneratorPolynomial<ABM, AGENT>> {
 
 
     class WeightedState<ABMTYPE>(var abmState : ABMTYPE, var probability : Double)
 
-    val size : Int
+    val size: Int
         get() = coeffs.size
 
-    constructor(initialState : ABM) : this(arrayListOf(WeightedState<ABM>(initialState, 1.0)))
+    constructor(initialState: ABM): this(arrayListOf(WeightedState<ABM>(initialState, 1.0)))
 
-    override fun create(d : AGENT) : GeneratorPolynomial<ABM, AGENT> {
+    override fun create(d: AGENT): GeneratorPolynomial<ABM, AGENT> {
         coeffs.forEach { wState ->
             wState.abmState.add(d)
         }
@@ -26,7 +26,7 @@ class GeneratorPolynomial<ABM : MutableCollection<AGENT>, AGENT> private constru
 
     // AGENT should define the 'equals' method to ensure we can
     // compare states
-    override fun annihilate(d : AGENT) : GeneratorPolynomial<ABM, AGENT> {
+    override fun annihilate(d: AGENT): GeneratorPolynomial<ABM, AGENT> {
         coeffs.forEach { wState ->
             wState.probability *= wState.abmState.count {it == d}
             wState.abmState.remove(d)
@@ -36,6 +36,15 @@ class GeneratorPolynomial<ABM : MutableCollection<AGENT>, AGENT> private constru
         }
         return this
     }
+
+    override fun number(d: AGENT): GeneratorPolynomial<ABM,AGENT> {
+        coeffs.forEach { wState ->
+            wState.probability *= wState.abmState.count {it == d}
+        }
+        return this
+    }
+
+
 
     override operator fun plus(other : GeneratorPolynomial<ABM, AGENT>) : GeneratorPolynomial<ABM, AGENT> {
         val fuzzyUnion = ArrayList<WeightedState<ABM>>(size + other.size)
@@ -75,14 +84,14 @@ class GeneratorPolynomial<ABM : MutableCollection<AGENT>, AGENT> private constru
 //    // to from this.
 //    fun sampleNext(hamiltonian : (FockState<Int, GeneratorPolynomial<AGENT>>) -> GeneratorPolynomial<AGENT>, rand : RandomGenerator = MersenneTwister()) : Pair<Double, GeneratorPolynomial<AGENT>> {
 //        val p0 = if(this.size == 1) this else this.sample()
-//        val H = hamiltonian(p0)
-//        if(H.size == 0) return Pair(Double.POSITIVE_INFINITY, this)
+//        val SparseH = hamiltonian(p0)
+//        if(SparseH.size == 0) return Pair(Double.POSITIVE_INFINITY, this)
 //        val currentState = p0.coeffs.keys.first()
-//        val totalRate = -(H[currentState]?:throw(IllegalArgumentException()))
-//        H.coeffs.remove(currentState)
+//        val totalRate = -(SparseH[currentState]?:throw(IllegalArgumentException()))
+//        SparseH.coeffs.remove(currentState)
 //        return Pair(
 //                -ln(1.0 - rand.nextDouble()) /totalRate,
-//                (H*(1.0/totalRate)).sample(rand)
+//                (SparseH*(1.0/totalRate)).sample(rand)
 //        )
 //    }
 //

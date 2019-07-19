@@ -1,5 +1,6 @@
 package deselby.std
 
+import deselby.std.collections.DoubleNDArray
 import kotlin.math.PI
 import kotlin.math.sin
 

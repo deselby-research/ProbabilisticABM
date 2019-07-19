@@ -1,7 +1,7 @@
 package deselby.distributions.discrete
 
 import deselby.distributions.FockState
-import deselby.std.DoubleNDArray
+import deselby.std.collections.DoubleNDArray
 import deselby.std.FallingFactorial
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.LUDecomposition
@@ -18,8 +18,13 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         }
 
     constructor(lambda : List<Double>) : this(
-            DoubleArray(lambda.size, {lambda[it]} ).asList(),
-            DoubleNDArray(IntArray(lambda.size, { 1 }).asList(), { 1.0 })
+            DoubleArray(lambda.size) {lambda[it]} .asList(),
+            DoubleNDArray(IntArray(lambda.size) { 1 }.asList()) { 1.0 }
+    )
+
+    constructor(other : DeselbyDistribution) : this(
+            DoubleArray(other.lambda.size) {other.lambda[it]} .asList(),
+            DoubleNDArray(other.shape) { ndi -> other.coeffs[ndi] }
     )
 
 
@@ -92,6 +97,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     }
 
 
+
     // observe that the variable with id 'variableId' has value 'm'
     // given that the probability of detection is 'p'
     // this amounts to multiplying this by the binomial distribution
@@ -117,7 +123,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         var p = this
         var time = 0.0
         while(time < T) {
-            p = (p + hamiltonian(p)*dt).truncateBelow(1e-8)
+            p = (p + hamiltonian(p)*dt)//.truncateBelow(1e-8)
             time += dt
         }
         return p

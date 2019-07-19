@@ -1,6 +1,6 @@
 package deselby.probabilisticABM
 
-import deselby.std.HashMultiset
+import deselby.std.collections.HashMultiset
 import java.util.*
 import kotlin.math.ln
 

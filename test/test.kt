@@ -1,34 +1,21 @@
-import deselby.std.DoubleNDArray
-import deselby.std.fourierTransformInPlace
+import deselby.distributions.FockState
+import deselby.distributions.discrete.DeselbyDistribution
+import deselby.std.collections.Array2D
+import deselby.std.collections.hashMultisetOf
+import deselby.std.collections.iSize
+import deselby.std.collections.toString2D
+import deselby.std.distributions.mutableCategoricalOf
+import experiments.spatialPredatorPrey.generatorPoly.Action
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.random.Random
+import kotlin.streams.asStream
+import kotlin.system.measureTimeMillis
 
-
-class MyClass(var i : Int, var j : Int) {
-    override fun equals(other : Any?) : Boolean {
-        if(other is MyClass) {
-            if(super.equals(other)) {
-                return true
-            }
-            return other.i == i && other.j == j
-        }
-        return false
-    }
-
-
-}
+class MyClass(val d : Double)
 
 fun main() {
-    val a = ArrayList<MyClass>()
-
-    val x = MyClass(1,2)
-    val y = MyClass(1,2)
-    val z = MyClass(2,2)
-
-
-    a.add(x)
-    if(a.contains(x)) println("contains x")
-    if(a.contains(y)) println("contains y")
-    if(a.contains(z)) println("contains z")
-    if(a.find {it.equals(x)} != null) println("found x")
-    if(a.find {it.equals(y)} != null) println("found y")
-    if(a.find {it.equals(z)} != null) println("found z")
+    val a = ArrayList<Int>()
+    println(a.toString())
 }

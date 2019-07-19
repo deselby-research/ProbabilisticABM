@@ -1,6 +1,6 @@
 import deselby.distributions.discrete.DeselbyDistribution
 import deselby.std.FallingFactorial
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class DeselbyDistributionTest {
     @Test

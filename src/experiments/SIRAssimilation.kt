@@ -99,7 +99,7 @@ fun SIRSimulate(startState : SIRState, stepTime : Double, totalTime : Double, ra
     return m
 }
 
-// H = beta(c_i^2  - c_s c_i)a_s a_i + gamma(1 - c_i)a_i
+// SparseH = beta(c_i^2  - c_s c_i)a_s a_i + gamma(1 - c_i)a_i
 fun <D : FockState<Int,D>> SIRHamiltonian(p : FockState<Int,D>) : D {
     val beta = 0.01 // rate of infection per si pair
     val gamma = 0.1 // rate of recovery per person

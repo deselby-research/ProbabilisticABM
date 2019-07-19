@@ -1,5 +1,5 @@
 import deselby.mcmc.*
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
 
