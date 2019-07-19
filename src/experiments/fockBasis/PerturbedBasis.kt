@@ -31,7 +31,7 @@ class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState :
     // using the identity
     // aa*^n = a*^(n-1)(n + a*a)
     // for n != 0
-    override fun annihilate(d: AGENT): FockState<AGENT> {
+    override fun annihilate(d: AGENT): AbstractFockState<AGENT> {
         val nd = perturbations[d]?:0
         if(nd == 0) return applyTo(baseState.annihilate(d))
         return this.remove(d)*nd.toDouble() + applyTo(baseState.annihilate(d))
@@ -54,7 +54,7 @@ class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState :
 
     // applies this perturbation to the given state rather than
     // the base state
-    private fun applyTo(state : FockState<AGENT>) : FockState<AGENT> {
+    private fun applyTo(state : AbstractFockState<AGENT>) : AbstractFockState<AGENT> {
         val result = SparseFockDecomposition<AGENT>()
         state.coeffs.mapKeysTo(result.coeffs) {
             val unperturbedBasis = it.key

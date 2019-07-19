@@ -1,5 +1,6 @@
 package experiments.phasedMonteCarlo
 
+import experiments.fockBasis.AbstractFockState
 import experiments.fockBasis.FockState
 import experiments.fockBasis.OneHotFock
 import experiments.fockBasis.SamplableFockDecomposition
@@ -8,7 +9,7 @@ import kotlin.math.ln
 import kotlin.math.sign
 import kotlin.random.Random
 
-fun FockState<Int>.monteCarloContinuous(H: (FockState<Int>) -> FockState<Int>, T : Double) : OneHotFock<Int> {
+fun AbstractFockState<Int>.monteCarloContinuous(H: (AbstractFockState<Int>) -> AbstractFockState<Int>, T : Double) : OneHotFock<Int> {
     var time = 0.0
     var sampleWeight = 1.0
     lateinit var sample : OneHotFock<Int>

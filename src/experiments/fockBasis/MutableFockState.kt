@@ -1,12 +1,16 @@
 package experiments.fockBasis
 
-interface MutableFockState<AGENT> : FockState<AGENT> {
-    override val coeffs : MutableMap<FockBasis<AGENT>, Double>
+import deselby.std.abstractAlgebra.MutableAlgebraElement
 
-    operator fun timesAssign(multiplier: Double)
-    operator fun plusAssign(other: FockState<AGENT>)
-    operator fun minusAssign(other: FockState<AGENT>)
+interface MutableFockState<AGENT, STATE : FockState<AGENT, STATE>> : FockState<AGENT,STATE>, MutableAlgebraElement<STATE, Double> {
     operator fun set(b : FockBasis<AGENT>, value : Double)
-    fun setToZero()
+
+    fun integrate(hamiltonian : (FockState<AGENT,STATE>)-> STATE, T : Double, dt : Double) {
+        var time = 0.0
+        while(time < T) {
+            this += hamiltonian(this)*dt
+            time += dt
+        }
+    }
 
 }

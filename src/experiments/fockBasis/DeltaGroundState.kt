@@ -1,6 +1,7 @@
 package experiments.fockBasis
 
 class DeltaGroundState<AGENT>: FockBasis<AGENT> {
+
     override fun times(other: FockBasis<AGENT>): FockBasis<AGENT> {
         if(other is DeltaGroundState<AGENT>) {
             return this
@@ -15,8 +16,8 @@ class DeltaGroundState<AGENT>: FockBasis<AGENT> {
         return PerturbedBasis(mapOf(d to n), this)
     }
 
-    override fun annihilate(d: AGENT): FockState<AGENT> {
-        return ZeroFockState<AGENT>()
+    override fun annihilate(d: AGENT): AbstractFockState<AGENT> {
+        return ZeroFockState()
     }
 
     override fun count(d: AGENT) = 0

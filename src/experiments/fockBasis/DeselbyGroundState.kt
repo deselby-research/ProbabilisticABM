@@ -1,6 +1,7 @@
 package experiments.fockBasis
 
 class DeselbyGroundState<AGENT>(val lambda : Map<AGENT, Double>) : FockBasis<AGENT> {
+
     override fun times(other: FockBasis<AGENT>): FockBasis<AGENT> {
         if(other is DeselbyGroundState<AGENT>) {
             return this
@@ -15,7 +16,7 @@ class DeselbyGroundState<AGENT>(val lambda : Map<AGENT, Double>) : FockBasis<AGE
         return PerturbedBasis(mapOf(d to n), this)
     }
 
-    override fun annihilate(d: AGENT): FockState<AGENT> {
+    override fun annihilate(d: AGENT): AbstractFockState<AGENT> {
         return OneHotFock(this, lambda[d]?:0.0)
     }
 

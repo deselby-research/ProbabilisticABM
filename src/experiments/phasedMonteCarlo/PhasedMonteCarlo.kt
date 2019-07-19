@@ -1,6 +1,7 @@
 package experiments.phasedMonteCarlo
 
 import deselby.distributions.discrete.DeselbyDistribution
+import experiments.fockBasis.AbstractFockState
 import experiments.fockBasis.DeselbyGroundState
 import experiments.fockBasis.FockState
 import experiments.fockBasis.SparseFockDecomposition
@@ -69,7 +70,8 @@ class PhasedMonteCarlo {
     fun compareSparseDenseIntegration() {
         reset()
         println(measureTimeMillis {
-            val sparseIntegral = sparse.integrate(::SparseH, T, dt)
+            val sparseIntegral = SparseFockDecomposition(sparse)
+            sparseIntegral.integrate(::SparseH, T, dt)
             println(sparseIntegral)
         })
         println(measureTimeMillis {
@@ -81,7 +83,8 @@ class PhasedMonteCarlo {
     @Test
     fun sparseTest() {
         reset()
-        val exactIntegral = sparse.integrate(::SparseH, T, dt)
+        val exactIntegral = SparseFockDecomposition(sparse)
+        exactIntegral.integrate(::SparseH, T, dt)
         println(exactIntegral)
         println(sparse)
 
@@ -125,7 +128,7 @@ class PhasedMonteCarlo {
 
 }
 
-fun SparseH(d: FockState<Int>): FockState<Int> {
+fun SparseH(d: FockState<Int,AbstractFockState<Int>>): AbstractFockState<Int> {
     val a = d.annihilate(0).create(0)
     return a.create(0) - a
 }

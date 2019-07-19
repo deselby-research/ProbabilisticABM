@@ -10,7 +10,7 @@ open class OperatorBasis<AGENT>(val creations : HashMultiset<AGENT>, val annihil
 
     constructor() : this(HashMultiset(), HashMultiset())
 
-    override fun create(d: AGENT, n: Int): FockBasis<AGENT> {
+    override fun create(d: AGENT, n: Int): OperatorBasis<AGENT> {
         val newCreations = HashMultiset(creations)
         newCreations.add(d,n)
         return OperatorBasis(newCreations, annihilations)
@@ -18,7 +18,7 @@ open class OperatorBasis<AGENT>(val creations : HashMultiset<AGENT>, val annihil
 
     // using commutation relation [a,a*^m] = ma*^(m-1)
     // a a*^m a^n = a*^m a^(n+1) + ma*^(m-1)a^n
-    override fun annihilate(d: AGENT): FockState<AGENT> {
+    override fun annihilate(d: AGENT): AbstractFockState<AGENT> {
         val anplus1 = HashMultiset(annihilations)
         anplus1.add(d,1)
         val m = creations.count(d)

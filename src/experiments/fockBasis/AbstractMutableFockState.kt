@@ -1,6 +1,8 @@
 package experiments.fockBasis
 
-abstract class AbstractMutableFockState<AGENT> : AbstractFockState<AGENT>(), MutableFockState<AGENT> {
+abstract class AbstractMutableFockState<AGENT> : AbstractFockState<AGENT>(), MutableFockState<AGENT, AbstractFockState<AGENT>> {
+    abstract override val coeffs : MutableMap<FockBasis<AGENT>, Double>
+
     override operator fun timesAssign(multiplier: Double) {
         if(multiplier == 0.0) coeffs.clear()
         coeffs.entries.forEach {
@@ -8,7 +10,7 @@ abstract class AbstractMutableFockState<AGENT> : AbstractFockState<AGENT>(), Mut
         }
     }
 
-    override operator fun plusAssign(other: FockState<AGENT>) {
+    override operator fun plusAssign(other: AbstractFockState<AGENT>) {
         other.coeffs.forEach {
             coeffs.compute(it.key) {_, initValue ->
                 val newVal = (initValue?:0.0) + it.value
@@ -17,13 +19,19 @@ abstract class AbstractMutableFockState<AGENT> : AbstractFockState<AGENT>(), Mut
         }
     }
 
-    override operator fun minusAssign(other: FockState<AGENT>) {
+    override operator fun minusAssign(other: AbstractFockState<AGENT>) {
         other.coeffs.forEach {
             coeffs.compute(it.key) {_, initValue ->
                 val newVal = (initValue?:0.0) - it.value
                 if(newVal == 0.0) null else newVal
             }
         }
+    }
+
+    override operator fun timesAssign(other : AbstractFockState<AGENT>) {
+        val result = this * other
+        setToZero()
+        coeffs.putAll(result.coeffs)
     }
 
     override operator fun set(b : FockBasis<AGENT>, value : Double) {
@@ -33,5 +41,4 @@ abstract class AbstractMutableFockState<AGENT> : AbstractFockState<AGENT>(), Mut
     override fun setToZero() {
         coeffs.clear()
     }
-
 }

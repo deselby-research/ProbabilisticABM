@@ -8,12 +8,12 @@ package experiments.fockBasis
 // a weighted sum of basis states.
 interface FockBasis<AGENT> : Fockable<AGENT> {
     override fun create(d : AGENT, n : Int) : FockBasis<AGENT>
-    override fun annihilate(d : AGENT) : FockState<AGENT>
+    override fun annihilate(d : AGENT) : AbstractFockState<AGENT>
     fun count(d : AGENT) : Int
 
     override fun create(d : AGENT) : FockBasis<AGENT> = create(d,1)
 
-    fun number(d : AGENT) : FockState<AGENT> = this.annihilate(d).create(d)
+    fun number(d : AGENT) : AbstractFockState<AGENT> = this.annihilate(d).create(d)
 
     fun remove(d : AGENT) : FockBasis<AGENT> = create(d,-1)
 
@@ -22,15 +22,4 @@ interface FockBasis<AGENT> : Fockable<AGENT> {
     }
 
     operator fun times(other : FockBasis<AGENT>) : FockBasis<AGENT>
-
-//    fun apply(perturbation: Map<AGENT, Int>): FockBasis<AGENT> {
-//        var result = this
-//        perturbation.forEach {
-//            result = result.create(it.key, it.value)
-//        }
-//        return result
-//    }
-
-
-
 }

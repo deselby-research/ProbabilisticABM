@@ -1,19 +1,13 @@
 package experiments.fockBasis
 
-interface FockState<AGENT> : Fockable<AGENT> {
-    val coeffs : Map<FockBasis<AGENT>, Double>
+import deselby.std.abstractAlgebra.AlgebraElement
 
-    fun zero() : MutableFockState<AGENT>
-    fun toMutableFockState() : MutableFockState<AGENT>
+interface FockState<AGENT, STATE : FockState<AGENT,STATE>> : Fockable<AGENT>, AlgebraElement<STATE, Double> {
 
-    override fun create(a : AGENT, n : Int) : FockState<AGENT>
-    override fun create(a : AGENT) : FockState<AGENT>
-    override fun annihilate(a : AGENT) : FockState<AGENT>
+    override fun create(a : AGENT, n : Int) : STATE
+    override fun create(a : AGENT) : STATE
+    override fun annihilate(a : AGENT) : STATE
 
-    operator fun get(b : FockBasis<AGENT>) : Double
-    operator fun plus(other : FockState<AGENT>) : FockState<AGENT>
-    operator fun minus(other: FockState<AGENT>): FockState<AGENT>
-    operator fun times(multiplier : Double) : FockState<AGENT>
-    operator fun times(other : FockState<AGENT>) : FockState<AGENT>
+
 
 }
