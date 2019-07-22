@@ -1,10 +1,7 @@
 package experiments.phasedMonteCarlo
 
 import deselby.distributions.discrete.DeselbyDistribution
-import experiments.fockBasis.AbstractFockState
-import experiments.fockBasis.DeselbyGroundState
-import experiments.fockBasis.FockState
-import experiments.fockBasis.SparseFockDecomposition
+import experiments.fockBasis.*
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -15,7 +12,7 @@ class PhasedMonteCarlo {
     val dt = 0.001
     val T = 0.5
     lateinit var deselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambda))
-    lateinit var sparse : SparseFockDecomposition<Int>//(DeselbyBasis(mapOf(0 to lambda)))
+    lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambda)))
 
     @Test
     fun testSparseOperators() {
@@ -70,33 +67,31 @@ class PhasedMonteCarlo {
     fun compareSparseDenseIntegration() {
         reset()
         println(measureTimeMillis {
-            val sparseIntegral = SparseFockDecomposition(sparse)
-            sparseIntegral.integrate(::SparseH, T, dt)
-            println(sparseIntegral)
-        })
-        println(measureTimeMillis {
             val denseIntegral = deselby.integrate(::DenseH, T, dt)
             println(denseIntegral)
+        })
+        println(measureTimeMillis {
+            val sparseIntegral = SparseFockState(sparse)
+            sparseIntegral.integrate(::SparseH, T, dt)
+            println(sparseIntegral)
         })
     }
 
     @Test
     fun sparseTest() {
         reset()
-        val exactIntegral = SparseFockDecomposition(sparse)
+        val exactIntegral = SparseFockState(sparse)
         exactIntegral.integrate(::SparseH, T, dt)
         println(exactIntegral)
-        println(sparse)
 
         val nSamples = 1000000
-        val monteCarloSum = SparseFockDecomposition<Int>()
+        val monteCarloSum = SparseFockState<Int>()
         var effectiveSamples= 0.0
         for(sample in 1..nSamples) {
             val s = sparse.monteCarloContinuous(::SparseH,T)
             monteCarloSum += s
             effectiveSamples += s.probability
         }
-        println(sparse)
         monteCarloSum *= (1.0/effectiveSamples)
         println("MC sum = $monteCarloSum")
         println("Coefficient ratios")
@@ -122,13 +117,13 @@ class PhasedMonteCarlo {
 
     fun reset() {
         deselby = DeselbyDistribution(listOf(lambda))
-//        sparse  = SparseFockDecomposition(DeselbyBasis(mapOf(0 to lambda)))
-        sparse  = SparseFockDecomposition(DeselbyGroundState(mapOf(0 to lambda)))
+//        sparse  = SparseFockState(DeselbyBasis(mapOf(0 to lambda)))
+        sparse  = SparseFockState(DeselbyBasis(mapOf(0 to lambda)))
     }
 
 }
 
-fun SparseH(d: FockState<Int,AbstractFockState<Int>>): AbstractFockState<Int> {
+fun <S : FockState<Int,S>> SparseH(d: FockState<Int,S>): S {
     val a = d.annihilate(0).create(0)
     return a.create(0) - a
 }

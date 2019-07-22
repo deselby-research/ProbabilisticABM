@@ -1,52 +1,44 @@
 package experiments.fockBasis
 
-import kotlin.math.sign
-
-class OneHotFock<AGENT>(var basis : FockBasis<AGENT>, var probability : Double) : AbstractFockState<AGENT>() {
-
-    override fun unaryMinus(): AbstractFockState<AGENT> {
-        return OneHotFock(basis, -probability)
-    }
+class OneHotFock<AGENT>(val basis : FockBasis<AGENT>, val probability : Double = 1.0) : MapFockState<AGENT> {
 
     override val coeffs = mapOf(basis to probability)
 
-    override fun create(a: AGENT): OneHotFock<AGENT> {
-        return OneHotFock(basis.create(a), probability)
-    }
+    override fun unaryMinus(): OneHotFock<AGENT> = OneHotFock(basis, -probability)
 
-    override fun annihilate(a: AGENT): AbstractFockState<AGENT> {
-        return basis.annihilate(a) * probability
-    }
+    override fun create(a: AGENT, n : Int): OneHotFock<AGENT> = OneHotFock(basis.create(a, n), probability)
 
-    override operator fun plus(other: AbstractFockState<AGENT>): AbstractFockState<AGENT> {
-        val result = other.toMutableFockState()
-        result.coeffs.compute(basis) {_, initValue ->
-            val newVal = probability + (initValue?:0.0)
-            if(newVal == 0.0) null else newVal
-        }
+    override fun create(a: AGENT): OneHotFock<AGENT> = OneHotFock(basis.create(a), probability)
+
+    override fun create(creations: Map<AGENT, Int>): OneHotFock<AGENT> = OneHotFock(basis.create(creations),probability)
+
+    override fun annihilate(a: AGENT): MapFockState<AGENT> = basis.annihilate(a) * probability
+
+    override operator fun plus(other: MapFockState<AGENT>): SparseFockState<AGENT> {
+        val result = SparseFockState(other)
+        result.mergeRemoveIfZero(basis, probability, Double::plus)
         return result
     }
 
     // result = -other + this
-    override operator fun minus(other: AbstractFockState<AGENT>): AbstractFockState<AGENT> {
-        val result = zero()
+    override operator fun minus(other: MapFockState<AGENT>): SparseFockState<AGENT> {
+        val result = SparseFockState<AGENT>()
         other.coeffs.mapValuesTo(result.coeffs) {-1.0 * it.value}
-        result.coeffs.compute(basis) {_, initValue ->
-            val newVal = probability + (initValue?:0.0)
-            if(newVal == 0.0) null else newVal
+        result.mergeRemoveIfZero(basis, probability, Double::plus)
+        return result
+    }
+
+    override operator fun times(multiplier: Double): OneHotFock<AGENT> = OneHotFock(basis, probability*multiplier)
+
+    override operator fun times(other : MapFockState<AGENT>) : SparseFockState<AGENT> {
+        val result = SparseFockState<AGENT>()
+        other.coeffs.forEach { otherEntry ->
+            result += (basis*otherEntry.key)*(otherEntry.value*probability)
         }
         return result
     }
 
-    override operator fun times(multiplier: Double): OneHotFock<AGENT> {
-        return OneHotFock(basis, probability*multiplier)
-    }
-
-    override operator fun times(other : AbstractFockState<AGENT>) : AbstractFockState<AGENT> {
-        val result = SparseFockDecomposition<AGENT>()
-        other.coeffs.forEach {
-            result.coeffs[it.key*basis] = it.value * probability
-        }
-        return result
+    override fun toString(): String {
+        return "%+fP[%s]".format(probability, basis)
     }
 }

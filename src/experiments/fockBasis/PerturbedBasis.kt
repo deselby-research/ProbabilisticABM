@@ -1,19 +1,20 @@
 package experiments.fockBasis
 
-class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState : FockBasis<AGENT>) : FockBasis<AGENT> {
+abstract class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState : FockBasis<AGENT>) : FockBasis<AGENT> {
 
-    override fun times(other: FockBasis<AGENT>): FockBasis<AGENT> {
-        if(other !is PerturbedBasis<AGENT>) throw(IllegalArgumentException("Multiplying incompatible bases"))
-        val newPerts = HashMap(perturbations)
-        other.perturbations.forEach { newPerts.merge(it.key, it.value, Int::plus) }
-        return PerturbedBasis(newPerts, baseState*other.baseState)
-    }
+//    override fun times(other: FockBasis<AGENT>): MapFockState<AGENT> {
+//        if(other !is PerturbedBasis<AGENT>) throw(IllegalArgumentException("Multiplying incompatible bases"))
+//        val newPerts = HashMap(creations)
+//        other.creations.forEach { newPerts.mergeRemoveIfZero(it.key, it.value, Int::plus) }
+//        return PerturbedBasis(newPerts, baseState*other.baseState)
+//    }
 
+    abstract fun new(perturbations : Map<AGENT, Int>, baseState : FockBasis<AGENT>) : PerturbedBasis<AGENT>
 
     fun apply(perturbation: Map<AGENT, Int>): FockBasis<AGENT> {
         val newPerts = HashMap(perturbations)
         perturbation.forEach { newPerts.merge(it.key, it.value, Int::plus) }
-        return PerturbedBasis(newPerts, baseState)
+        return new(newPerts, baseState)
     }
 
 
@@ -24,14 +25,14 @@ class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState :
             if(newCount == 0) null else newCount
         }
         if(delta.size == 0) return baseState
-        return PerturbedBasis(delta, baseState)
+        return new(delta, baseState)
     }
 
 
     // using the identity
     // aa*^n = a*^(n-1)(n + a*a)
     // for n != 0
-    override fun annihilate(d: AGENT): AbstractFockState<AGENT> {
+    override fun annihilate(d: AGENT): MapFockState<AGENT> {
         val nd = perturbations[d]?:0
         if(nd == 0) return applyTo(baseState.annihilate(d))
         return this.remove(d)*nd.toDouble() + applyTo(baseState.annihilate(d))
@@ -48,20 +49,20 @@ class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState :
         perturbations.forEach {
             s += "${it.key}:${it.value} "
         }
-        return s
+        return s.dropLast(1)
     }
 
 
     // applies this perturbation to the given state rather than
     // the base state
-    private fun applyTo(state : AbstractFockState<AGENT>) : AbstractFockState<AGENT> {
-        val result = SparseFockDecomposition<AGENT>()
+    private fun applyTo(state : MapFockState<AGENT>) : MapFockState<AGENT> {
+        val result = SparseFockState<AGENT>()
         state.coeffs.mapKeysTo(result.coeffs) {
             val unperturbedBasis = it.key
             if(unperturbedBasis is PerturbedBasis<AGENT>) {
                 unperturbedBasis.apply(perturbations)
             } else {
-                PerturbedBasis(perturbations, unperturbedBasis)
+                new(perturbations, unperturbedBasis)
             }
         }
         return result

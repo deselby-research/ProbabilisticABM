@@ -7,13 +7,15 @@ package experiments.fockBasis
 // The annihilation operator transforms a basis state into
 // a weighted sum of basis states.
 interface FockBasis<AGENT> : Fockable<AGENT> {
+    override fun annihilate(d : AGENT) : MapFockState<AGENT>
     override fun create(d : AGENT, n : Int) : FockBasis<AGENT>
-    override fun annihilate(d : AGENT) : AbstractFockState<AGENT>
+    override fun create(d : AGENT) : FockBasis<AGENT> = create(d,1)
+    override fun create(creations: Map<AGENT, Int>): FockBasis<AGENT>
+
     fun count(d : AGENT) : Int
 
-    override fun create(d : AGENT) : FockBasis<AGENT> = create(d,1)
 
-    fun number(d : AGENT) : AbstractFockState<AGENT> = this.annihilate(d).create(d)
+    fun number(d : AGENT) = this.annihilate(d).create(d)
 
     fun remove(d : AGENT) : FockBasis<AGENT> = create(d,-1)
 
@@ -21,5 +23,5 @@ interface FockBasis<AGENT> : Fockable<AGENT> {
         return OneHotFock(this, multiplier)
     }
 
-    operator fun times(other : FockBasis<AGENT>) : FockBasis<AGENT>
+    operator fun times(other : FockBasis<AGENT>) : MapFockState<AGENT>
 }

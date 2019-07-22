@@ -6,19 +6,23 @@ class CommutationRelation<AGENT>
     : FockState<AGENT,CommutationRelation<AGENT>> {
 
     val operatorToCommute: OperatorBasis<AGENT>
-    val H: AbstractFockState<AGENT>
-    val commutation: AbstractFockState<AGENT>
+    val H: CanonicalOperator<AGENT>
+    val commutation: CanonicalOperator<AGENT>
 
     constructor(operatorToCommute: OperatorBasis<AGENT>) {
         this.operatorToCommute = operatorToCommute
-        this.H = SparseFockDecomposition()
-        commutation = ZeroFockState()
+        this.H = CanonicalOperator()
+        commutation = CanonicalOperator(OperatorBasis())
     }
 
-    private constructor(operatorToCommute: OperatorBasis<AGENT>, H: AbstractFockState<AGENT>, commutation: AbstractFockState<AGENT>) {
+    private constructor(operatorToCommute: OperatorBasis<AGENT>, H: CanonicalOperator<AGENT>, commutation: CanonicalOperator<AGENT>) {
         this.operatorToCommute = operatorToCommute
         this.H = H
         this.commutation = commutation
+    }
+
+    override fun create(creations: Map<AGENT, Int>): CommutationRelation<AGENT> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun times(multiplier: Double): CommutationRelation<AGENT> {
