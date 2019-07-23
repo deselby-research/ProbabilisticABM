@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 class DeltaBasis<AGENT>(creations : Map<AGENT,Int> = HashMap()) : AbstractBasis<AGENT>(creations) {
     override fun new(creations: Map<AGENT, Int>) = DeltaBasis(creations)

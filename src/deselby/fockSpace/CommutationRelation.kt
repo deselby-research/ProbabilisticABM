@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 // represents the commutation relation [x,H] where x commutes with the creation operator
 // and annihilationCommutation is the commutation with the annihilation operator [x,a]
@@ -48,8 +48,8 @@ class CommutationRelation<AGENT>
                 commutation.annihilate(d) + (x*a - a*x)*H)
     }
 
-    override fun create(a: AGENT, n: Int): CommutationRelation<AGENT> {
-        return CommutationRelation(operatorToCommute , H.create(a, n), commutation.create(a, n))
+    override fun create(d: AGENT, n: Int): CommutationRelation<AGENT> {
+        return CommutationRelation(operatorToCommute , H.create(d, n), commutation.create(d, n))
     }
 
     override fun create(d : AGENT) : CommutationRelation<AGENT> = create(d,1)

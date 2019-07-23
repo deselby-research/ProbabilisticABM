@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 
 open class SparseFockState<AGENT>(override val coeffs: HashMap<FockBasis<AGENT>,Double> = HashMap())

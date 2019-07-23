@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 interface MutableMapFockState<AGENT> : MapFockState<AGENT>, MutableFockState<AGENT,MapFockState<AGENT>> {
     override val coeffs : MutableMap<FockBasis<AGENT>, Double>

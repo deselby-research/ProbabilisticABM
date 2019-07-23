@@ -1,9 +1,9 @@
 package experiments.phasedMonteCarlo
 
-import experiments.fockBasis.FockState
-import experiments.fockBasis.MapFockState
-import experiments.fockBasis.OneHotFock
-import experiments.fockBasis.SamplableFockState
+import deselby.fockSpace.FockState
+import deselby.fockSpace.MapFockState
+import deselby.fockSpace.OneHotFock
+import deselby.fockSpace.SamplableFockState
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sign

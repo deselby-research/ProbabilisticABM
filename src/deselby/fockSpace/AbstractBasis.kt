@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<AGENT> {
 

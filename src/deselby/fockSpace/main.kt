@@ -1,6 +1,4 @@
-package experiments.fockBasis
-
-import deselby.std.collections.hashMultisetOf
+package deselby.fockSpace
 
 fun main() {
 //    val deselby = SparseFockState(DeselbyBasis(mapOf(0 to 0.1)))
@@ -17,4 +15,10 @@ fun main() {
     println("a*a*a = ${fock.annihilate(0).create(0).create(0)}")
     println("a*a*a - aa* = ${fock.annihilate(0).create(0).create(0) - fock.annihilate(0).create(0)}")
 //    println(fock.annihilate(0)*deselby)
+}
+
+
+fun <T : FockState<Int,T>> H(s :T) : T {
+    val a = s.annihilate(0).create(0)
+    return a.create(0) - a
 }

@@ -1,6 +1,5 @@
 package deselby.std.abstractAlgebra
 
-interface MutableRingElement<MEMBER : RingElement<MEMBER>> : RingElement<MEMBER>, MutableGroupElement<MEMBER> {
-    operator fun timesAssign(other : MEMBER)
-    // fun setToOne()
-}
+interface MutableRingElement<ELEMENT> : MutableAdditionGroupElement<ELEMENT>, MutableMultiplicationMonoidElement<ELEMENT>
+        where ELEMENT : MultiplicationMonoidElement<ELEMENT>,
+              ELEMENT : AdditionGroupElement<ELEMENT>

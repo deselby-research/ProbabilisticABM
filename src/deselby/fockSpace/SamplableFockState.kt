@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 import deselby.std.distributions.AbsMutableCategorical
 import kotlin.math.sign

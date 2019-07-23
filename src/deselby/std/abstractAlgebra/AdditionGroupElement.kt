@@ -1,6 +1,6 @@
 package deselby.std.abstractAlgebra
 
-interface GroupElement<ELEMENT : GroupElement<ELEMENT>> {
+interface AdditionGroupElement<ELEMENT : AdditionGroupElement<ELEMENT>> {
    // fun isZero() : Boolean
     operator fun plus(other : ELEMENT) : ELEMENT
     operator fun unaryMinus() : ELEMENT

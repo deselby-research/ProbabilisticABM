@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 // represents a set of creation and annihilation operators in canonical order: with annihilation
 // operators being applied before creation. Removal operators can be represented with -ve

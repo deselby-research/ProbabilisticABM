@@ -1,6 +1,5 @@
 package deselby.std.abstractAlgebra
 
-interface RingElement<MEMBER : RingElement<MEMBER>> : GroupElement<MEMBER> {
-   // fun isOne() : Boolean
-    operator fun times(other : MEMBER) : MEMBER
-}
+interface RingElement<ELEMENT> : AdditionGroupElement<ELEMENT>, MultiplicationMonoidElement<ELEMENT>
+        where   ELEMENT: AdditionGroupElement<ELEMENT>,
+                ELEMENT: MultiplicationMonoidElement<ELEMENT>

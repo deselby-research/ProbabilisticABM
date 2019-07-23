@@ -1,5 +1,5 @@
 package deselby.std.abstractAlgebra
 
-interface AlgebraElement<MEMBER : AlgebraElement<MEMBER, SCALAR>, SCALAR> : RingElement<MEMBER> {
-    operator fun times(multiplier : SCALAR) : MEMBER
+interface AlgebraElement<ELEMENT : AlgebraElement<ELEMENT,SCALAR>, SCALAR> : RingElement<ELEMENT> {
+    operator fun times(multiplier : SCALAR) : ELEMENT
 }

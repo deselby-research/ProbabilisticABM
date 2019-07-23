@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 class OneHotFock<AGENT>(val basis : FockBasis<AGENT>, val probability : Double = 1.0) : MapFockState<AGENT> {
 
@@ -6,13 +6,13 @@ class OneHotFock<AGENT>(val basis : FockBasis<AGENT>, val probability : Double =
 
     override fun unaryMinus(): OneHotFock<AGENT> = OneHotFock(basis, -probability)
 
-    override fun create(a: AGENT, n : Int): OneHotFock<AGENT> = OneHotFock(basis.create(a, n), probability)
+    override fun create(d: AGENT, n : Int): OneHotFock<AGENT> = OneHotFock(basis.create(d, n), probability)
 
-    override fun create(a: AGENT): OneHotFock<AGENT> = OneHotFock(basis.create(a), probability)
+    override fun create(d: AGENT): OneHotFock<AGENT> = OneHotFock(basis.create(d), probability)
 
     override fun create(creations: Map<AGENT, Int>): OneHotFock<AGENT> = OneHotFock(basis.create(creations),probability)
 
-    override fun annihilate(a: AGENT): MapFockState<AGENT> = basis.annihilate(a) * probability
+    override fun annihilate(d: AGENT): MapFockState<AGENT> = basis.annihilate(d) * probability
 
     override operator fun plus(other: MapFockState<AGENT>): SparseFockState<AGENT> {
         val result = SparseFockState(other)

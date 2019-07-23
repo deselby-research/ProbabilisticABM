@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 interface MapFockState<AGENT> : FockState<AGENT,MapFockState<AGENT>> {
     val coeffs : Map<FockBasis<AGENT>, Double>

@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 class ZeroFockState<AGENT> : MapFockState<AGENT> {
 
@@ -6,7 +6,7 @@ class ZeroFockState<AGENT> : MapFockState<AGENT> {
         get() = emptyMap()
 
     override fun unaryMinus(): ZeroFockState<AGENT> = this
-    override fun create(a: AGENT, n : Int): ZeroFockState<AGENT> = this
+    override fun create(d: AGENT, n : Int): ZeroFockState<AGENT> = this
     override fun create(creations: Map<AGENT, Int>): MapFockState<AGENT> = this
     override fun annihilate(d: AGENT): ZeroFockState<AGENT> = this
     override fun plus(other: MapFockState<AGENT>) = other

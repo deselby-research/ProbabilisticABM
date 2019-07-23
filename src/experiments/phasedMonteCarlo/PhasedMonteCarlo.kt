@@ -1,7 +1,7 @@
 package experiments.phasedMonteCarlo
 
 import deselby.distributions.discrete.DeselbyDistribution
-import experiments.fockBasis.*
+import deselby.fockSpace.*
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt

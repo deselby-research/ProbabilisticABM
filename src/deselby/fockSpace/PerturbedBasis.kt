@@ -1,4 +1,4 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 abstract class PerturbedBasis<AGENT>(val perturbations : Map<AGENT, Int>, val baseState : FockBasis<AGENT>) : FockBasis<AGENT> {
 

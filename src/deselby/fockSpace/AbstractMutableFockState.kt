@@ -1,22 +1,22 @@
-package experiments.fockBasis
+package deselby.fockSpace
 
 abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>> : MutableMapFockState<AGENT> {
     abstract override val coeffs : MutableMap<FockBasis<AGENT>, Double>
 
     abstract fun zero() : STATE
 
-    override fun create(a : AGENT, n : Int) : STATE {
+    override fun create(d : AGENT, n : Int) : STATE {
         val result = zero()
         coeffs.mapKeysTo(result.coeffs) {
-            it.key.create(a, n)
+            it.key.create(d, n)
         }
         return result
     }
 
-    override fun create(a : AGENT)  : STATE {
+    override fun create(d : AGENT)  : STATE {
         val result = zero()
         coeffs.mapKeysTo(result.coeffs) {
-            it.key.create(a)
+            it.key.create(d)
         }
         return result
     }
@@ -29,10 +29,10 @@ abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>
         return result
     }
 
-    override fun annihilate(a : AGENT) : STATE {
+    override fun annihilate(d : AGENT) : STATE {
         val result = zero()
         coeffs.forEach { monomial ->
-            monomial.key.annihilate(a).coeffs.forEach { annihilatedMonomial ->
+            monomial.key.annihilate(d).coeffs.forEach { annihilatedMonomial ->
                 result.mergeRemoveIfZero(
                         annihilatedMonomial.key ,
                         annihilatedMonomial.value*monomial.value,
@@ -80,10 +80,10 @@ abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>
         return result
     }
 
-    override operator fun timesAssign(multiplier: Double) {
-        if(multiplier == 0.0) coeffs.clear()
+    override operator fun timesAssign(other: Double) {
+        if(other == 0.0) coeffs.clear()
         coeffs.entries.forEach {
-            it.setValue(it.value * multiplier)
+            it.setValue(it.value * other)
         }
     }
 

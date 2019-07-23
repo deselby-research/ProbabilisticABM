@@ -56,7 +56,7 @@ fun metropolisHastingsPosterior(observations : Array<Int>) {
     val totalTime = observationInterval * observations.size
     val r = 0.9 // probability of detection of infected
 
-    var mhRand = MonteCarloRandomGenerator()
+//    var mhRand = MonteCarloRandomGenerator()
 
     val mcmc = MetropolisHastings { rand ->
         val initState = SIRState(rand.nextPoisson(40.0), rand.nextPoisson(7.0), 0)
