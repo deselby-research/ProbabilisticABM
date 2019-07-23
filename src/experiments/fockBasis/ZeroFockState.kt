@@ -13,5 +13,9 @@ class ZeroFockState<AGENT> : MapFockState<AGENT> {
     override fun minus(other: MapFockState<AGENT>): MapFockState<AGENT> = other*(-1.0)
     override fun times(multiplier: Double): ZeroFockState<AGENT> = this
     override fun times(other: MapFockState<AGENT>): ZeroFockState<AGENT> = this
+
+    override fun toString(): String {
+        return "{}"
+    }
 }
 

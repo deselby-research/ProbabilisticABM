@@ -27,9 +27,11 @@ abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<
     }
 
 
-    // using the identity
-    // aa*^n = a*^(n-1)(n + a*a)
-    // for n != 0
+    // using the commutation relation
+    // [a,a*^n] = na*^(n-1)
+    // so
+    // aa*^n = n.a*^(n-1) + (a*^n)a
+    // for all n
     override fun annihilate(d: AGENT): MapFockState<AGENT> {
         val nd = creations[d]?:0
         if(nd == 0) return groundStateAnnihilate(d).create(creations)
@@ -40,6 +42,9 @@ abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<
     override fun count(d: AGENT): Int {
         return creations.getOrDefault(d,0)
     }
+
+
+    fun toFockState() : MapFockState<AGENT> = OneHotFock(this)
 
 
     override fun toString() : String {
