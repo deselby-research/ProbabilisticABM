@@ -10,7 +10,7 @@ interface FockBasis<AGENT> : Fockable<AGENT> {
     override fun annihilate(d : AGENT) : MapFockState<AGENT>
     override fun create(d : AGENT, n : Int) : FockBasis<AGENT>
     override fun create(d : AGENT) : FockBasis<AGENT> = create(d,1)
-    override fun create(creations: Map<AGENT, Int>): FockBasis<AGENT>
+    override fun create(newCreations: Map<AGENT, Int>): FockBasis<AGENT>
 
     fun count(d : AGENT) : Int
 
@@ -24,4 +24,7 @@ interface FockBasis<AGENT> : Fockable<AGENT> {
     }
 
     operator fun times(other : FockBasis<AGENT>) : MapFockState<AGENT>
+
+    fun toFockState() : MapFockState<AGENT> = OneHotFock(this)
+
 }

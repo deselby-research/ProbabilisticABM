@@ -1,7 +1,8 @@
 package deselby.fockSpace
 
-class DeselbyBasis<AGENT>(val lambda : Map<AGENT, Double>, creations : Map<AGENT,Int> = HashMap()) : AbstractBasis<AGENT>(creations) {
-    override fun new(creations: Map<AGENT, Int>) = DeselbyBasis(lambda, creations)
+open class DeselbyBasis<AGENT>(val lambda : Map<AGENT, Double>, override val creations : Map<AGENT,Int> = emptyMap()) : AbstractBasis<AGENT>() {
+
+    override fun new(initCreations: Map<AGENT, Int>) = DeselbyBasis(lambda, initCreations)
 
     override fun groundStateAnnihilate(d: AGENT): MapFockState<AGENT> {
         val ld = lambda[d]?:return ZeroFockState()

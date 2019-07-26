@@ -58,6 +58,10 @@ class CommutationRelation<AGENT>
         return CommutationRelation(operatorToCommute, H + other.H, commutation + other.commutation)
     }
 
+    fun toMapFockState() : MapFockState<AGENT> {
+        return commutation
+    }
+
     override fun toString(): String {
         return commutation.toString()
     }

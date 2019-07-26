@@ -1,18 +1,21 @@
 package deselby.fockSpace
 
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+
 // represents a set of creation and annihilation operators in canonical order: with annihilation
 // operators being applied before creation. Removal operators can be represented with -ve
 // number of creations
-class OperatorBasis<AGENT>(creations : Map<AGENT,Int>, val annihilations : HashMap<AGENT,Int>) : AbstractBasis<AGENT>(creations) {
+class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihilations : Map<AGENT,Int>) : AbstractBasis<AGENT>() {
 
     companion object {
         fun <AGENT> identity() = OperatorBasis<AGENT>()
-        fun <AGENT> create(d: AGENT) = OperatorBasis(hashMapOf(d to 1), HashMap())
-        fun <AGENT> annihilate(d: AGENT) = OperatorBasis(HashMap(), hashMapOf(d to 1))
+        fun <AGENT> create(d: AGENT) = OperatorBasis(hashMapOf(d to 1), emptyMap())
+        fun <AGENT> annihilate(d: AGENT) = OperatorBasis(emptyMap(), hashMapOf(d to 1))
     }
 
 
-    constructor() : this(HashMap(), HashMap())
+    constructor() : this(emptyMap(), emptyMap())
+    constructor(other : OperatorBasis<AGENT>) : this(HashMap(other.creations), HashMap(other.annihilations))
 
 
     override fun new(creations: Map<AGENT, Int>): AbstractBasis<AGENT> = OperatorBasis(creations, annihilations)
@@ -21,7 +24,9 @@ class OperatorBasis<AGENT>(creations : Map<AGENT,Int>, val annihilations : HashM
     // Ground state is taken to be a^annihilations
     // annihilation just adds another annihilation operator
     override fun groundStateAnnihilate(d: AGENT): MapFockState<AGENT> {
-        return OneHotFock(OperatorBasis(HashMap(), hashMapOf(d to annihilations.getOrDefault(d,0)+1)),1.0)
+        val newAnnihilations = HashMap(annihilations)
+        newAnnihilations.merge(d,1,Int::plus)
+        return OperatorBasis(HashMap(), newAnnihilations).toFockState()
     }
 
 
@@ -45,9 +50,9 @@ class OperatorBasis<AGENT>(creations : Map<AGENT,Int>, val annihilations : HashM
 
 
     override fun equals(other: Any?): Boolean {
-        if(super.equals(other)) return true
+//        if(this === other) return true
         if(other !is OperatorBasis<*>) return false
-        return creations == other.creations && annihilations == other.annihilations
+        return (creations == other.creations) and (annihilations == other.annihilations)
     }
 
 

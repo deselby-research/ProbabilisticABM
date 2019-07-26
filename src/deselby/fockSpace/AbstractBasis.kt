@@ -1,8 +1,9 @@
 package deselby.fockSpace
 
-abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<AGENT> {
+abstract class AbstractBasis<AGENT> : FockBasis<AGENT> {
+    abstract val creations : Map<AGENT,Int>
 
-    abstract fun new(creations : Map<AGENT, Int>) : AbstractBasis<AGENT>
+    abstract fun new(initCreations : Map<AGENT, Int>) : AbstractBasis<AGENT>
 
     abstract fun groundStateAnnihilate(d: AGENT) : MapFockState<AGENT>
 
@@ -15,9 +16,9 @@ abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<
         return new(delta)
     }
 
-    override fun create(creations: Map<AGENT, Int>): FockBasis<AGENT> {
-        val delta = HashMap(this.creations)
-        creations.forEach {
+    override fun create(newCreations: Map<AGENT, Int>): FockBasis<AGENT> {
+        val delta = HashMap(creations)
+        newCreations.forEach {
             delta.merge(it.key, it.value) {a , b ->
                 val newVal = a + b
                 if(newVal == 0) null else newVal
@@ -44,9 +45,6 @@ abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<
     }
 
 
-    fun toFockState() : MapFockState<AGENT> = OneHotFock(this)
-
-
     override fun toString() : String {
         var s = ""
         creations.forEach {
@@ -62,7 +60,7 @@ abstract class AbstractBasis<AGENT>(val creations : Map<AGENT,Int>) : FockBasis<
 
 
     override fun equals(other: Any?): Boolean {
-        if(super.equals(other)) return true
+//        if(super.equals(other)) return true
         if(other !is AbstractBasis<*>) return false
         return creations == other.creations
     }

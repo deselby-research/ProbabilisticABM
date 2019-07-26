@@ -13,6 +13,7 @@ class PhasedMonteCarlo {
     val T = 0.5
     lateinit var deselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambda))
     lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambda)))
+    val H : (FockState<Int,MapFockState<Int>>) -> MapFockState<Int> = ::SparseH
 
     @Test
     fun testSparseOperators() {
@@ -88,7 +89,7 @@ class PhasedMonteCarlo {
         val monteCarloSum = SparseFockState<Int>()
         var effectiveSamples= 0.0
         for(sample in 1..nSamples) {
-            val s = sparse.monteCarloContinuous(::SparseH,T)
+            val s = sparse.monteCarloContinuous(H,T)
             monteCarloSum += s
             effectiveSamples += s.probability
         }
@@ -114,6 +115,47 @@ class PhasedMonteCarlo {
         println("Effective samples = $effectiveSamples")
         println("p = $sparse")
     }
+
+    @Test
+    fun perturbationTest() {
+        reset()
+        val exactIntegral = SparseFockState(sparse)
+        exactIntegral.integrate(::SparseH, T, dt)
+        println(exactIntegral)
+
+
+        val nSamples = 100000
+        val monteCarloSum = SparseFockState<Int>()
+        var effectiveSamples= 0.0
+        for(sample in 1..nSamples) {
+//            val s = sparse.perturbativeMonteCarlo(H,T)
+            val s = sparse.perturbativeMonteCarlo(H,T)
+            monteCarloSum += s
+            effectiveSamples += s.probability
+        }
+        monteCarloSum *= (1.0/effectiveSamples)
+        println("MC sum = $monteCarloSum")
+        println("Coefficient ratios")
+        for(monomial in monteCarloSum.coeffs) {
+            val r = (exactIntegral.coeffs[monomial.key]?:0.0)/monomial.value
+            print("%d=%.3f ".format(monomial.key.count(0),r))
+        }
+        println("")
+        println("Coefficient SDs")
+        val qabsSum = exactIntegral.coeffs.values.sumByDouble(::abs)
+        val sampleabsSum = monteCarloSum.coeffs.values.sumByDouble(::abs)
+        for(monomial in monteCarloSum.coeffs) {
+            val qProb = abs(exactIntegral.coeffs[monomial.key]?:0.0)/qabsSum
+            val sd = (abs(monomial.value)/sampleabsSum - qProb)/sqrt(qProb*(1.0-qProb)/effectiveSamples)
+            print("%d=%.3f ".format(monomial.key.count(0),sd))
+        }
+        println("")
+        println("absolute sum = $qabsSum")
+        println("sample absolute sum = $sampleabsSum")
+        println("Effective samples = $effectiveSamples")
+        println("p = $sparse")
+    }
+
 
     fun reset() {
         deselby = DeselbyDistribution(listOf(lambda))
