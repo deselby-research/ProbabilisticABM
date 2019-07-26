@@ -67,44 +67,44 @@ fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int,MapFockState<Int>
     val commutations = CreationCommutations(hamiltonian)
     val sampleBasis = MutableDeselbyBasis(this.coeffs.keys.first() as DeselbyBasis<Int>)
     val sampleAsPerturbation = DeselbyPerturbationBasis(sampleBasis)
-    var sample = OneHotFock(sampleAsPerturbation)
-//    var samplePhase = 1
+    val sample = OneHotFock(sampleAsPerturbation)
+    var samplePhase = 1.0
     val possibleTransitionStates = SamplableFockState(hamiltonian * sampleAsPerturbation.toFockState())
     do {
-        val sampleRateOfChange = possibleTransitionStates[sampleAsPerturbation] * sample.probability.sign
+        val sampleRateOfChange = possibleTransitionStates[sampleAsPerturbation]
         possibleTransitionStates.coeffs.remove(sampleAsPerturbation)
 
         val transitionRate = possibleTransitionStates.coeffs.sum()
         var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T
-        val weightGrowthRate = transitionRate + sampleRateOfChange*sample.probability.sign
+        val weightGrowthRate = transitionRate + sampleRateOfChange
         sampleWeight *= exp(weightGrowthRate*timeToNextEvent)
 
         if(time < T) {
             // choose perturbation
             val perturbation = possibleTransitionStates.sample()
-            possibleTransitionStates[sampleAsPerturbation] = sampleRateOfChange * sample.probability.sign
+            samplePhase *= perturbation.probability
+            possibleTransitionStates[sampleAsPerturbation] = sampleRateOfChange
             val basis = perturbation.basis as DeselbyPerturbationBasis<Int>
             // apply it to sampleBasis
             basis.creations.forEach {
                 val commutation: MapFockState<Int> = commutations[it.key] ?: ZeroFockState()
                 if (it.value > 0) {
                     for (i in 1..it.value) {
-                        val Q = commutation * OneHotFock(sampleAsPerturbation)
+                        val Q = commutation * sample
                         possibleTransitionStates -= Q
                         sampleBasis.createAssign(it.key, 1)
                     }
                 } else if (it.value < 0) {
                     for (i in 1..-it.value) {
                         sampleBasis.createAssign(it.key, -1)
-                        val Q = commutation * OneHotFock(sampleAsPerturbation)
+                        val Q = commutation * sample
                         possibleTransitionStates += Q
                     }
                 }
             }
-            sample = OneHotFock(sampleAsPerturbation, perturbation.probability*sample.probability)
         }
     } while(time < T)
-    return OneHotFock(sampleBasis, sampleWeight*sample.probability)
+    return OneHotFock(sampleBasis, sampleWeight*samplePhase)
 }

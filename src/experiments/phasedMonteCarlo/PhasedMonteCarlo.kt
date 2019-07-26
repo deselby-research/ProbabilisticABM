@@ -124,7 +124,7 @@ class PhasedMonteCarlo {
         println(exactIntegral)
 
 
-        val nSamples = 100000
+        val nSamples = 1000000
         val monteCarloSum = SparseFockState<Int>()
         var effectiveSamples= 0.0
         for(sample in 1..nSamples) {
