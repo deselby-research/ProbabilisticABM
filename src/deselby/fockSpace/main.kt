@@ -1,5 +1,6 @@
 package deselby.fockSpace
 
+
 fun main() {
 //    val basis = DeselbyBasis(mapOf(0 to 0.1)).create(0,2)
 //    val fock = DeselbyPerturbationBasis(basis as DeselbyBasis<Int>).toFockState()

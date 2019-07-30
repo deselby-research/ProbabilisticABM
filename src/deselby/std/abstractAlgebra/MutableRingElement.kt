@@ -1,5 +1,9 @@
 package deselby.std.abstractAlgebra
 
-interface MutableRingElement<ELEMENT> : MutableAdditionGroupElement<ELEMENT>, MutableMultiplicationMonoidElement<ELEMENT>
-        where ELEMENT : MultiplicationMonoidElement<ELEMENT>,
-              ELEMENT : AdditionGroupElement<ELEMENT>
+interface MutableRingElement<ELEMENT>:
+        RingElement<ELEMENT>,
+        HasMutablePlusMinusSelf<ELEMENT>,
+        HasMutableTimesBySelf<ELEMENT>
+        where
+ELEMENT: HasPlusMinusSelf<ELEMENT>,
+ELEMENT: HasTimesBySelf<ELEMENT>

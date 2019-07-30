@@ -1,8 +1,12 @@
 package deselby.std.abstractAlgebra
 
-interface MutableAlgebraElement<MEMBER : AlgebraElement<MEMBER,SCALAR>, SCALAR> :
-        AlgebraElement<MEMBER,SCALAR>,
-        MutableRingElement<MEMBER>
-{
-    operator fun timesAssign(other : SCALAR)
-}
+import javax.swing.text.AbstractDocument
+
+interface MutableAlgebraElement<ELEMENT, SCALAR> :
+        AlgebraElement<ELEMENT, SCALAR>,
+        HasMutableTimesBySelf<ELEMENT>,
+        HasMutablePlusMinusSelf<ELEMENT>,
+        HasTimesAssign<SCALAR>
+        where
+ELEMENT : HasPlusMinusSelf<ELEMENT>,
+ELEMENT : HasTimesBySelf<ELEMENT> {}

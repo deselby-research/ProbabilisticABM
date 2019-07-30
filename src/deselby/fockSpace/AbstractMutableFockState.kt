@@ -102,7 +102,7 @@ abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>
     }
 
 
-    override fun setToZero() {
+    fun setToZero() {
         coeffs.clear()
     }
 

@@ -62,7 +62,7 @@ class GeneratorPolynomial<ABM: MutableCollection<AGENT>, AGENT> private construc
     }
 
 
-//    // randomly chooses a single monomial from this polynomial with probability proportional to
+//    // randomly chooses a single monomial from this polynomial with coeff proportional to
 //    // its coefficient and returns a GeneratorPolynomial<AGENT> with just that monomial in, with
 //    // coefficient of 1
 //    // assumes that this polynomial is normalised

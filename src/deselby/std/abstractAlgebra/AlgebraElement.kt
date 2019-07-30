@@ -1,5 +1,7 @@
 package deselby.std.abstractAlgebra
 
-interface AlgebraElement<ELEMENT : AlgebraElement<ELEMENT,SCALAR>, SCALAR> : RingElement<ELEMENT> {
-    operator fun times(multiplier : SCALAR) : ELEMENT
+interface AlgebraElement<ELEMENT, SCALAR> : RingElement<ELEMENT>, HasTimes<SCALAR,ELEMENT>
+    where ELEMENT : HasPlusMinusSelf<ELEMENT>,
+          ELEMENT : HasTimesBySelf<ELEMENT>
+{
 }

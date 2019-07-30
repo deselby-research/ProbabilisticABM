@@ -24,7 +24,7 @@ class SIRState(var S : Int, var I : Int, var R : Int) {
 fun main(args : Array<String>) {
     val observationInterval = 1.0
     val totalTime = 5.0
-    val r = 0.9 // probability of detection of infected
+    val r = 0.9 // coeff of detection of infected
     val realStartState = SIRState(35,5,0)
     val observations = generateObservations(realStartState, observationInterval, r, totalTime)
     deselbyPosterior(observations)
@@ -33,7 +33,7 @@ fun main(args : Array<String>) {
 
 fun deselbyPosterior(observations : Array<Int>) {
     val observationInterval = 1.0
-    val r = 0.9 // probability of detection of infected
+    val r = 0.9 // coeff of detection of infected
 
     var p = DeselbyDistribution(listOf(40.0, 7.0)) // initial prior
     for(nObs in 0 until observations.size) {
@@ -54,7 +54,7 @@ fun deselbyPosterior(observations : Array<Int>) {
 fun metropolisHastingsPosterior(observations : Array<Int>) {
     val observationInterval = 1.0
     val totalTime = observationInterval * observations.size
-    val r = 0.9 // probability of detection of infected
+    val r = 0.9 // coeff of detection of infected
 
 //    var mhRand = MonteCarloRandomGenerator()
 
