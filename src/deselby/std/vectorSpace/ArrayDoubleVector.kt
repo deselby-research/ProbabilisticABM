@@ -2,14 +2,18 @@ package deselby.std.vectorSpace
 
 import deselby.std.collections.DoubleArrayMap
 
-class ArrayDoubleVector<BASIS>(override val coeffs : DoubleArrayMap<BASIS>) :
-        AbstractMutableDoubleVector<BASIS>() {
+class ArrayDoubleVector<BASIS>(val coeffs : DoubleArrayMap<BASIS>) :
+        AbstractMutableMap<BASIS,Double>(),
+        MutableDoubleVector<BASIS> {
 
-    override fun toMutableVector(): AbstractMutableDoubleVector<BASIS> {
-        return ArrayDoubleVector(DoubleArrayMap(coeffs))
-    }
+    override val entries
+            get() = coeffs.entries
 
-    override fun zero(): AbstractMutableDoubleVector<BASIS> {
-        return ArrayDoubleVector(DoubleArrayMap(DoubleArray(coeffs.size) { 0.0 }, coeffs.keyToIndex, coeffs.keysInOrder))
-    }
+    override fun put(key: BASIS, value: Double) = coeffs.put(key,value)
+
+    override fun get(key: BASIS) = coeffs.get(key)
+
+    override fun toMutableVector()= ArrayDoubleVector(DoubleArrayMap(coeffs))
+
+    override fun zero()= ArrayDoubleVector(DoubleArrayMap(DoubleArray(coeffs.size) { 0.0 }, coeffs.keyToIndex, coeffs.keysInOrder))
 }

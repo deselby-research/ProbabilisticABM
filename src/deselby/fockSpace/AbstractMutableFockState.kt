@@ -110,7 +110,7 @@ abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>
         if(coeffs.isEmpty()) return "{}"
         var s = ""
         coeffs.forEach {
-            s += "%+fP[%s] ".format(it.value, it.key)// ""${it.value}P[${it.key}] "
+            s += "%+fP[%s] ".format(it.value, it.key)// ""${it.coeff}P[${it.key}] "
         }
         return s
     }

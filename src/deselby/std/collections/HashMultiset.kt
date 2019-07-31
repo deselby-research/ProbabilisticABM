@@ -1,7 +1,5 @@
 package deselby.std.collections
 
-import kotlin.math.min
-
 class HashMultiset<T>(private val map : HashMap<T,Int> = HashMap()) : AbstractMutableSet<T>() {
     override var size : Int = 0
 
@@ -18,7 +16,6 @@ class HashMultiset<T>(private val map : HashMap<T,Int> = HashMap()) : AbstractMu
             add(it)
         }
     }
-
 
     override fun add(m : T) = add(m,1)
 
@@ -107,6 +104,11 @@ class HashMultiset<T>(private val map : HashMap<T,Int> = HashMap()) : AbstractMu
         val result = HashMultiset(HashMap(map))
         other.map.entries.forEach { result.map.merge(it.key, it.value, Int::plus) }
         return result
+    }
+
+
+    override fun contains(element: T): Boolean {
+        return map.containsKey(element)
     }
 
 

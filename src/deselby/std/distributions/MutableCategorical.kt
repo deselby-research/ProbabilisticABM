@@ -114,7 +114,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
         while (category.hasNext() && probability.hasNext()) {
             val prob = probability.next()
             val cat = category.next()
-            if (prob > 0.0) {
+            if (prob != 0.0) {
                 val newNode = createLeaf(null, cat, prob)
                 heap.add(newNode)
                 leafNodes[newNode.key] = newNode

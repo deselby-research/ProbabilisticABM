@@ -13,6 +13,7 @@ class DoubleArrayMap<K>(denseData : DoubleArray, keyToIndex : (K) -> Int, keysIn
 
     override fun put(key: K, value: Double): Double = entries.add(key,value)?:throw(IndexOutOfBoundsException())
 
+    override fun get(key: K): Double? = entries.get(key)
 
     fun asArray() = entries.denseData
 
@@ -30,12 +31,17 @@ class DoubleArrayMap<K>(denseData : DoubleArray, keyToIndex : (K) -> Int, keysIn
 
         fun add(key: K, value: Double): Double? {
             val index = keyToIndex(key)
-            if(index >= denseData.size || index < 0) return null
+            if(index >= denseData.size) return null
             val oldVal = denseData[index]
             denseData[index] = value
             return oldVal
         }
 
+        fun get(key : K) : Double? {
+            val index = keyToIndex(key)
+            if(index >= denseData.size) return null
+            return(denseData[index])
+        }
 
         override fun iterator(): MutableIterator<Entry<K>> {
             return EntryIterator(0, keysInOrder.iterator())

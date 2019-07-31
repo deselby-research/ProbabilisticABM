@@ -37,7 +37,7 @@ class PABMSample<AGENT, ABM : MutableCollection<AGENT>>(initABMState : ABM) {
         var remainingTime = t
 
         var totalActRate = acts.sumByDouble { it.rate }
-        remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative value
+        remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative coeff
         while(remainingTime > 0.0) {
 
             // choose next act
@@ -60,7 +60,7 @@ class PABMSample<AGENT, ABM : MutableCollection<AGENT>>(initABMState : ABM) {
             }
 
             totalActRate = acts.sumByDouble { it.rate } // TODO: Make this perturbative rather than recalculating
-            remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative value
+            remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative coeff
         }
 
         return this

@@ -1,9 +1,36 @@
 package deselby.std.vectorSpace
 
-class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) : Vector<BASIS,Double> {
+import java.util.Collections.singleton
 
-    override val coeffs = mapOf(basis to coeff)
+class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) :
+        AbstractMap<BASIS,Double>(),
+        DoubleVector<BASIS> {
 
+    override val entries: Set<Map.Entry<BASIS, Double>>
+        get() = singleton(this.asEntry())
+
+
+    override fun get(key: BASIS) : Double? {
+        return if(key == basis) coeff else null
+    }
+
+    override fun toMutableVector(): HashMapDoubleVector<BASIS> {
+        val s = singleton(1)
+        return HashMapDoubleVector(hashMapOf(basis to coeff))
+    }
+
+    override fun zero(): HashMapDoubleVector<BASIS> {
+        return HashMapDoubleVector()
+    }
+
+    fun asEntry() : Map.Entry<BASIS,Double> {
+        return object : Map.Entry<BASIS,Double> {
+            override val key: BASIS
+                get() = basis
+            override val value: Double
+                get() = coeff
+        }
+    }
 
     override operator fun plus(other: Vector<BASIS,Double>): HashMapDoubleVector<BASIS> {
         val result = HashMapDoubleVector(other)
@@ -16,16 +43,14 @@ class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) : Vector<
 
 
     override operator fun minus(other: Vector<BASIS,Double>): HashMapDoubleVector<BASIS> {
-        val result = HashMapDoubleVector(other)
-        result.coeffs.merge(basis , coeff) { a, b ->
-            val newVal = b - a
-            if(newVal == 0.0) null else newVal
-        }
+        val result = HashMapDoubleVector<BASIS>()
+        other.mapValuesTo(result.coeffs) { -it.value }
+        result += this.asEntry()
         return result
     }
 
 
-    override operator fun unaryMinus(): Vector<BASIS,Double> =
+    override operator fun unaryMinus(): OneHotDoubleVector<BASIS> =
             OneHotDoubleVector(basis, -coeff)
 
 

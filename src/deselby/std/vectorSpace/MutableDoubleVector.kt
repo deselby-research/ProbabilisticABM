@@ -1,27 +1,28 @@
 package deselby.std.vectorSpace
 
-abstract class AbstractMutableDoubleVector<BASIS> : AbstractDoubleVector<BASIS>(), MutableVector<BASIS,Double> {
+interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector<BASIS> {
+//    val coeffs : MutableMap<BASIS, Double>
 
     override fun plusAssign(other: Vector<BASIS, Double>) {
-        other.coeffs.forEach { this += it}
+        other.forEach { this += it}
     }
 
 
     override fun minusAssign(other: Vector<BASIS, Double>) {
-        other.coeffs.forEach { this -= it}
+        other.forEach { this -= it}
     }
 
 
     override fun timesAssign(multiplier: Double) {
-        if(multiplier == 0.0) coeffs.clear()
-        coeffs.entries.forEach {
+        if(multiplier == 0.0) clear()
+        entries.forEach {
             it.setValue(it.value * multiplier)
         }
     }
 
 
     operator fun plusAssign(entry : Map.Entry<BASIS,Double>) {
-        coeffs.merge(entry.key , entry.value) {a , b ->
+        merge(entry.key , entry.value) {a , b ->
             val newVal = a + b
             if(newVal == 0.0) null else newVal
         }
@@ -29,7 +30,7 @@ abstract class AbstractMutableDoubleVector<BASIS> : AbstractDoubleVector<BASIS>(
 
 
     operator fun minusAssign(entry : Map.Entry<BASIS,Double>) {
-        coeffs.merge(entry.key , -entry.value) {a , b ->
+        merge(entry.key , -entry.value) {a , b ->
             val newVal = a + b
             if(newVal == 0.0) null else newVal
         }

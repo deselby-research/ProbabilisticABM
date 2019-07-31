@@ -6,7 +6,7 @@ import kotlin.math.exp
 import kotlin.math.sqrt
 
 // supply a function from which you want to sample that takes a RandomGenerator and returns
-// a pair consisting of the coeff and the value of the sample.
+// a pair consisting of the coeff and the coeff of the sample.
 class MetropolisHastings<T>(val model : (RandomGenerator) -> Pair<Observations,T>) : ArrayList<T>() {
     val rand = MersenneTwister()
 

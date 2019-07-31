@@ -98,7 +98,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
 
 
-    // observe that the variable with id 'variableId' has value 'm'
+    // observe that the variable with id 'variableId' has coeff 'm'
     // given that the coeff of detection is 'p'
     // this amounts to multiplying this by the binomial distribution
     // P'(k) = Binom(p,m,k)P(k)

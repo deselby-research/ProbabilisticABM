@@ -73,7 +73,7 @@ class GeneratorPolynomial<ABM: MutableCollection<AGENT>, AGENT> private construc
 //        var entry : MutableMap.MutableEntry<List<AGENT>,Double>? = null
 //        while(cumulativeProb <= targetCumulativeProb && iterator.hasNext()) {
 //            entry = iterator.next()
-//            cumulativeProb += entry.value
+//            cumulativeProb += entry.coeff
 //        }
 //        val result = GeneratorPolynomial<AGENT>(HashMap())
 //        if(entry != null) result[entry.key] = 1.0

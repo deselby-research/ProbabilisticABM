@@ -77,8 +77,9 @@ class testMutableCategorical {
         myChoose.clear()
 
         val probs = listOf(0.6, 0.04, 0.06, 0.2, 0.1)
+//        val probs = listOf(0.4, 0.6)
         // myChoose.createHuffmanTree(0..probs.size, probs)
-        myChoose.createBinaryTree(0..probs.size, probs)
+        myChoose.createBinaryTree(0 until probs.size, probs)
 
         val count = Array(myChoose.size) { 0 }
         val nSamples = 10000000

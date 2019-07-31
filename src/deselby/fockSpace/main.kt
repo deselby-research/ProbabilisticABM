@@ -1,5 +1,10 @@
 package deselby.fockSpace
 
+import deselby.fockSpace.bases.FockBasisVector
+import deselby.fockSpace.bases.Operator
+import deselby.std.vectorSpace.DoubleVector
+import deselby.std.vectorSpace.OneHotDoubleVector
+
 
 fun main() {
 //    val basis = DeselbyBasis(mapOf(0 to 0.1)).create(0,2)
@@ -9,11 +14,16 @@ fun main() {
 //    val fock = SparseFockState(OperatorBasis.identity<Int>())
 //    val fock = CommutationRelation(OperatorBasis.create(0))
 //    val pb = DeselbyPerturbationBasis(basis as DeselbyBasis<Int>)
-    val fock = OneHotFock(DeselbyPerturbationBasis(DeselbyBasis(mapOf(0 to 0.1))))
+//    val fock = OneHotFock(DeselbyPerturbationBasis(DeselbyBasis(mapOf(0 to 0.1))))
+
+//    val fock = OneHotDoubleVector(Deselby(mapOf(0 to 0.1)),1.0)
+    val fock = OneHotDoubleVector(Operator.identity<Int>(),1.0)
 
     testOperators(fock)
 
-
+    val hamiltonian = H(fock)
+    println(hamiltonian)
+    println(hamiltonian.toCreationCommutationMap())
 }
 
 
@@ -21,6 +31,12 @@ fun <T : FockState<Int,T>> H(s :T) : T {
     val a = s.annihilate(0).create(0)
     return a.create(0) - a
 }
+
+fun <T : FockBasisVector<Int,T>> H(s :DoubleVector<T>) : DoubleVector<T> {
+    val a = s.annihilate(0).create(0)
+    return a.create(0) - a
+}
+
 
 fun <T : FockState<Int,T>> multidimH(s :T) : T {
     val a = s.annihilate(0).create(1) - s.annihilate(0).create(0)
@@ -41,6 +57,18 @@ fun <T : FockState<Int,T>> testOperators(fock : T) {
     println("a*a*a - aa* = ${fock.annihilate(0).create(0).create(0) - fock.annihilate(0).create(0)}")
 
 }
+
+fun <T : FockBasisVector<Int,T>> testOperators(fock : DoubleVector<T>) {
+    println("fock = $fock")
+    println("a* = ${fock.create(0)}")
+    println("a = ${fock.annihilate(0)}")
+    println("a*a* = ${fock.create(0).create(0)}")
+    println("aa* = ${fock.create(0).annihilate(0)}")
+    println("a*a = ${fock.annihilate(0).create(0)}")
+    println("a*a*a = ${fock.annihilate(0).create(0).create(0)}")
+    println("a*a*a - aa* = ${fock.annihilate(0).create(0).create(0) - fock.annihilate(0).create(0)}")
+}
+
 
 fun testMonteCarlo() {
     val fock = SparseFockState(OperatorBasis.identity<Int>())
