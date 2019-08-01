@@ -4,7 +4,6 @@ import deselby.std.collections.Array2D
 import deselby.std.collections.hashMultisetOf
 import deselby.std.collections.iSize
 import deselby.std.collections.toString2D
-import deselby.std.distributions.mutableCategoricalOf
 import experiments.spatialPredatorPrey.generatorPoly.Action
 import java.util.*
 import kotlin.collections.ArrayList

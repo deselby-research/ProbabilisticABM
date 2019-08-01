@@ -1,6 +1,7 @@
 package deselby.std.distributions
 
 import java.util.*
+import kotlin.Comparator
 import kotlin.NoSuchElementException
 import kotlin.collections.HashMap
 import kotlin.random.Random
@@ -26,11 +27,21 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
     }
 
 
+    constructor(vararg categories: Pair<T, Double>) {
+        leafNodes = HashMap(categories.size)
+        createBinaryTree(
+                categories.asSequence().map { it.first }.asIterable(),
+                categories.asSequence().map { it.second }.asIterable(),
+                categories.size
+        )
+    }
+
+
     // Sets this to be the Huffman tree of the given categories with the given probabilities
     // This creates an optimally efficient tree but runs in O(n log(n)) time as the entries
     // need to be sorted
     fun createHuffmanTree(categories: Iterable<T>, probabilities: Iterable<Double>, initialCapacity: Int = -1) {
-        val heapComparator = Comparator<SumTreeNode<T>> { i, j -> i.value.compareTo(j.value) }
+        val heapComparator = Comparator<SumTreeNode<T>> { i, j -> i.probability.compareTo(j.probability) }
         if (initialCapacity > 0)
             createTree(categories, probabilities, PriorityQueue(initialCapacity, heapComparator))
         else
@@ -88,11 +99,11 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
     fun sample(): T {
         val root = sumTreeRoot ?: throw(NoSuchElementException())
-        return sample(Random.nextDouble() * root.value)!!
+        return sample(Random.nextDouble() * root.probability)!!
     }
 
 
-    fun sum() = sumTreeRoot?.value ?: 0.0
+    fun sum() = sumTreeRoot?.probability ?: 0.0
 
 
     override fun clear() {
@@ -102,7 +113,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
 
     fun calcHuffmanLength(): Double {
-        return (sumTreeRoot?.calcHuffmanLength() ?: 0.0) / (sumTreeRoot?.value ?: 1.0)
+        return (sumTreeRoot?.calcHuffmanLength() ?: 0.0) / (sumTreeRoot?.probability ?: 1.0)
     }
 
 
@@ -142,17 +153,18 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
     open fun createLeaf(parent : InternalNode<T>?, category : T, probability : Double) : LeafNode<T> =
             LeafNode(parent, category, probability)
 
-    open fun createNode(parent : InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) =
+    private fun createNode(parent : InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) =
             InternalNode(parent, child1, child2)
 
 
-    open class InternalNode<T> : SumTreeNode<T> {
+    class InternalNode<T> : SumTreeNode<T> {
+        override var probability : Double
         var leftChild: SumTreeNode<T>
         var rightChild: SumTreeNode<T>
 
-
-        constructor(parent: InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) : super(parent, child1.value + child2.value) {
-            if (child1.value > child2.value) {
+        constructor(parent: InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) : super(parent) {
+            probability = child1.probability + child2.probability
+            if (child1.probability > child2.probability) {
                 this.leftChild = child1
                 this.rightChild = child2
             } else {
@@ -163,20 +175,21 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
             child2.parent = this
         }
 
-        constructor(parent: InternalNode<T>?, lChild: SumTreeNode<T>, rChild: SumTreeNode<T>, sum : Double) : super(parent, sum) {
+        constructor(parent: InternalNode<T>?, lChild: SumTreeNode<T>, rChild: SumTreeNode<T>, sum : Double) : super(parent) {
+            probability = sum
             leftChild = lChild
             rightChild = rChild
         }
 
 
         override fun find(sum: Double): LeafNode<T> {
-            if (sum <= leftChild.value) return leftChild.find(sum)
-            return rightChild.find(sum - leftChild.value)
+            if (sum <= leftChild.probability) return leftChild.find(sum)
+            return rightChild.find(sum - leftChild.probability)
         }
 
         override fun updateSum() {
-            value = leftChild.value + rightChild.value
-            if (leftChild.value < rightChild.value) {
+            probability = leftChild.probability + rightChild.probability
+            if (leftChild.probability < rightChild.probability) {
                 val tmp = rightChild
                 rightChild = leftChild
                 leftChild = tmp
@@ -184,7 +197,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
         }
 
         override fun add(newNode: LeafNode<T>): InternalNode<T> {
-            if (value <= newNode.value) { // add right here
+            if (probability <= newNode.value) { // add right here
                 return newNode.growNewParentAndInsertAbove(this)
             }
             rightChild.add(newNode)
@@ -219,15 +232,19 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
             return keepChild.parent?.updateSumsToRoot() ?: keepChild
         }
 
-        override fun calcHuffmanLength() =  value + leftChild.calcHuffmanLength() + rightChild.calcHuffmanLength()
+        override fun calcHuffmanLength() =  probability + leftChild.calcHuffmanLength() + rightChild.calcHuffmanLength()
 
     }
 
 
     open class LeafNode<T> : SumTreeNode<T>, Map.Entry<T, Double> {
+        override var value : Double
         override val key: T
+        override val probability : Double
+            get() = value
 
-        constructor(parent: InternalNode<T>?, item: T, probability: Double) : super(parent, probability) {
+        constructor(parent: InternalNode<T>?, item: T, probability: Double) : super(parent) {
+            value = probability
             this.key = item
         }
 
@@ -246,7 +263,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
             return newParent
         }
 
-        open fun createInternalNode(parent : InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) =
+        fun createInternalNode(parent : InternalNode<T>?, child1: SumTreeNode<T>, child2: SumTreeNode<T>) =
                 InternalNode(parent, child1, child2)
 
         // removes this and returns the root node
@@ -257,7 +274,8 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
     }
 
 
-    abstract class SumTreeNode<T>(var parent: InternalNode<T>?, var value: Double) {
+    abstract class SumTreeNode<T>(var parent: InternalNode<T>?) {
+        abstract val probability : Double
 
         // returns the root node
         fun updateSumsToRoot(): SumTreeNode<T> {
@@ -342,13 +360,3 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
 }
 
-
-fun <T> mutableCategoricalOf(vararg categories: Pair<T, Double>): MutableCategorical<T> {
-    val d = MutableCategorical<T>(categories.size)
-    d.createBinaryTree(
-            categories.asSequence().map { it.first }.asIterable(),
-            categories.asSequence().map { it.second }.asIterable(),
-            categories.size
-    )
-    return d
-}

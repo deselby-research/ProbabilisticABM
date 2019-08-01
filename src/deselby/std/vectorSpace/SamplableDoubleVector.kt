@@ -6,7 +6,7 @@ import kotlin.math.sign
 class SamplableDoubleVector<BASIS>(val coeffs: AbsMutableCategorical<BASIS> = AbsMutableCategorical()) :
         AbstractMutableMap<BASIS,Double>(), MutableDoubleVector<BASIS> {
 
-    constructor(otherVector : Vector<BASIS,Double>) : this(AbsMutableCategorical()) {
+    constructor(otherVector : Vector<BASIS,Double>) : this() {
 //        coeffs.putAll(otherVector)
         coeffs.createBinaryTree(otherVector.keys, otherVector.values)
     }
