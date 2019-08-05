@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 open class DeselbyBasis<AGENT>(val lambda : Map<AGENT, Double>, override val creations : Map<AGENT,Int> = emptyMap()) : AbstractBasis<AGENT>() {
 

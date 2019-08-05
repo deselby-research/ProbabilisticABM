@@ -16,8 +16,8 @@ class EmptyDoubleVector<BASIS> : DoubleVector<BASIS> {
     override fun get(key: BASIS) = null
     override fun isEmpty() = true
 
-    override fun zero() = HashMapDoubleVector<BASIS>()
-    override fun toMutableVector() = HashMapDoubleVector<BASIS>()
+    override fun zero() = HashDoubleVector<BASIS>()
+    override fun toMutableVector() = HashDoubleVector<BASIS>()
 
     override fun toString() = "{ }"
 }

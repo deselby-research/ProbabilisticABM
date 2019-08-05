@@ -1,7 +1,10 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
-import deselby.fockSpace.bases.FockBasisVector
-import deselby.fockSpace.bases.Operator
+import deselby.fockSpace.extensions.annihilate
+import deselby.fockSpace.FockBasisVector
+import deselby.fockSpace.Operator
+import deselby.fockSpace.extensions.create
+import deselby.fockSpace.extensions.toCreationCommutationMap
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 
@@ -9,7 +12,7 @@ import deselby.std.vectorSpace.OneHotDoubleVector
 fun main() {
 //    val basis = DeselbyBasis(mapOf(0 to 0.1)).create(0,2)
 //    val fock = DeselbyPerturbationBasis(basis as DeselbyBasis<Int>).toFockState()
-//    val deselby = SparseFockState(DeselbyBasis(mapOf(0 to 0.1)))
+//    val denseDeselby = SparseFockState(DeselbyBasis(mapOf(0 to 0.1)))
 //    val fock = SparseFockState(DeltaBasis<Int>())
 //    val fock = SparseFockState(OperatorBasis.identity<Int>())
 //    val fock = CommutationRelation(OperatorBasis.create(0))
@@ -27,18 +30,18 @@ fun main() {
 }
 
 
-fun <T : FockState<Int,T>> H(s :T) : T {
+fun <T : FockState<Int, T>> H(s :T) : T {
     val a = s.annihilate(0).create(0)
     return a.create(0) - a
 }
 
-fun <T : FockBasisVector<Int,T>> H(s :DoubleVector<T>) : DoubleVector<T> {
+fun <T : FockBasisVector<Int, T>> H(s :DoubleVector<T>) : DoubleVector<T> {
     val a = s.annihilate(0).create(0)
     return a.create(0) - a
 }
 
 
-fun <T : FockState<Int,T>> multidimH(s :T) : T {
+fun <T : FockState<Int, T>> multidimH(s :T) : T {
     val a = s.annihilate(0).create(1) - s.annihilate(0).create(0)
     val b = s.annihilate(0).annihilate(0).create(1) - s.annihilate(1).create(1)
 //    val b = s.annihilate(1).annihilate(0).create(1) - s.annihilate(1).create(1) + s.annihilate(0).create(1)
@@ -46,7 +49,7 @@ fun <T : FockState<Int,T>> multidimH(s :T) : T {
 }
 
 
-fun <T : FockState<Int,T>> testOperators(fock : T) {
+fun <T : FockState<Int, T>> testOperators(fock : T) {
     println("fock = $fock")
     println("a* = ${fock.create(0)}")
     println("a = ${fock.annihilate(0)}")
@@ -58,7 +61,7 @@ fun <T : FockState<Int,T>> testOperators(fock : T) {
 
 }
 
-fun <T : FockBasisVector<Int,T>> testOperators(fock : DoubleVector<T>) {
+fun <T : FockBasisVector<Int, T>> testOperators(fock : DoubleVector<T>) {
     println("fock = $fock")
     println("a* = ${fock.create(0)}")
     println("a = ${fock.annihilate(0)}")
@@ -87,7 +90,7 @@ fun testMonteCarlo() {
         val basis = perturbation.basis as DeselbyPerturbationBasis<Int>
         // apply it to state
         basis.creations.forEach {
-            val commutation: MapFockState<Int> = commutations[it.key]?:ZeroFockState()
+            val commutation: MapFockState<Int> = commutations[it.key]?: ZeroFockState()
             if (it.value > 0) {
                 for(i in 1..it.value) {
                     val Q = commutation * sample

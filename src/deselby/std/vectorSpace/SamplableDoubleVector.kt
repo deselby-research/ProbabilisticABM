@@ -21,9 +21,9 @@ class SamplableDoubleVector<BASIS>(val coeffs: AbsMutableCategorical<BASIS> = Ab
 
     override fun remove(key: BASIS, value: Double) = coeffs.remove(key, value)
 
-    override fun toMutableVector() = HashMapDoubleVector(this)
+    override fun toMutableVector() = HashDoubleVector(this)
 
-    override fun zero() = HashMapDoubleVector<BASIS>()
+    override fun zero() = HashDoubleVector<BASIS>()
 
     fun sample() : OneHotDoubleVector<BASIS> {
         val basis = coeffs.sample()

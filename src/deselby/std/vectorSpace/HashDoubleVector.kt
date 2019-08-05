@@ -2,7 +2,7 @@ package deselby.std.vectorSpace
 
 import java.util.function.BiFunction
 
-class HashMapDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : AbstractMutableMap<BASIS,Double>(), MutableDoubleVector<BASIS> {
+class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : AbstractMutableMap<BASIS,Double>(), MutableDoubleVector<BASIS> {
     override val entries
             get() = coeffs.entries
 
@@ -25,9 +25,9 @@ class HashMapDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : AbstractM
 
     constructor(vecToCopy : Vector<BASIS,Double>) : this(HashMap(vecToCopy))
 
-    override fun toMutableVector() = HashMapDoubleVector(HashMap(coeffs))
+    override fun toMutableVector() = HashDoubleVector(HashMap(coeffs))
 
-    override fun zero() = HashMapDoubleVector<BASIS>(HashMap())
+    override fun zero() = HashDoubleVector<BASIS>(HashMap())
 
     override fun toString() : String {
         if(coeffs.isEmpty()) return "{ }"

@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 class ZeroFockState<AGENT> : MapFockState<AGENT> {
 

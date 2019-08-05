@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 abstract class AbstractMutableFockState<AGENT,STATE : MutableMapFockState<AGENT>> : MutableMapFockState<AGENT> {
     abstract override val coeffs : MutableMap<FockBasis<AGENT>, Double>

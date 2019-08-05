@@ -1,8 +1,8 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 import deselby.std.abstractAlgebra.AlgebraElement
 
-interface FockState<AGENT, STATE : FockState<AGENT,STATE>> : Fockable<AGENT>, AlgebraElement<STATE, Double> {
+interface FockState<AGENT, STATE : FockState<AGENT, STATE>> : Fockable<AGENT>, AlgebraElement<STATE, Double> {
 
     override fun create(d : AGENT, n : Int) : STATE
     override fun create(d : AGENT) : STATE = create(d,1)

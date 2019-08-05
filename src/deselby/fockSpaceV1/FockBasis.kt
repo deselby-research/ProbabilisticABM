@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 // A Fock basis consists of a base state and a creation operator
 // The set of basis states are those that can be expressed as

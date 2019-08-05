@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 class MutableDeselbyBasis<AGENT>(lambda: Map<AGENT, Double>, override val creations: MutableMap<AGENT, Int> = HashMap()) : DeselbyBasis<AGENT>(lambda, creations) {
 

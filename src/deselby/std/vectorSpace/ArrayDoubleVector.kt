@@ -4,7 +4,8 @@ import deselby.std.collections.DoubleArrayMap
 
 class ArrayDoubleVector<BASIS>(val coeffs : DoubleArrayMap<BASIS>) :
         AbstractMutableMap<BASIS,Double>(),
-        MutableDoubleVector<BASIS> {
+        MutableDoubleVector<BASIS>,
+        DenseVector {
 
     override val entries
             get() = coeffs.entries

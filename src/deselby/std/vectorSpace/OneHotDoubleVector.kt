@@ -14,13 +14,13 @@ class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) :
         return if(key == basis) coeff else null
     }
 
-    override fun toMutableVector(): HashMapDoubleVector<BASIS> {
+    override fun toMutableVector(): HashDoubleVector<BASIS> {
         val s = singleton(1)
-        return HashMapDoubleVector(hashMapOf(basis to coeff))
+        return HashDoubleVector(hashMapOf(basis to coeff))
     }
 
-    override fun zero(): HashMapDoubleVector<BASIS> {
-        return HashMapDoubleVector()
+    override fun zero(): HashDoubleVector<BASIS> {
+        return HashDoubleVector()
     }
 
     fun asEntry() : Map.Entry<BASIS,Double> {
@@ -32,8 +32,8 @@ class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) :
         }
     }
 
-    override operator fun plus(other: Vector<BASIS,Double>): HashMapDoubleVector<BASIS> {
-        val result = HashMapDoubleVector(other)
+    override operator fun plus(other: Vector<BASIS,Double>): HashDoubleVector<BASIS> {
+        val result = HashDoubleVector(other)
         result.coeffs.merge(basis , coeff) { a, b ->
             val newVal = a + b
             if(newVal == 0.0) null else newVal
@@ -42,8 +42,8 @@ class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) :
     }
 
 
-    override operator fun minus(other: Vector<BASIS,Double>): HashMapDoubleVector<BASIS> {
-        val result = HashMapDoubleVector<BASIS>()
+    override operator fun minus(other: Vector<BASIS,Double>): HashDoubleVector<BASIS> {
+        val result = HashDoubleVector<BASIS>()
         other.mapValuesTo(result.coeffs) { -it.value }
         result += this.asEntry()
         return result

@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 class DeselbyPerturbationBasis<AGENT>(val baseState : DeselbyBasis<AGENT>, override val creations : Map<AGENT,Int>) :
         AbstractBasis<AGENT>() {

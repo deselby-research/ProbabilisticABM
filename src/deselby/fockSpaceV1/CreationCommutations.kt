@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 // Given a canonical operator, S, will create a mapping from
 // agent states, d, to Operators such that d -> a^-_d[a*_d,S]
@@ -28,7 +28,7 @@ class CreationCommutations<AGENT> : AbstractMap<AGENT, MapFockState<AGENT>> {
                     if(sum == 0) null else sum
                 }
                 val mdminus1 = OperatorBasis(creationsminus1d, annihilationsminus1d)
-                index.getOrPut(d, {SparseFockState()})[mdminus1] = entry.value*-(m+1)
+                index.getOrPut(d, { SparseFockState() })[mdminus1] = entry.value*-(m+1)
             }
         }
     }

@@ -1,8 +1,8 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 
 open class SparseFockState<AGENT>(override val coeffs: HashMap<FockBasis<AGENT>,Double> = HashMap())
-    : AbstractMutableFockState<AGENT,SparseFockState<AGENT>>() {
+    : AbstractMutableFockState<AGENT, SparseFockState<AGENT>>() {
 
     constructor(initialBasis : FockBasis<AGENT>) :this() { coeffs[initialBasis] = 1.0 }
 

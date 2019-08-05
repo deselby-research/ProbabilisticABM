@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 interface Fockable<AGENT> {
     fun create(d : AGENT) : Fockable<AGENT>

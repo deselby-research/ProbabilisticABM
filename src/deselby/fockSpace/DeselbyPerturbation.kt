@@ -1,7 +1,7 @@
-package deselby.fockSpace.bases
+package deselby.fockSpace
 
 import deselby.std.vectorSpace.DoubleVector
-import deselby.std.vectorSpace.HashMapDoubleVector
+import deselby.std.vectorSpace.HashDoubleVector
 
 class DeselbyPerturbation<AGENT>(val baseState : Deselby<AGENT>, override val creations : Map<AGENT,Int>) :
         AbstractBasis<AGENT, DeselbyPerturbation<AGENT>>() {
@@ -11,13 +11,12 @@ class DeselbyPerturbation<AGENT>(val baseState : Deselby<AGENT>, override val cr
     override fun new(creations: MutableMap<AGENT, Int>)= DeselbyPerturbation(baseState, creations)
 
     override fun groundStateAnnihilate(d: AGENT): DoubleVector<DeselbyPerturbation<AGENT>> {
-        val result = HashMapDoubleVector<DeselbyPerturbation<AGENT>>()
-        val base = baseState
-        base.creations[d]?.run {
-            result[DeselbyPerturbation(base, mapOf(d to -1))] = this.toDouble()
+        val result = HashDoubleVector<DeselbyPerturbation<AGENT>>()
+        baseState.creations[d]?.run {
+            result[DeselbyPerturbation(baseState, mapOf(d to -1))] = this.toDouble()
         }
-        base.lambda[d]?.run {
-            result[DeselbyPerturbation(base, emptyMap())] = this
+        baseState.lambda[d]?.run {
+            result[DeselbyPerturbation(baseState, emptyMap())] = this
         }
         return result
     }

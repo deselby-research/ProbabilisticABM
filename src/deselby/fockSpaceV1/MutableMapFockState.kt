@@ -1,6 +1,6 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
-interface MutableMapFockState<AGENT> : MapFockState<AGENT>, MutableFockState<AGENT,MapFockState<AGENT>> {
+interface MutableMapFockState<AGENT> : MapFockState<AGENT>, MutableFockState<AGENT, MapFockState<AGENT>> {
 
     override val coeffs : MutableMap<FockBasis<AGENT>, Double>
     override operator fun set(b : FockBasis<AGENT>, value : Double) { coeffs[b] = value }

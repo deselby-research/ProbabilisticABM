@@ -1,11 +1,8 @@
-package deselby.fockSpace
+package deselby.fockSpace.extensions
 
-import deselby.fockSpace.bases.FockBasisVector
-import deselby.fockSpace.bases.Operator
-import deselby.std.vectorSpace.DoubleVector
-import deselby.std.vectorSpace.HashMapDoubleVector
-import deselby.std.vectorSpace.MutableDoubleVector
-import deselby.std.vectorSpace.OneHotDoubleVector
+import deselby.fockSpace.FockBasisVector
+import deselby.fockSpace.Operator
+import deselby.std.vectorSpace.*
 import java.util.*
 
 
@@ -69,7 +66,6 @@ operator fun <AGENT, OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>>
     return result
 }
 
-
 // Given a canonical operator, S, will create a mapping from
 // agent states, d, to Operators such that d -> a^-_d[a*_d,S]
 //
@@ -77,8 +73,8 @@ operator fun <AGENT, OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>>
 // [a*,a^m] = -ma^(m-1)
 // so
 // a^-_d[a*,a^m] = -m a^-_da^(m-1)
-fun<AGENT> DoubleVector<Operator<AGENT>>.toCreationCommutationMap() : HashMap<AGENT, HashMapDoubleVector<Operator<AGENT>>> {
-    val commutations = HashMap<AGENT, HashMapDoubleVector<Operator<AGENT>>>()
+fun<AGENT> DoubleVector<Operator<AGENT>>.toCreationCommutationMap() : HashMap<AGENT, HashDoubleVector<Operator<AGENT>>> {
+    val commutations = HashMap<AGENT, HashDoubleVector<Operator<AGENT>>>()
     forEach { entry ->
         val basis = entry.key
         val indices = basis.annihilations.keys
@@ -94,14 +90,14 @@ fun<AGENT> DoubleVector<Operator<AGENT>>.toCreationCommutationMap() : HashMap<AG
                 if(sum == 0) null else sum
             }
             val mdminus1 = Operator(creationsminus1d, annihilationsminus1d)
-            commutations.getOrPut(d, { HashMapDoubleVector() })[mdminus1] = entry.value*-(m+1)
+            commutations.getOrPut(d, { HashDoubleVector() })[mdminus1] = entry.value*-(m+1)
         }
     }
     return commutations
 }
 
 
-fun<BASIS : FockBasisVector<*,BASIS>> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASIS>)-> DoubleVector<BASIS>, T : Double, dt : Double) {
+fun<BASIS : FockBasisVector<*, BASIS>> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASIS>)-> DoubleVector<BASIS>, T : Double, dt : Double) {
     var time = 0.0
     while(time < T) {
         this += hamiltonian(this)*dt

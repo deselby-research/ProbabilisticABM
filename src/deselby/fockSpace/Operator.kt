@@ -1,40 +1,43 @@
 package deselby.fockSpace
 
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+import deselby.fockSpace.extensions.annihilate
+import deselby.fockSpace.extensions.create
+import deselby.fockSpace.extensions.times
+import deselby.fockSpaceV1.OperatorBasis
+import deselby.std.vectorSpace.DoubleVector
 
-// represents a set of creation and annihilation operators in canonical order: with annihilation
-// operators being applied before creation. Removal operators can be represented with -ve
-// number of creations
-class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihilations : Map<AGENT,Int>) : AbstractBasis<AGENT>() {
+class Operator<AGENT>(override val creations : Map<AGENT,Int>, val annihilations : Map<AGENT,Int>) :
+        AbstractBasis<AGENT, Operator<AGENT>>()
+{
 
     companion object {
-        fun <AGENT> identity() = OperatorBasis<AGENT>()
-        fun <AGENT> create(d: AGENT) = OperatorBasis(hashMapOf(d to 1), emptyMap())
-        fun <AGENT> annihilate(d: AGENT) = OperatorBasis(emptyMap(), hashMapOf(d to 1))
+        fun <AGENT> identity() = Operator<AGENT>()
+        fun <AGENT> create(d: AGENT) = Operator(hashMapOf(d to 1), emptyMap())
+        fun <AGENT> annihilate(d: AGENT) = Operator(emptyMap(), hashMapOf(d to 1))
     }
 
 
     constructor() : this(emptyMap(), emptyMap())
-    constructor(other : OperatorBasis<AGENT>) : this(HashMap(other.creations), HashMap(other.annihilations))
+    constructor(other : Operator<AGENT>) : this(HashMap(other.creations), HashMap(other.annihilations))
 
 
-    override fun new(creations: Map<AGENT, Int>): AbstractBasis<AGENT> = OperatorBasis(creations, annihilations)
+    override fun new(initCreations: MutableMap<AGENT, Int>) = Operator(initCreations, annihilations)
 
 
     // Ground state is taken to be a^annihilations
     // annihilation just adds another annihilation operator
-    override fun groundStateAnnihilate(d: AGENT): MapFockState<AGENT> {
+    override fun groundStateAnnihilate(d: AGENT): DoubleVector<Operator<AGENT>> {
         val newAnnihilations = HashMap(annihilations)
         newAnnihilations.merge(d,1,Int::plus)
-        return OperatorBasis(HashMap(), newAnnihilations).toFockState()
+        return 1.0 * Operator(HashMap(), newAnnihilations)
     }
 
 
     // multiplication with another basis means application of the operators
-    override fun times(other: FockBasis<AGENT>): MapFockState<AGENT> {
+    operator fun<OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>> times(other: OTHERBASIS):
+            DoubleVector<OTHERBASIS> {
         // TODO: Make this faster for case when other is OperatorBasis with multiple annihilations
-        // apply operators
-        var runningResult : MapFockState<AGENT> = OneHotFock(other,1.0)
+        var runningResult : DoubleVector<OTHERBASIS> = 1.0 * other
         annihilations.forEach {
             for(i in 1..it.value) {
                 runningResult = runningResult.annihilate(it.key)
@@ -52,7 +55,7 @@ class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihila
     override fun equals(other: Any?): Boolean {
 //        if(this === other) return true
         if(other !is OperatorBasis<*>) return false
-        return (creations == other.creations) and (annihilations == other.annihilations)
+        return (creations == other.creations) && (annihilations == other.annihilations)
     }
 
 

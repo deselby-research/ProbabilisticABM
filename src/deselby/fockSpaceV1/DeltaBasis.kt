@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV1
 
 class DeltaBasis<AGENT>(override val creations : Map<AGENT,Int> = emptyMap()) : AbstractBasis<AGENT>() {
 

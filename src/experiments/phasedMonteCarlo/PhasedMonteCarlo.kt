@@ -1,16 +1,13 @@
 package experiments.phasedMonteCarlo
 
 import deselby.distributions.discrete.DeselbyDistribution
-import deselby.fockSpace.*
-import deselby.fockSpace.bases.Deselby
-import deselby.fockSpace.bases.DeselbyPerturbation
-import deselby.fockSpace.bases.Operator
-import deselby.fockSpace.bases.FockBasisVector
-import deselby.std.vectorSpace.DoubleVector
-import deselby.std.vectorSpace.HashMapDoubleVector
-import deselby.std.vectorSpace.SamplableDoubleVector
-import deselby.std.vectorSpace.MutableDoubleVector
-import deselby.std.vectorSpace.OneHotDoubleVector
+import deselby.fockSpace.Deselby
+import deselby.fockSpace.DeselbyPerturbation
+import deselby.fockSpace.FockBasisVector
+import deselby.fockSpace.Operator
+import deselby.fockSpace.extensions.*
+import deselby.fockSpaceV1.*
+import deselby.std.vectorSpace.*
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -20,7 +17,7 @@ class PhasedMonteCarlo {
     val lambda = 0.1
     val dt = 0.001
     val T = 0.5
-    lateinit var deselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambda))
+    lateinit var denseDeselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambda))
     lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambda)))
     lateinit var vector : DoubleVector<Deselby<Int>>//(DeselbyBasis(mapOf(0 to lambda)))
     val H : (FockState<Int, MapFockState<Int>>) -> MapFockState<Int> = ::SparseH
@@ -29,7 +26,7 @@ class PhasedMonteCarlo {
     fun testOperators() {
         reset()
         val sh = SparseH(sparse)
-        val dh = DenseH(deselby)
+        val dh = DenseH(denseDeselby)
         val vh = VectorH(vector)
         println(dh)
         println(sh)
@@ -80,15 +77,15 @@ class PhasedMonteCarlo {
     @Test
     fun testDense() {
         reset()
-        val exactIntegral = deselby.integrate(::DenseH, T, dt)
+        val exactIntegral = denseDeselby.integrate(::DenseH, T, dt)
         println(exactIntegral)
 
         val nSamples = 1000000
-        var monteCarloSum = deselby.monteCarloDiscrete(::DenseH, T, dt)
+        var monteCarloSum = denseDeselby.monteCarloDiscrete(::DenseH, T, dt)
         var effectiveSamples = monteCarloSum.coeffs.asDoubleArray().sum()
         for(sample in 1 until nSamples) {
 //        val s = p.monteCarloDiscrete(::SparseH,T,dt)
-            val s = deselby.monteCarloContinuous(::DenseH,T)
+            val s = denseDeselby.monteCarloContinuous(::DenseH,T)
             monteCarloSum += s
             effectiveSamples += s.coeffs.asDoubleArray().sum()
         }
@@ -112,19 +109,19 @@ class PhasedMonteCarlo {
         println("absolute sum = $qabsSum")
         println("sample absolute sum = $sampleabsSum")
         println("Effective samples = $effectiveSamples")
-        println("p = $deselby")
+        println("p = $denseDeselby")
     }
 
     @Test
     fun compareIntegration() {
         reset()
         println(measureTimeMillis {
-            val denseIntegral = deselby.integrate(::DenseH, T, dt)
+            val denseIntegral = denseDeselby.integrate(::DenseH, T, dt)
             println(denseIntegral)
         })
 
         println(measureTimeMillis {
-            val vectorIntegral = HashMapDoubleVector(vector)
+            val vectorIntegral = HashDoubleVector(vector)
             vectorIntegral.integrate(::VectorH, T, dt)
             println(vectorIntegral)
         })
@@ -219,12 +216,12 @@ class PhasedMonteCarlo {
     @Test
     fun vectorTest() {
         reset()
-        val exactIntegral = HashMapDoubleVector(vector)
+        val exactIntegral = HashDoubleVector(vector)
         exactIntegral.integrate(::VectorH, T, dt)
         println(exactIntegral)
 
         val nSamples = 1000000
-        val monteCarloSum = HashMapDoubleVector<Deselby<Int>>()
+        val monteCarloSum = HashDoubleVector<Deselby<Int>>()
         val initialState = OneHotDoubleVector(Deselby(mapOf(0 to 0.1)), 1.0)
         val hamiltonian = VectorH(OneHotDoubleVector(Operator.identity<Int>(),1.0))
 
@@ -259,20 +256,19 @@ class PhasedMonteCarlo {
 
 
     fun reset() {
-        deselby = DeselbyDistribution(listOf(lambda))
-//        sparse  = SparseFockState(DeselbyBasis(mapOf(0 to lambda)))
+        denseDeselby = DeselbyDistribution(listOf(lambda))
         sparse  = SparseFockState(DeselbyBasis(mapOf(0 to lambda)))
         vector = OneHotDoubleVector(Deselby(mapOf(0 to lambda)), 1.0)
     }
 
 }
 
-fun <S : FockState<Int,S>> SparseH(d: FockState<Int,S>): S {
+fun <S : FockState<Int, S>> SparseH(d: FockState<Int, S>): S {
     val a = d.annihilate(0).create(0)
     return a.create(0) - a
 }
 
-fun<BASIS : FockBasisVector<Int,BASIS>> VectorH(d: DoubleVector<BASIS>): DoubleVector<BASIS> {
+fun<BASIS : FockBasisVector<Int, BASIS>> VectorH(d: DoubleVector<BASIS>): DoubleVector<BASIS> {
     val a = d.annihilate(0).create(0)
     return a.create(0) - a
 }

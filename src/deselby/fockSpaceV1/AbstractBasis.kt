@@ -1,19 +1,13 @@
-package deselby.fockSpace.bases
+package deselby.fockSpaceV1
 
-import deselby.fockSpace.create
-import deselby.fockSpace.times
-import deselby.std.vectorSpace.DoubleVector
-
-abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT,BASIS>> : FockBasisVector<AGENT, BASIS> {
+abstract class AbstractBasis<AGENT> : FockBasis<AGENT> {
     abstract val creations : Map<AGENT,Int>
 
-    abstract fun new(initCreations: MutableMap<AGENT, Int>) : BASIS
+    abstract fun new(initCreations : Map<AGENT, Int>) : AbstractBasis<AGENT>
 
-    abstract fun groundStateAnnihilate(d: AGENT) : DoubleVector<BASIS>
+    abstract fun groundStateAnnihilate(d: AGENT) : MapFockState<AGENT>
 
-    override fun create(d: AGENT) = create(d,1)
-
-    override fun create(d: AGENT, n : Int): BASIS {
+    override fun create(d: AGENT, n : Int): FockBasis<AGENT> {
         val delta = HashMap(creations)
         delta.merge(d, n) {a , b ->
             val newVal = a + b
@@ -22,7 +16,7 @@ abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT,BASIS>> : FockBas
         return new(delta)
     }
 
-    override fun create(newCreations: Map<AGENT, Int>): BASIS {
+    override fun create(newCreations: Map<AGENT, Int>): FockBasis<AGENT> {
         val delta = HashMap(creations)
         newCreations.forEach {
             delta.merge(it.key, it.value) {a , b ->
@@ -39,13 +33,14 @@ abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT,BASIS>> : FockBas
     // so
     // aa*^n = n.a*^(n-1) + (a*^n)a
     // for all n
-    override fun annihilate(d: AGENT): DoubleVector<BASIS> {
-        val nd = creations[d]?:return groundStateAnnihilate(d).create(creations)
+    override fun annihilate(d: AGENT): MapFockState<AGENT> {
+        val nd = creations[d]?:0
+        if(nd == 0) return groundStateAnnihilate(d).create(creations)
         return this.remove(d)*nd.toDouble() + groundStateAnnihilate(d).create(creations)
     }
 
 
-    fun count(d: AGENT): Int {
+    override fun count(d: AGENT): Int {
         return creations.getOrDefault(d,0)
     }
 
@@ -66,7 +61,8 @@ abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT,BASIS>> : FockBas
 
     override fun equals(other: Any?): Boolean {
 //        if(super.equals(other)) return true
-        if(other !is AbstractBasis<*,*>) return false
+        if(other !is AbstractBasis<*>) return false
         return creations == other.creations
     }
+
 }

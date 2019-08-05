@@ -1,13 +1,6 @@
 package experiments.phasedMonteCarlo
 
-import deselby.fockSpace.*
-import deselby.fockSpace.bases.Deselby
-import deselby.fockSpace.bases.DeselbyPerturbation
-import deselby.fockSpace.bases.Operator
-import deselby.std.vectorSpace.DoubleVector
-import deselby.std.vectorSpace.EmptyDoubleVector
-import deselby.std.vectorSpace.OneHotDoubleVector
-import deselby.std.vectorSpace.SamplableDoubleVector
+import deselby.fockSpaceV1.*
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sign
@@ -22,7 +15,7 @@ fun MapFockState<Int>.monteCarloContinuous(H: (MapFockState<Int>) -> MapFockStat
         sample = possibleTransitionStates.sample()
         val dp_dt = H(sample)
         val sampleRateOfChange = dp_dt.coeffs[sample.basis]?:0.0
-        possibleTransitionStates = SamplableFockState(dp_dt - sample.basis*sampleRateOfChange)
+        possibleTransitionStates = SamplableFockState(dp_dt - sample.basis * sampleRateOfChange)
         val transitionRate = possibleTransitionStates.coeffs.sum()
         var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
         if(time + timeToNextEvent >= T) timeToNextEvent = T - time
@@ -62,11 +55,11 @@ fun MapFockState<Int>.monteCarloTest(H: (MapFockState<Int>) -> MapFockState<Int>
             possibleTransitionStates = SamplableFockState(hamiltonian * sample)
         }
     } while(time < T)
-    return OneHotFock(sampleBasis, sampleWeight*sample.probability)
+    return OneHotFock(sampleBasis, sampleWeight * sample.probability)
 }
 
 
-fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int,MapFockState<Int>>) -> MapFockState<Int>, T : Double) : OneHotFock<Int> {
+fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int, MapFockState<Int>>) -> MapFockState<Int>, T : Double) : OneHotFock<Int> {
     var time = 0.0
     var sampleWeight = 1.0
 
@@ -115,55 +108,7 @@ fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int,MapFockState<Int>
             }
         }
     } while(time < T)
-    return OneHotFock(sampleBasis, sampleWeight*samplePhase)
+    return OneHotFock(sampleBasis, sampleWeight * samplePhase)
 }
 
 
-fun OneHotDoubleVector<Deselby<Int>>.perturbativeMonteCarlo(hamiltonian: DoubleVector<Operator<Int>>, T : Double) : OneHotDoubleVector<Deselby<Int>> {
-    var time = 0.0
-    var sampleWeight = 1.0
-
-//    val hamiltonian = H(OperatorBasis.identity<Int>().toFockState())
-    val commutations = hamiltonian.toCreationCommutationMap()
-    val sampleBasis = Deselby(this.basis)
-    val sampleAsPerturbation = DeselbyPerturbation(sampleBasis)
-    val sample = OneHotDoubleVector(sampleAsPerturbation,1.0)
-    var samplePhase = 1.0
-    val possibleTransitionStates = SamplableDoubleVector(hamiltonian * sample)
-    do {
-        val sampleRateOfChange = possibleTransitionStates[sampleAsPerturbation]
-        possibleTransitionStates.coeffs.remove(sampleAsPerturbation)
-
-        val transitionRate = possibleTransitionStates.coeffs.sum()
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
-        time += timeToNextEvent
-        if(time > T) timeToNextEvent -= time - T
-        val weightGrowthRate = transitionRate + sampleRateOfChange
-        sampleWeight *= exp(weightGrowthRate*timeToNextEvent)
-
-        if(time < T) {
-            // choose perturbation
-            val perturbation = possibleTransitionStates.sample()
-            samplePhase *= perturbation.coeff
-            possibleTransitionStates[sampleAsPerturbation] = sampleRateOfChange
-            // apply it to sampleBasis
-            perturbation.basis.creations.forEach {
-                val commutation = commutations[it.key] ?: EmptyDoubleVector<Operator<Int>>()
-                if (it.value > 0) {
-                    for (i in 1..it.value) {
-                        val Q = commutation * sample
-                        possibleTransitionStates -= Q
-                        sampleBasis.createAssign(it.key, 1)
-                    }
-                } else if (it.value < 0) {
-                    for (i in 1..-it.value) {
-                        sampleBasis.createAssign(it.key, -1)
-                        val Q = commutation * sample
-                        possibleTransitionStates += Q
-                    }
-                }
-            }
-        }
-    } while(time < T)
-    return OneHotDoubleVector(sampleBasis, sampleWeight*samplePhase)
-}
