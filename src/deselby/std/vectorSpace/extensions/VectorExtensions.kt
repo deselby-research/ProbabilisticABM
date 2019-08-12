@@ -2,7 +2,9 @@ package deselby.std.vectorSpace.extensions
 
 import deselby.std.abstractAlgebra.HasPlusMinusAssign
 import deselby.std.abstractAlgebra.HasTimes
+import deselby.std.abstractAlgebra.HasTimesBySelf
 import deselby.std.vectorSpace.*
+import java.util.AbstractMap
 
 //inline fun<BASIS,OTHERBASIS,RESULTBASIS> DoubleVector<BASIS>.vectorMultiply(
 //        other : DoubleVector<OTHERBASIS>,
@@ -17,35 +19,59 @@ import deselby.std.vectorSpace.*
 //    return result?:EmptyDoubleVector()
 //}
 
-inline fun<BASIS,OTHERBASIS,RESULT : HasPlusMinusAssign<DoubleVector<OTHERBASIS>>> DoubleVector<BASIS>.vectorMultiplyTo(
-        result : RESULT,
-        other : DoubleVector<OTHERBASIS>,
-        multiplyOp : (BASIS,OTHERBASIS)->DoubleVector<OTHERBASIS>) : RESULT {
-    forEach {thisTerm ->
-        other.forEach { otherTerm ->
-            val basisProduct = multiplyOp(thisTerm.key, otherTerm.key)
-            result += basisProduct * (thisTerm.value*otherTerm.value)
-        }
+
+inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
+    = DoubleVector.times(this, other, op)
+
+inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : RBASIS, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
+    = DoubleVector.times(this, other, op)
+
+operator fun<LBASIS : HasTimes<RBASIS,OUTBASIS>,RBASIS,OUTBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>) : DoubleVector<OUTBASIS>
+     = DoubleVector.times<LBASIS,RBASIS,OUTBASIS>(this, other, HasTimes<RBASIS,OUTBASIS>::times)
+
+operator fun<RBASIS,OBASIS> CovariantDoubleVector<HasDoubleVectorTimes<RBASIS,OBASIS>>.times(other : DoubleVector<RBASIS>) : DoubleVector<OBASIS>
+    = DoubleVector.timesUsing<HasDoubleVectorTimes<RBASIS,OBASIS>,RBASIS,OBASIS>(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+
+operator fun<LBASIS : HasTimes<RBASIS,OBASIS>,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : RBASIS) : MutableDoubleVector<OBASIS>
+    = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
+
+operator fun<RBASIS,OBASIS> CovariantDoubleVector<HasDoubleVectorTimes<RBASIS,OBASIS>>.times(other : RBASIS) : MutableDoubleVector<OBASIS>
+    = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+
+operator fun<RBASIS,OBASIS> HasDoubleVectorTimes<RBASIS, OBASIS>.times(other : DoubleVector<RBASIS>) : MutableDoubleVector<OBASIS>
+    = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+
+operator fun<RBASIS,OBASIS> HasTimes<RBASIS, OBASIS>.times(other : DoubleVector<RBASIS>) : MutableDoubleVector<OBASIS>
+    = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
+
+fun<BASIS> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASIS>)-> DoubleVector<BASIS>, T : Double, dt : Double) {
+    var time = 0.0
+    while(time < T) {
+        this += hamiltonian(this)*dt
+        time += dt
     }
-    return result
 }
 
-
-operator fun<BASIS : HasTimes<OTHERBASIS, DoubleVector<OTHERBASIS>>, OTHERBASIS> DoubleVector<BASIS>.times(other : DoubleVector<OTHERBASIS>) : DoubleVector<OTHERBASIS> {
-    val result = other.zero()
-    forEach {thisTerm ->
-        other.forEach { otherTerm ->
-            result += (thisTerm.key * otherTerm.key) * (thisTerm.value*otherTerm.value)
-        }
-    }
-    return result
-}
+//operator fun<BASIS : HasTimesBySelf<BASIS>> HasTimesBySelf<BASIS>.times(other : DoubleVector<BASIS>) : MutableDoubleVector<BASIS> {
 
 
-operator fun<LHS : HasTimes<OTHERBASIS, DoubleVector<OTHERBASIS>>, OTHERBASIS> LHS.times(other : DoubleVector<OTHERBASIS>) : DoubleVector<OTHERBASIS> {
-    val result = other.zero()
-    other.forEach { otherTerm ->
-        result += (this * otherTerm.key) *otherTerm.value
-    }
-    return result
-}
+//fun<BASIS : HasTimesBySelf<BASIS>> DoubleVector<BASIS>.timesUsingBasisTimesBySelf(other : DoubleVector<BASIS>) =
+//    this.vectorMultiplyUsing(other, HasTimesBySelf<BASIS>::times)
+//
+
+
+//fun<RBASIS,OBASIS> HasTimes<RBASIS, OBASIS>.timesUsingBasisOperator(other : DoubleVector<RBASIS>) : MutableDoubleVector<OBASIS> {
+//    val result = HashDoubleVector<OBASIS>()
+//    other.mapKeysTo(result) { otherTerm -> this * otherTerm.key }
+//    return result
+//}
+
+
+
+//operator fun<BASIS> DoubleVector<BASIS>.times(other : HasTimes<BASIS, DoubleVector<BASIS>>) : DoubleVector<BASIS> {
+//    val result = zero()
+//    forEach { thisTerm ->
+//        result += (other * thisTerm.key) * thisTerm.value
+//    }
+//    return result
+//}

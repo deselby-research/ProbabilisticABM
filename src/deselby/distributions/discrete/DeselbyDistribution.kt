@@ -43,7 +43,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
 
     // transform using identity
-    // aP(lambda,D) = lambda*P(lambda,D) + DP(lambda,D-1)
+    // aP(lambdas,D) = lambdas*P(lambdas,D) + DP(lambdas,D-1)
     //
     override fun annihilate(d : Int) : DeselbyDistribution {
         val newCoeffs = DoubleNDArray(shape) { ndIndex ->
@@ -204,11 +204,11 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // returns this + perturbation, where the lambdas of the result are changed so as to
     // minimise the weighted cartesian norm of the coefficients of the resulting polynomial
     //
-    // assumes lambda is very close to optimisation initially
+    // assumes lambdas is very close to optimisation initially
 //    fun optimizeLambda() : DeselbyDistribution {
 //        val P = this
 //        val dP_dL = Array(P.shape.nDimensions, {i ->
-//            P.annihilate(i).create(i)/P.lambda[i] - P
+//            P.annihilate(i).create(i)/P.lambdas[i] - P
 //        })
 //
 //        val Y = Array2DRowRealMatrix(Array(shape.nDimensions, { i ->
@@ -228,7 +228,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 //        println(DL.frobeniusNorm)
 //
 //        val newLambda = DoubleArray(shape.nDimensions, {i ->
-//            lambda[i] + DL.getEntry(i,0)
+//            lambdas[i] + DL.getEntry(i,0)
 //        })
 //        var newCoeffs = P.coeffs
 //        dP_dL.forEachIndexed({ i, dP_dLi ->

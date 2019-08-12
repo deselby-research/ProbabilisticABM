@@ -1,13 +1,14 @@
 package experiments.phasedMonteCarlo
 
 import deselby.distributions.discrete.DeselbyDistribution
-import deselby.fockSpace.Deselby
-import deselby.fockSpace.DeselbyPerturbation
-import deselby.fockSpace.FockBasisVector
-import deselby.fockSpace.Operator
-import deselby.fockSpace.extensions.*
+import deselby.fockSpaceV2.Deselby
+import deselby.fockSpaceV2.DeselbyPerturbation
+import deselby.fockSpaceV2.FockBasisVector
+import deselby.fockSpaceV2.Operator
+import deselby.fockSpaceV2.extensions.*
 import deselby.fockSpaceV1.*
 import deselby.std.vectorSpace.*
+import deselby.std.vectorSpace.extensions.integrate
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -15,11 +16,11 @@ import kotlin.system.measureTimeMillis
 
 class PhasedMonteCarlo {
     val lambda = 0.1
-    val dt = 0.001
+    val dt = 0.0001
     val T = 0.5
-    lateinit var denseDeselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambda))
-    lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambda)))
-    lateinit var vector : DoubleVector<Deselby<Int>>//(DeselbyBasis(mapOf(0 to lambda)))
+    lateinit var denseDeselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambdas))
+    lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambdas)))
+    lateinit var vector : DoubleVector<Deselby<Int>>//(DeselbyBasis(mapOf(0 to lambdas)))
     val H : (FockState<Int, MapFockState<Int>>) -> MapFockState<Int> = ::SparseH
 
     @Test
@@ -115,22 +116,30 @@ class PhasedMonteCarlo {
     @Test
     fun compareIntegration() {
         reset()
+        var deselbyResult : DeselbyDistribution? = null
         println(measureTimeMillis {
             val denseIntegral = denseDeselby.integrate(::DenseH, T, dt)
-            println(denseIntegral)
+            deselbyResult = denseIntegral
         })
+        println(deselbyResult)
 
+        println()
+        var vectorResult : DoubleVector<Deselby<Int>>? = null
         println(measureTimeMillis {
             val vectorIntegral = HashDoubleVector(vector)
             vectorIntegral.integrate(::VectorH, T, dt)
-            println(vectorIntegral)
+            vectorResult = vectorIntegral
         })
+        println(vectorResult)
 
+        println()
+        var sparseResult : SparseFockState<Int>? = null
         println(measureTimeMillis {
             val sparseIntegral = SparseFockState(sparse)
             sparseIntegral.integrate(::SparseH, T, dt)
-            println(sparseIntegral)
+            sparseResult = sparseIntegral
         })
+        println(sparseResult)
 
     }
 

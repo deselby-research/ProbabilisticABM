@@ -1,7 +1,7 @@
-package deselby.fockSpace
+package deselby.fockSpaceV2
 
-import deselby.fockSpace.extensions.create
-import deselby.fockSpace.extensions.times
+import deselby.fockSpaceV2.extensions.create
+import deselby.fockSpaceV2.extensions.times
 import deselby.std.vectorSpace.DoubleVector
 
 abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT, BASIS>> : FockBasisVector<AGENT, BASIS> {

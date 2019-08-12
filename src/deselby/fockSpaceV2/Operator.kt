@@ -1,8 +1,8 @@
-package deselby.fockSpace
+package deselby.fockSpaceV2
 
-import deselby.fockSpace.extensions.annihilate
-import deselby.fockSpace.extensions.create
-import deselby.fockSpace.extensions.times
+import deselby.fockSpaceV2.extensions.annihilate
+import deselby.fockSpaceV2.extensions.create
+import deselby.fockSpaceV2.extensions.times
 import deselby.fockSpaceV1.OperatorBasis
 import deselby.std.vectorSpace.DoubleVector
 
@@ -33,7 +33,7 @@ class Operator<AGENT>(override val creations : Map<AGENT,Int>, val annihilations
     }
 
 
-    // multiplication with another basis means application of the operators
+    // multiplication with another basis means application of the creations
     operator fun<OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>> times(other: OTHERBASIS):
             DoubleVector<OTHERBASIS> {
         // TODO: Make this faster for case when other is OperatorBasis with multiple annihilations

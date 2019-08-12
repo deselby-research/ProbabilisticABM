@@ -1,9 +1,9 @@
 package experiments.phasedMonteCarlo
 
-import deselby.fockSpace.Deselby
-import deselby.fockSpace.DeselbyPerturbation
-import deselby.fockSpace.Operator
-import deselby.fockSpace.extensions.*
+import deselby.fockSpaceV2.Deselby
+import deselby.fockSpaceV2.DeselbyPerturbation
+import deselby.fockSpaceV2.Operator
+import deselby.fockSpaceV2.extensions.*
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.EmptyDoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector

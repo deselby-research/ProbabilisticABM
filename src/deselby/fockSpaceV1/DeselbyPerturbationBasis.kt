@@ -5,8 +5,8 @@ class DeselbyPerturbationBasis<AGENT>(val baseState : DeselbyBasis<AGENT>, overr
 
     constructor(base : DeselbyBasis<AGENT>) :this(base, emptyMap())
 
-    override fun new(creations: Map<AGENT, Int>): AbstractBasis<AGENT> {
-        return DeselbyPerturbationBasis(baseState, creations)
+    override fun new(initCreations: Map<AGENT, Int>): AbstractBasis<AGENT> {
+        return DeselbyPerturbationBasis(baseState, initCreations)
     }
 
     override fun groundStateAnnihilate(d: AGENT): MapFockState<AGENT> {

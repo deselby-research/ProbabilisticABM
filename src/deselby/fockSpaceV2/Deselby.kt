@@ -1,4 +1,4 @@
-package deselby.fockSpace
+package deselby.fockSpaceV2
 
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.EmptyDoubleVector

@@ -28,6 +28,13 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
         }
     }
 
+    fun plusAssign(basis : BASIS, increment : Double) {
+        merge(basis , increment) {a , b ->
+            val newVal = a + b
+            if(newVal == 0.0) null else newVal
+        }
+    }
+
 
     operator fun minusAssign(entry : Map.Entry<BASIS,Double>) {
         merge(entry.key , -entry.value) {a , b ->

@@ -7,8 +7,9 @@ class SamplableDoubleVector<BASIS>(val coeffs: AbsMutableCategorical<BASIS> = Ab
         AbstractMutableMap<BASIS,Double>(), MutableDoubleVector<BASIS> {
 
     constructor(otherVector : Vector<BASIS,Double>) : this() {
-//        coeffs.putAll(otherVector)
-        coeffs.createBinaryTree(otherVector.keys, otherVector.values)
+        coeffs.createBinaryTree(
+                otherVector.asSequence().map {it.key}.asIterable(),
+                otherVector.asSequence().map{it.value}.asIterable())
     }
 
     override val entries = coeffs.entries

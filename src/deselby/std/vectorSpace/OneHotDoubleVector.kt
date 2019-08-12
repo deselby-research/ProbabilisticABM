@@ -15,7 +15,6 @@ class OneHotDoubleVector<BASIS>(val basis : BASIS, val coeff : Double) :
     }
 
     override fun toMutableVector(): HashDoubleVector<BASIS> {
-        val s = singleton(1)
         return HashDoubleVector(hashMapOf(basis to coeff))
     }
 

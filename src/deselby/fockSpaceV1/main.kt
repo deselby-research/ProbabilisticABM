@@ -1,10 +1,10 @@
 package deselby.fockSpaceV1
 
-import deselby.fockSpace.extensions.annihilate
-import deselby.fockSpace.FockBasisVector
-import deselby.fockSpace.Operator
-import deselby.fockSpace.extensions.create
-import deselby.fockSpace.extensions.toCreationCommutationMap
+import deselby.fockSpaceV2.extensions.annihilate
+import deselby.fockSpaceV2.FockBasisVector
+import deselby.fockSpaceV2.Operator
+import deselby.fockSpaceV2.extensions.create
+import deselby.fockSpaceV2.extensions.toCreationCommutationMap
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 
