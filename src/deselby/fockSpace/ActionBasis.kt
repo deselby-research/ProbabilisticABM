@@ -1,39 +1,52 @@
 package deselby.fockSpace
 
-class ActionBasis<AGENT>(val d : AGENT, creations: Map<AGENT,Int> = emptyMap()) : ActBasis<AGENT>(creations) {
+class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT>(creations) {
 
-    override fun create(d: AGENT, n: Int): ActBasis<AGENT> {
-        return ActionBasis(d, creations.plus(d,n))
+    override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) {
+        keyConsumer(d)
     }
 
-    override fun annihilate(d: AGENT): ActBasis<AGENT> {
-        return if(this.d == d) ReflexiveActBasis(d, creations) else InteractionBasis(this.d, d, creations)
+    override fun commute(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        val m = basis.creations[d]?:return
+        termConsumer(CreationBasis(basis.creations.plus(d,-1) union this.creations), m.toDouble())
     }
 
-    override fun multiplyTo(otherBasis: ActCreationBasis<AGENT>,
+//    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) {
+//        termConsumer(d, CreationBasis(creationVector), 1.0)
+//    }
+
+    override fun create(d: AGENT, n: Int): Basis<AGENT> {
+        return ActionBasis(creations.plus(d,n), d)
+    }
+
+    override fun annihilate(d: AGENT): Basis<AGENT> {
+        return if(this.d == d) ReflexiveBasis(creations, d) else InteractionBasis(creations, this.d, d)
+    }
+
+    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
                             ground: GroundState<AGENT>,
-                            termConsumer: (ActCreationBasis<AGENT>, Double) -> Unit) {
+                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         val lambda = ground.lambda(d)
         val nCreations = otherBasis.creations[d]
         var creationUnion: Map<AGENT,Int>? = null
         if(lambda != 0.0) {
             creationUnion = this.creations union otherBasis.creations
-            termConsumer(ActCreationBasis(creationUnion), lambda)
+            termConsumer(CreationBasis(creationUnion), lambda)
         }
         if(nCreations != null) {
             creationUnion = creationUnion?.plus(d,-1)?:(this.creations union otherBasis.creations).plus(d,-1)
-            termConsumer(ActCreationBasis(creationUnion), nCreations.toDouble())
+            termConsumer(CreationBasis(creationUnion), nCreations.toDouble())
         }
     }
 
 
 
     override fun multiplyTo(groundBasis: GroundBasis<AGENT>,
-                            termConsumer: (ActCreationBasis<AGENT>, Double) -> Unit) {
+                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         val lambda = groundBasis.ground.lambda(d)
-        if(lambda != 0.0) termConsumer(ActCreationBasis(creations), lambda)
+        if(lambda != 0.0) termConsumer(CreationBasis(creations), lambda)
         val nCreations = groundBasis.basis.creations[d]
-        if(nCreations != null) termConsumer(ActCreationBasis(creations.plus(d,-1)), nCreations.toDouble())
+        if(nCreations != null) termConsumer(CreationBasis(creations.plus(d,-1)), nCreations.toDouble())
     }
 
 
@@ -53,22 +66,22 @@ class ActionBasis<AGENT>(val d : AGENT, creations: Map<AGENT,Int> = emptyMap()) 
         return super.toString() + "a($d)"
     }
 
-    //    override fun multiply(otherBasis: ActCreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>) : Sequence<Pair<ActCreationBasis<AGENT>,Double>> {
+    //    override fun multiply(otherBasis: CreationBasis<AGENT>,
+//                            ground: GroundState<AGENT>) : Sequence<Pair<CreationBasis<AGENT>,Double>> {
 //        val lambda = ground.lambda(d)
-//        val nCreations = otherBasis.creations[d]
+//        val nCreations = otherBasis.creationVector[d]
 //        if(lambda != 0.0) {
-//            val creationUnion = this.creations union otherBasis.creations
+//            val creationUnion = this.creationVector union otherBasis.creationVector
 //            if(nCreations != null) {
 //                return sequenceOf(
-//                        Pair(ActCreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()),
-//                        Pair(ActCreationBasis(creationUnion), lambda)
+//                        Pair(CreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()),
+//                        Pair(CreationBasis(creationUnion), lambda)
 //                )
 //            }
-//            return sequenceOf(Pair(ActCreationBasis(creationUnion), lambda))
+//            return sequenceOf(Pair(CreationBasis(creationUnion), lambda))
 //        } else if(nCreations != null) {
-//            val creationUnion = this.creations union otherBasis.creations
-//            return sequenceOf(Pair(ActCreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()))
+//            val creationUnion = this.creationVector union otherBasis.creationVector
+//            return sequenceOf(Pair(CreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()))
 //        }
 //        return emptySequence()
 //    }

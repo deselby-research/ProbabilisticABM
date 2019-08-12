@@ -1,8 +1,8 @@
 package deselby.fockSpaceV1
 
-// represents a set of creation and annihilation creations in canonical order: with annihilation
-// creations being applied before creation. Removal creations can be represented with -ve
-// number of creations
+// represents a set of creation and annihilation creationVector in canonical order: with annihilation
+// creationVector being applied before creation. Removal creationVector can be represented with -ve
+// number of creationVector
 class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihilations : Map<AGENT,Int>) : AbstractBasis<AGENT>() {
 
     companion object {
@@ -28,10 +28,10 @@ class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihila
     }
 
 
-    // multiplication with another basis means application of the creations
+    // multiplication with another basis means application of the creationVector
     override fun times(other: FockBasis<AGENT>): MapFockState<AGENT> {
         // TODO: Make this faster for case when other is OperatorBasis with multiple annihilations
-        // apply creations
+        // apply creationVector
         var runningResult : MapFockState<AGENT> = OneHotFock(other, 1.0)
         annihilations.forEach {
             for(i in 1..it.value) {

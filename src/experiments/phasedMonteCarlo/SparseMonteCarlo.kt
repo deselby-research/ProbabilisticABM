@@ -75,8 +75,8 @@ fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int, MapFockState<Int
         possibleTransitionStates.coeffs.remove(sampleAsPerturbation)
 
         val transitionRate = possibleTransitionStates.coeffs.sum()
-        println(possibleTransitionStates.coeffs.entries)
-        println(transitionRate)
+//        println(possibleTransitionStates.coeffs.entries)
+//        println(transitionRate)
         var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T

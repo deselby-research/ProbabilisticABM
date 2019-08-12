@@ -1,115 +1,35 @@
 package deselby.fockSpace.extensions
 
 import deselby.fockSpace.*
+import deselby.std.consumerExtensions.asBiconsumer
 import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.MutableDoubleVector
-import java.util.AbstractMap
 
-
-//operator fun<AGENT> DoubleVector<CreationBasis<AGENT>>.times(other : DoubleVector<CreationBasis<AGENT>>) =
-//        this.vectorMultiplyUsing(other, CreationBasis<AGENT>::times)
-//
-//operator fun<AGENT> CreationBasis<AGENT>.times(other : DoubleVector<CreationBasis<AGENT>>) =
-//        this.timesUsingBasisOperator(other)
-
-
-typealias CreationVector<AGENT> = DoubleVector<CreationBasis<AGENT>>
-typealias AnnihilationVector<AGENT> = DoubleVector<AnnihilationBasis<AGENT>>
-typealias OperatorVector<AGENT> = DoubleVector<OperatorBasis<AGENT>>
-
-typealias LazyVector<BASIS> = Sequence<Map.Entry<BASIS,Double>>
-typealias LazyBasis<AGENT> = Sequence<Map.Entry<AGENT,Int>>
-typealias LazyCreationVector<AGENT> = LazyVector<CreationBasis<AGENT>>
-typealias LazyAnnihilationVector<AGENT> = LazyVector<AnnihilationBasis<AGENT>>
-//typealias LazyLazyVector<AGENT> = LazyVector<LazyBasis<AGENT>>
-
-interface LazyAnnihilationBasis<AGENT> : Sequence<Map.Entry<AGENT,Int>>
-interface LazyCreationBasis<AGENT> : Sequence<Map.Entry<AGENT,Int>>
-
-typealias FockPair<AGENT> = Pair<CreationVector<AGENT>,GroundState<AGENT>>
-
-fun<AGENT> OperatorVector<AGENT>.create(d: AGENT): MutableDoubleVector<OperatorBasis<AGENT>> {
-    val result = zero()
-    forEach { result[it.key.create(d)] = it.value }
+fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<Basis<AGENT>> {
+    val result = HashDoubleVector<Basis<AGENT>>()
+    this.entries.forEach { result[it.key.create(d,n)] = it.value }
     return result
 }
 
 
-fun<AGENT> OperatorVector<AGENT>.create(d: AGENT, n: Int): MutableDoubleVector<OperatorBasis<AGENT>> {
-    val result = zero()
-    forEach { result[it.key.create(d,n)] = it.value }
+fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVector<Basis<AGENT>> {
+    val result = HashDoubleVector<Basis<AGENT>>()
+    this.entries.forEach { result[it.key.annihilate(d)] = it.value }
     return result
 }
 
 
-//fun<AGENT> DoubleVector<OperatorBasis<AGENT>>.create(creations: Map<AGENT,Int>): MutableDoubleVector<OperatorBasis<AGENT>> {
-//    val result = zero()
-//    forEach { result[it.key.create(creations)] = it.value }
-//    return result
-//}
+infix fun<AGENT> CreationVector<AGENT>.on(ground: GroundState<AGENT>) = FockState(this, ground)
+
+infix fun<AGENT> CreationBasis<AGENT>.on(ground: GroundState<AGENT>) = GroundBasis(this, ground)
 
 
-fun<AGENT> OperatorVector<AGENT>.annihilate(d: AGENT): OperatorVector<AGENT> {
-    val result = zero()
-    forEach {
-        result += it.key.annihilate(d) * it.value
-    }
-    return result
-}
-
-
-infix fun<AGENT> CreationVector<AGENT>.on(ground : GroundState<AGENT>) = Pair(this,ground)
-
-operator fun<AGENT> LazyCreationBasis<AGENT>.times(basis: CreationVector<AGENT>) = this * basis.asSequence()
-operator fun<AGENT> CreationVector<AGENT>.times(basis: LazyCreationBasis<AGENT>) = basis * this.asSequence()
-
-operator fun<AGENT> LazyAnnihilationBasis<AGENT>.times(basis: AnnihilationVector<AGENT>) = this * basis.asSequence()
-operator fun<AGENT> AnnihilationVector<AGENT>.times(basis: LazyAnnihilationBasis<AGENT>) = basis * this.asSequence()
-
-operator fun<AGENT> OperatorVector<AGENT>.times(ground : GroundState<AGENT>): CreationVector<AGENT> {
-    return timesUsingLazy(this, ground, OperatorBasis<AGENT>::times)
-}
-
-operator fun<AGENT> OperatorVector<AGENT>.times(fockState : FockPair<AGENT>): CreationVector<AGENT> {
-    return DoubleVector.timesUsing(this, fockState, OperatorBasis<AGENT>::times)
-}
-
-///// LazyVector Stuff
-
-operator fun<BASIS> Double.times(v : LazyVector<BASIS>) : LazyVector<BASIS> = v * this
-operator fun<BASIS> LazyVector<BASIS>.times(multiplier : Double) : LazyVector<BASIS>
-    = this.map { AbstractMap.SimpleEntry(it.key, it.value * multiplier) }
-
-operator fun<BASIS : OperatorSet<*>> DoubleVector<BASIS>.times(multiplier : Double) : LazyVector<BASIS>
-        = this.asSequence().map { AbstractMap.SimpleEntry(it.key, it.value * multiplier) }
-
-
-operator fun<BASIS> MutableDoubleVector<BASIS>.plusAssign(other : LazyVector<BASIS>) {
-    other.forEach { this.plusAssign(it) }
-}
-
-
-inline fun<LBASIS, RBASIS, OBASIS> timesUsingLazy(lhs : CovariantDoubleVector<LBASIS>, rhs : RBASIS, operator : (LBASIS, RBASIS) -> LazyVector<OBASIS>) : MutableDoubleVector<OBASIS> {
-    val result = HashDoubleVector<OBASIS>()
-    lhs.entries.forEach { lhsTerm ->
-        result += (operator(lhsTerm.key, rhs) * lhsTerm.value)
-    }
-    return result
-}
-
-// ------------ Act stuff ----------
-
-infix fun<AGENT> ActCreationVector<AGENT>.on(ground: GroundState<AGENT>) = FockState(this, ground)
-
-infix fun<AGENT> MutableActCreationBasis<AGENT>.on(ground: GroundState<AGENT>) = GroundBasis(this, ground)
-
-
-operator fun<AGENT> CovariantDoubleVector<ActBasis<AGENT>>.times(fockState :FockState<AGENT>) : DoubleVector<ActCreationBasis<AGENT>> {
-    val result = HashDoubleVector<ActCreationBasis<AGENT>>()
+operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(fockState :FockState<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
+    val result = HashDoubleVector<CreationBasis<AGENT>>()
     this.entries.forEach { thisTerm ->
-        fockState.creations.forEach { otherTerm ->
+        fockState.creationVector.forEach { otherTerm ->
             thisTerm.key.multiplyTo(otherTerm.key, fockState.ground) { basis, weight ->
                 result.plusAssign(basis, weight*thisTerm.value * otherTerm.value)
             }
@@ -118,28 +38,105 @@ operator fun<AGENT> CovariantDoubleVector<ActBasis<AGENT>>.times(fockState :Fock
     return result
 }
 
-//fun<AGENT> DoubleVector<ActionBasis<AGENT>>.timesActToList(fockState :FockState<AGENT>) : ArrayList<Pair<ActCreationBasis<AGENT>,Double>> {
-//    val result = ArrayList<Pair<ActCreationBasis<AGENT>,Double>>(this.size*fockState.creations.size*2)
-//    this.forEach { thisTerm ->
-//        fockState.creations.forEach { otherTerm ->
-//            thisTerm.key.multiplyTo(result, otherTerm.key, fockState.ground, thisTerm.value * otherTerm.value)
-//        }
-//    }
-//    return result
-//}
 
-operator fun<AGENT> MutableDoubleVector<ActCreationBasis<AGENT>>.plusAssign(list :ArrayList<Pair<ActCreationBasis<AGENT>,Double>>) {
+operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: GroundBasis<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
+    val result = HashDoubleVector<CreationBasis<AGENT>>()
+    this.entries.forEach { thisTerm ->
+        thisTerm.key.multiplyTo(groundBasis) { basis, weight ->
+            result.plusAssign(basis, weight*thisTerm.value)
+        }
+    }
+    return result
+}
+
+operator fun<AGENT> CreationVector<AGENT>.div(basis: CreationBasis<AGENT>) : CreationVector<AGENT> {
+    val result = HashDoubleVector<CreationBasis<AGENT>>()
+    this.entries.forEach { result.plusAssign(it.key / basis, it.value) }
+    return result
+}
+
+
+operator fun<BASIS> MutableDoubleVector<BASIS>.plusAssign(list: Collection<Pair<BASIS,Double>>) {
     list.forEach { this.plusAssign(it.first, it.second) }
 }
 
-fun<AGENT> CovariantDoubleVector<ActBasis<AGENT>>.create(d : AGENT) : DoubleVector<ActBasis<AGENT>> {
-    val result = HashDoubleVector<ActBasis<AGENT>>()
-    this.entries.forEach { result[it.key.create(d)] = it.value }
-    return result
+// Given a canonical operator, S, will create a mapping from
+// agent states, d, to Operators such that d -> a^-_d[a*_d,S]
+//
+// Uses the identity
+// [a*,a^m] = -ma^(m-1)
+// so
+// a^-_d[a*,a^m] = -m a^-_da^(m-1)
+//fun<AGENT> FockVector<AGENT>.toCreationCommutationMap(): CommutationMap<AGENT> {
+//    val commutations = HashMap<AGENT, HashDoubleVector<Basis<AGENT>>>()
+//    forEach { (basis, basisWeight) ->
+//        basis.commutationsTo { d, basis, commutationWeight ->
+//            commutations.getOrPut(d, { HashDoubleVector() }).
+//                    plusAssign(basis.create(d,-1), basisWeight*commutationWeight)
+//        }
+//    }
+//    return commutations
+//}
+
+
+fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
+    val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
+    forEach { entry ->
+        entry.key.forEachAnnihilationKey { d ->
+            index.getOrPut(d, { ArrayList() }).add(entry)
+        }
+    }
+    return index
 }
 
-fun<AGENT> CovariantDoubleVector<ActBasis<AGENT>>.annihilate(d : AGENT) : DoubleVector<ActBasis<AGENT>> {
-    val result = HashDoubleVector<ActBasis<AGENT>>()
-    this.entries.forEach { result[it.key.annihilate(d)] = it.value }
-    return result
+
+fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+    val activeTerms = HashSet<Map.Entry<Basis<AGENT>,Double>>()
+    otherBasis.creations.keys.forEach { d ->
+        this[d]?.forEach { term ->
+            activeTerms.add(term)
+        }
+    }
+    activeTerms.forEach { (indexedBasis, indexedWeight) ->
+        indexedBasis.commute(otherBasis) { commutedBasis, commutedWeight ->
+            termConsumer(commutedBasis, commutedWeight * indexedWeight)
+        }
+    }
 }
+
+
+fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>) : FockVector<AGENT> {
+    val commutation = HashFockVector<AGENT>()
+    this.commute(otherBasis, commutation.asBiconsumer())
+    return commutation
+}
+
+fun<AGENT> FockState<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double) : CreationVector<AGENT> {
+    val Hdt  = hamiltonian*dt
+    val state = HashDoubleVector(this.creationVector)
+    var time = 0.0
+    while(time < T) {
+        state += Hdt * (state on ground)
+        time += dt
+    }
+    return state
+}
+//fun<AGENT> CommutationMap<AGENT>.commute(basis: CreationBasis<AGENT>): FockVector<AGENT> {
+//    basis.creationVector.forEach {
+//        val commutation = this[it.key] ?: Basis.identityVector()
+//        if (it.value > 0) {
+//            for (i in 1..it.value) {
+//                val Q = commutation * sample
+//                possibleTransitionStates -= Q
+//                sampleBasis.createAssign(it.key, 1)
+//            }
+//        } else if (it.value < 0) {
+//            for (i in 1..-it.value) {
+//                sampleBasis.createAssign(it.key, -1)
+//                val Q = commutation * sample
+//                possibleTransitionStates += Q
+//            }
+//        }
+//    }
+//
+//}

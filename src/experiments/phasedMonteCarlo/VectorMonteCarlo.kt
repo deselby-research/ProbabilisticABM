@@ -1,5 +1,7 @@
 package experiments.phasedMonteCarlo
 
+import deselby.fockSpace.*
+import deselby.fockSpace.extensions.*
 import deselby.fockSpaceV2.Deselby
 import deselby.fockSpaceV2.DeselbyPerturbation
 import deselby.fockSpaceV2.Operator
@@ -57,6 +59,41 @@ fun OneHotDoubleVector<Deselby<Int>>.perturbativeMonteCarlo(hamiltonian: DoubleV
                     }
                 }
             }
+        }
+    } while(time < T)
+    return OneHotDoubleVector(sampleBasis, sampleWeight*samplePhase)
+}
+
+
+fun GroundBasis<Int>.monteCarlo(hamiltonian: FockVector<Int>, T : Double) : OneHotDoubleVector<CreationBasis<Int>> {
+    var time = 0.0
+    var sampleWeight = 1.0
+
+    val hIndex = hamiltonian.toAnnihilationIndex()
+    var samplePhase = 1.0
+    val sampleBasis = MutableCreationBasis(this.basis)
+//    val groundBasis = sampleBasis on this.ground
+    val possibleTransitionStates = SamplableDoubleVector(hamiltonian * this)
+    do {
+        val sampleRateOfChange = possibleTransitionStates[Basis.identity()]
+        possibleTransitionStates.coeffs.remove(Basis.identity())
+
+        val transitionRate = possibleTransitionStates.coeffs.sum()
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        time += timeToNextEvent
+        if(time > T) timeToNextEvent -= time - T
+        val weightGrowthRate = transitionRate + sampleRateOfChange
+        sampleWeight *= exp(weightGrowthRate*timeToNextEvent)
+
+        if(time < T) {
+            // choose perturbation
+            val perturbation = possibleTransitionStates.sample()
+            samplePhase *= perturbation.coeff
+            possibleTransitionStates[Basis.identity()] = sampleRateOfChange
+            // apply it to sampleBasis
+            val reducedCommutation = hIndex.commute(perturbation.basis) * (sampleBasis on this.ground)
+            possibleTransitionStates += reducedCommutation / perturbation.basis
+            sampleBasis *= perturbation.basis
         }
     } while(time < T)
     return OneHotDoubleVector(sampleBasis, sampleWeight*samplePhase)

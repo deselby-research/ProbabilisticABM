@@ -1,0 +1,75 @@
+package deselby.fockSpace
+
+class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT>(creations) {
+
+    override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) {
+        keyConsumer(d)
+    }
+
+
+    override fun commute(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        val m = basis.creations[d]?:return
+        val unionminus1 = this.creations union basis.creations.plus(d,-1)
+        termConsumer(ActionBasis(unionminus1, d), 2.0*m)
+        if(m>1) termConsumer(CreationBasis(unionminus1.plus(d,-1)), (m*(m-1)).toDouble())
+    }
+
+//    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) {
+//        termConsumer(d, ActionBasis(creationVector, d), 2.0)
+//    }
+
+    override fun create(d: AGENT, n: Int): Basis<AGENT> {
+        return ReflexiveBasis(creations.plus(d,n), d)
+    }
+
+    override fun annihilate(d: AGENT): Basis<AGENT> {
+        throw(NotImplementedError())
+    }
+
+    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
+                            ground: GroundState<AGENT>,
+                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        val lambda = ground.lambda(d)
+        val nCreations = otherBasis.creations[d]?:run {
+            if(lambda == 0.0) return@multiplyTo
+            0
+        }
+        val creationUnion = this.creations union otherBasis.creations
+        if(lambda != 0.0) {
+            termConsumer(CreationBasis(creationUnion), lambda*lambda)
+            if(nCreations != 0) termConsumer(CreationBasis(creationUnion.plus(d,-1)), 2.0*lambda*nCreations)
+        }
+        if(nCreations > 1) {
+            termConsumer(CreationBasis(creationUnion.plus(d,-2)), (nCreations*(nCreations-1)).toDouble())
+        }
+    }
+
+
+    override fun multiplyTo(groundBasis: GroundBasis<AGENT>,
+                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        val lambda = groundBasis.ground.lambda(d)
+        val nCreations = groundBasis.basis.creations[d]?:0
+        if(lambda != 0.0) {
+            termConsumer(CreationBasis(creations), lambda*lambda)
+            if(nCreations != 0) termConsumer(CreationBasis(creations.plus(d,-1)), 2.0*lambda*nCreations)
+        }
+        if(nCreations > 1) termConsumer(CreationBasis(creations.plus(d,-2)), (nCreations*(nCreations-1)).toDouble())
+    }
+
+
+    override fun hashCode(): Int {
+        return  1922 + creations.hashCode() + d.hashCode()*62
+    }
+
+
+    override fun equals(other: Any?): Boolean {
+        if(other === this) return true
+        if (other !is ReflexiveBasis<*>) return false
+        return (d == other.d && creations == other.creations)
+    }
+
+
+    override fun toString(): String {
+        return super.toString() + "a($d^2)"
+    }
+}

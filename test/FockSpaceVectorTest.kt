@@ -2,7 +2,6 @@ import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
 import deselby.std.vectorSpace.*
 import org.junit.Test
-import java.util.AbstractMap
 import kotlin.system.measureTimeMillis
 
 class FockSpaceVectorTest {
@@ -16,8 +15,16 @@ class FockSpaceVectorTest {
     }
 
     @Test
+    fun testCommutation() {
+        val H = Hamiltonian(Basis.identityVector())
+        val index = H.toAnnihilationIndex()
+        println(H)
+        println(index.entries)
+    }
+
+    @Test
     fun testOperators() {
-        val a  = OneHotDoubleVector(ActBasis.identity<Int>(),1.0)
+        val a  = OneHotDoubleVector(Basis.identity<Int>(),1.0)
         val b = a.annihilate(0)
         val c = a.create(0)
         println(a)
@@ -36,11 +43,11 @@ class FockSpaceVectorTest {
         val dt = 0.0001
         val T = 0.5
 
-        var opResult : DoubleVector<ActCreationBasis<Int>>? = null
+        var opResult : DoubleVector<CreationBasis<Int>>? = null
         println(measureTimeMillis {
-            val H  = Hamiltonian(ActBasis.identity<Int>().toVector()*dt)
+            val H  = Hamiltonian(Basis.identity<Int>().toVector()*dt)
             val ground = DeselbyGroundState(0 to lambda)
-            val state : MutableDoubleVector<ActCreationBasis<Int>> = HashDoubleVector(ActBasis.identity<Int>() to 1.0)
+            val state : MutableDoubleVector<CreationBasis<Int>> = HashDoubleVector(Basis.identity<Int>() to 1.0)
 
             println(H)
             var time = 0.0
@@ -57,7 +64,7 @@ class FockSpaceVectorTest {
 
 
 
-    fun Hamiltonian(d: CovariantDoubleVector<ActBasis<Int>>): DoubleVector<ActBasis<Int>> {
+    fun Hamiltonian(d: CovariantDoubleVector<Basis<Int>>): DoubleVector<Basis<Int>> {
         val a = d.annihilate(0).create(0)
         return a.create(0) - a
     }

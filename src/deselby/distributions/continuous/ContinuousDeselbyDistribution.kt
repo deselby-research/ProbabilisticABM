@@ -10,7 +10,7 @@ class ContinuousDeselbyDistribution(val rho : FourierDistribution, val subsets :
     }
 
     // Add nDimensions dimensions to the shape of each of the members of this
-    // ready for parametric creation and annihilation creations
+    // ready for parametric creation and annihilation creationVector
     fun lift(nDimensions : Int) : LiftedDeselbyDistribution {
         return LiftedDeselbyDistribution(rho, subsets.size) { i ->
             subsets[i].toLiftedSymmetric(nDimensions)

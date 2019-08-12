@@ -33,7 +33,7 @@ class Operator<AGENT>(override val creations : Map<AGENT,Int>, val annihilations
     }
 
 
-    // multiplication with another basis means application of the creations
+    // multiplication with another basis means application of the creationVector
     operator fun<OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>> times(other: OTHERBASIS):
             DoubleVector<OTHERBASIS> {
         // TODO: Make this faster for case when other is OperatorBasis with multiple annihilations

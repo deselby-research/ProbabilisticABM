@@ -1,8 +1,8 @@
 package deselby.fockSpace
 
-data class FockState<AGENT>(val creations: ActCreationVector<AGENT>, val ground: GroundState<AGENT>)
+data class FockState<AGENT>(val creationVector: CreationVector<AGENT>, val ground: GroundState<AGENT>)
 
-data class GroundBasis<AGENT>(val basis: MutableActCreationBasis<AGENT>, val ground: GroundState<AGENT>)
+data class GroundBasis<AGENT>(val basis: CreationBasis<AGENT>, val ground: GroundState<AGENT>)
 
 data class CommutationCoefficient(val n: Int, val m: Int, val c: Int, val q: Int) {
     fun next() : CommutationCoefficient? {
@@ -19,3 +19,4 @@ data class CommutationCoefficient(val n: Int, val m: Int, val c: Int, val q: Int
                 generateSequence(CommutationCoefficient(n-1, m-1, n*m, 1), CommutationCoefficient::next)
     }
 }
+

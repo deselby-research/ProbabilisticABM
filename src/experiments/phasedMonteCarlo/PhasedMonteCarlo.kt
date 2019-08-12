@@ -16,7 +16,7 @@ import kotlin.system.measureTimeMillis
 
 class PhasedMonteCarlo {
     val lambda = 0.1
-    val dt = 0.0001
+    val dt = 0.0005
     val T = 0.5
     lateinit var denseDeselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambdas))
     lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambdas)))
@@ -153,11 +153,14 @@ class PhasedMonteCarlo {
         val nSamples = 1000000
         val monteCarloSum = SparseFockState<Int>()
         var effectiveSamples= 0.0
-        for(sample in 1..nSamples) {
-            val s = sparse.monteCarloContinuous(H,T)
-            monteCarloSum += s
-            effectiveSamples += s.probability
+        val execTime = measureTimeMillis {
+            for(sample in 1..nSamples) {
+                val s = sparse.monteCarloContinuous(H,T)
+                monteCarloSum += s
+                effectiveSamples += s.probability
+            }
         }
+        println("Exec time = $execTime")
         monteCarloSum *= (1.0/effectiveSamples)
         println("MC sum = $monteCarloSum")
         println("Coefficient ratios")
@@ -189,16 +192,17 @@ class PhasedMonteCarlo {
         println(exactIntegral)
 
 
-        val nSamples = 10
+        val nSamples = 1000000
         val monteCarloSum = SparseFockState<Int>()
         var effectiveSamples= 0.0
-        for(sample in 1..nSamples) {
-//            val s = sparse.perturbativeMonteCarlo(H,T)
-            val s = sparse.perturbativeMonteCarlo(H,T)
-            println(s)
-            monteCarloSum += s
-            effectiveSamples += s.probability
+        val execTime = measureTimeMillis {
+            for(sample in 1..nSamples) {
+                val s = sparse.perturbativeMonteCarlo(H,T)
+                monteCarloSum += s
+                effectiveSamples += s.probability
+            }
         }
+        println("Exec time = $execTime")
         monteCarloSum *= (1.0/effectiveSamples)
         println("MC sum = $monteCarloSum")
         println("Coefficient ratios")
@@ -235,11 +239,14 @@ class PhasedMonteCarlo {
         val hamiltonian = VectorH(OneHotDoubleVector(Operator.identity<Int>(),1.0))
 
         var effectiveSamples= 0.0
-        for(sample in 1..nSamples) {
-            val s = initialState.perturbativeMonteCarlo(hamiltonian,T)
-            monteCarloSum += s
-            effectiveSamples += s.coeff
+        val execTime = measureTimeMillis {
+            for(sample in 1..nSamples) {
+                val s = initialState.perturbativeMonteCarlo(hamiltonian,T)
+                monteCarloSum += s
+                effectiveSamples += s.coeff
+            }
         }
+        println("Exec time = $execTime")
         monteCarloSum *= (1.0/effectiveSamples)
         println("MC sum = $monteCarloSum")
         println("Coefficient ratios")
