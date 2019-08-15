@@ -21,28 +21,34 @@ import java.util.AbstractMap
 
 
 inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
-    = DoubleVector.times(this, other, op)
+        = DoubleVector.times(this, other, op)
 
 inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : RBASIS, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
-    = DoubleVector.times(this, other, op)
+        = DoubleVector.times(this, other, op)
 
 operator fun<LBASIS : HasTimes<RBASIS,OUTBASIS>,RBASIS,OUTBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>) : DoubleVector<OUTBASIS>
-     = DoubleVector.times<LBASIS,RBASIS,OUTBASIS>(this, other, HasTimes<RBASIS,OUTBASIS>::times)
+        = DoubleVector.times<LBASIS,RBASIS,OUTBASIS>(this, other, HasTimes<RBASIS,OUTBASIS>::times)
 
 operator fun<RBASIS,OBASIS> CovariantDoubleVector<HasDoubleVectorTimes<RBASIS,OBASIS>>.times(other : DoubleVector<RBASIS>) : DoubleVector<OBASIS>
-    = DoubleVector.timesUsing<HasDoubleVectorTimes<RBASIS,OBASIS>,RBASIS,OBASIS>(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+        = DoubleVector.timesUsing<HasDoubleVectorTimes<RBASIS,OBASIS>,RBASIS,OBASIS>(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
 
 operator fun<LBASIS : HasTimes<RBASIS,OBASIS>,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : RBASIS) : MutableDoubleVector<OBASIS>
-    = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
+        = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
 
 operator fun<RBASIS,OBASIS> CovariantDoubleVector<HasDoubleVectorTimes<RBASIS,OBASIS>>.times(other : RBASIS) : MutableDoubleVector<OBASIS>
-    = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+        = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
 
 operator fun<RBASIS,OBASIS> HasDoubleVectorTimes<RBASIS, OBASIS>.times(other : DoubleVector<RBASIS>) : MutableDoubleVector<OBASIS>
-    = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
+        = DoubleVector.timesUsing(this, other, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
 
 operator fun<RBASIS,OBASIS> HasTimes<RBASIS, OBASIS>.times(other : DoubleVector<RBASIS>) : MutableDoubleVector<OBASIS>
-    = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
+        = DoubleVector.times(this, other, HasTimes<RBASIS,OBASIS>::times)
+
+fun<LBASIS : HasTimes<RBASIS,OUTBASIS>,RBASIS,OUTBASIS> DoubleVector<LBASIS>.timesApproximate(other : DoubleVector<RBASIS>, coeffLowerBound: Double) : DoubleVector<OUTBASIS>
+        = DoubleVector.timesApproximate(this, other, coeffLowerBound, HasTimes<RBASIS,OUTBASIS>::times)
+
+fun<RBASIS,OBASIS> CovariantDoubleVector<HasDoubleVectorTimes<RBASIS,OBASIS>>.timesApproximate(other : DoubleVector<RBASIS>, coeffLowerBound: Double) : DoubleVector<OBASIS>
+        = DoubleVector.timesApproximateUsing(this, other, coeffLowerBound, HasDoubleVectorTimes<RBASIS,OBASIS>::times)
 
 fun<BASIS> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASIS>)-> DoubleVector<BASIS>, T : Double, dt : Double) {
     var time = 0.0

@@ -1,10 +1,10 @@
 package deselby.fockSpaceV1
 
-// A Fock basis consists of a base state and a creation operator
+// A Fock basis consists of a base d and a creation operator
 // The set of basis states are those that can be expressed as
-// any number of creation creationVector on the base state.
+// any number of creation creationVector on the base d.
 //
-// The annihilation operator transforms a basis state into
+// The annihilation operator transforms a basis d into
 // a weighted sum of basis states.
 interface FockBasis<AGENT> : Fockable<AGENT> {
     override fun annihilate(d : AGENT) : MapFockState<AGENT>

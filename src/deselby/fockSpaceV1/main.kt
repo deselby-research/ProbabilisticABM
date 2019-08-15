@@ -88,7 +88,7 @@ fun testMonteCarlo() {
         // choose a perturbation
         val perturbation = possibleTransitionStates.sample()
         val basis = perturbation.basis as DeselbyPerturbationBasis<Int>
-        // apply it to state
+        // apply it to d
         basis.creations.forEach {
             val commutation: MapFockState<Int> = commutations[it.key]?: ZeroFockState()
             if (it.value > 0) {

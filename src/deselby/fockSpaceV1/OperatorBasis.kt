@@ -19,7 +19,7 @@ class OperatorBasis<AGENT>(override val creations : Map<AGENT,Int>, val annihila
     override fun new(initCreations: Map<AGENT, Int>): AbstractBasis<AGENT> = OperatorBasis(initCreations, annihilations)
 
 
-    // Ground state is taken to be a^annihilations
+    // Ground d is taken to be a^annihilations
     // annihilation just adds another annihilation operator
     override fun groundStateAnnihilate(d: AGENT): MapFockState<AGENT> {
         val newAnnihilations = HashMap(annihilations)

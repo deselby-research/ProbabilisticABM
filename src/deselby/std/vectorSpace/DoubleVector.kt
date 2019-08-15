@@ -1,6 +1,7 @@
 package deselby.std.vectorSpace
 
 import deselby.std.abstractAlgebra.HasTimes
+import kotlin.math.abs
 
 interface DoubleVector<BASIS> : CovariantDoubleVector<BASIS>, Vector<BASIS,Double> {
 
@@ -88,10 +89,39 @@ interface DoubleVector<BASIS> : CovariantDoubleVector<BASIS>, Vector<BASIS,Doubl
             lhs.entries.forEach {thisTerm ->
                 rhs.entries.forEach { otherTerm ->
                     val product = operator(thisTerm.key, otherTerm.key)
-                    product.forEach { result.plusAssign(it.key, it.value*thisTerm.value*otherTerm.value) }
+                    val coeffProduct = thisTerm.value*otherTerm.value
+                    product.forEach { result.plusAssign(it.key, it.value*coeffProduct) }
                 }
             }
             return result
         }
+
+
+        inline fun<LBASIS, RBASIS, OBASIS> timesApproximate(lhs : CovariantDoubleVector<LBASIS>, rhs : CovariantDoubleVector<RBASIS>, coeffLowerBound: Double, operator : (LBASIS, RBASIS) -> OBASIS) : MutableDoubleVector<OBASIS> {
+            val result = HashDoubleVector<OBASIS>()
+            lhs.entries.forEach {thisTerm ->
+                rhs.entries.forEach { otherTerm ->
+                    val coeffProduct = thisTerm.value * otherTerm.value
+                    if(abs(coeffProduct) > coeffLowerBound) result.plusAssign(operator(thisTerm.key, otherTerm.key), coeffProduct)
+                }
+            }
+            return result
+        }
+
+
+        inline fun<LBASIS, RBASIS, OBASIS> timesApproximateUsing(lhs : CovariantDoubleVector<LBASIS>, rhs : CovariantDoubleVector<RBASIS>, coeffLowerBound: Double, operator : (LBASIS, RBASIS) -> DoubleVector<OBASIS>) : MutableDoubleVector<OBASIS> {
+            val result = HashDoubleVector<OBASIS>()
+            lhs.entries.forEach {thisTerm ->
+                rhs.entries.forEach { otherTerm ->
+                    val product = operator(thisTerm.key, otherTerm.key)
+                    product.forEach {
+                        val coeffProduct = it.value*thisTerm.value*otherTerm.value
+                        if(abs(coeffProduct) > coeffLowerBound) result.plusAssign(it.key, coeffProduct)
+                    }
+                }
+            }
+            return result
+        }
+
     }
 }

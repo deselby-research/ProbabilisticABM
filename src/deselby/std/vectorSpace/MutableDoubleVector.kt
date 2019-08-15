@@ -21,6 +21,7 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
     }
 
 
+    // value of entry should be non-zero!
     operator fun plusAssign(entry : Map.Entry<BASIS,Double>) {
         merge(entry.key , entry.value) {a , b ->
             val newVal = a + b
@@ -29,6 +30,7 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
     }
 
     fun plusAssign(basis : BASIS, increment : Double) {
+        if(increment == 0.0) return
         merge(basis , increment) {a , b ->
             val newVal = a + b
             if(newVal == 0.0) null else newVal
@@ -36,6 +38,7 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
     }
 
 
+    // value of entry should be non-zero!
     operator fun minusAssign(entry : Map.Entry<BASIS,Double>) {
         merge(entry.key , -entry.value) {a , b ->
             val newVal = a + b

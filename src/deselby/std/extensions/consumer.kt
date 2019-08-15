@@ -1,4 +1,4 @@
-package deselby.std.consumerExtensions
+package deselby.std.extensions
 
 
 inline fun<T> MutableCollection<T>.asConsumer(): (T) -> Unit {

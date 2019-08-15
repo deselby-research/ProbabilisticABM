@@ -24,7 +24,7 @@ class Operator<AGENT>(override val creations : Map<AGENT,Int>, val annihilations
     override fun new(initCreations: MutableMap<AGENT, Int>) = Operator(initCreations, annihilations)
 
 
-    // Ground state is taken to be a^annihilations
+    // Ground d is taken to be a^annihilations
     // annihilation just adds another annihilation operator
     override fun groundStateAnnihilate(d: AGENT): DoubleVector<Operator<AGENT>> {
         val newAnnihilations = HashMap(annihilations)

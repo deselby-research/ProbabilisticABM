@@ -16,7 +16,7 @@ import kotlin.system.measureTimeMillis
 
 class PhasedMonteCarlo {
     val lambda = 0.1
-    val dt = 0.0005
+    val dt = 0.0001
     val T = 0.5
     lateinit var denseDeselby : DeselbyDistribution //= DeselbyDistribution(listOf(lambdas))
     lateinit var sparse : SparseFockState<Int>//(DeselbyBasis(mapOf(0 to lambdas)))

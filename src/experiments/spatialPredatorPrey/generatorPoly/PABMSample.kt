@@ -73,7 +73,7 @@ class PABMSample<AGENT, ABM : MutableCollection<AGENT>>(initABMState : ABM) {
         }
         for(agent in agents.coeffs[0].abmState) { // assumes there's only one basis vector
             TODO("Calculate act rates by calculating the FockState rate-of-change. This can be made " +
-                    "efficient by calculating the perturbation to the rate-of-change when updating the state")
+                    "efficient by calculating the perturbation to the rate-of-change when updating the d")
             addAgentsToActRecords(agent, 1)
         }
     }

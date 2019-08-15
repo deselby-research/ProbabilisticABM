@@ -17,7 +17,7 @@ fun MapFockState<Int>.monteCarloContinuous(H: (MapFockState<Int>) -> MapFockStat
         val sampleRateOfChange = dp_dt.coeffs[sample.basis]?:0.0
         possibleTransitionStates = SamplableFockState(dp_dt - sample.basis * sampleRateOfChange)
         val transitionRate = possibleTransitionStates.coeffs.sum()
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of d change
         if(time + timeToNextEvent >= T) timeToNextEvent = T - time
         time += timeToNextEvent
         val weightGrowthRate = transitionRate + sampleRateOfChange*sample.probability.sign
@@ -40,7 +40,7 @@ fun MapFockState<Int>.monteCarloTest(H: (MapFockState<Int>) -> MapFockState<Int>
         possibleTransitionStates.coeffs.remove(sampleAsPerturbation)
 
         val transitionRate = possibleTransitionStates.coeffs.sum()
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of d change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T
         val weightGrowthRate = transitionRate + sampleRateOfChange*sample.probability.sign
@@ -77,7 +77,7 @@ fun MapFockState<Int>.perturbativeMonteCarlo(H: (FockState<Int, MapFockState<Int
         val transitionRate = possibleTransitionStates.coeffs.sum()
 //        println(possibleTransitionStates.coeffs.entries)
 //        println(transitionRate)
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of d change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T
         val weightGrowthRate = transitionRate + sampleRateOfChange

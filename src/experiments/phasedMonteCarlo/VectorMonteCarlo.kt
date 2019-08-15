@@ -31,7 +31,7 @@ fun OneHotDoubleVector<Deselby<Int>>.perturbativeMonteCarlo(hamiltonian: DoubleV
         possibleTransitionStates.coeffs.remove(sampleAsPerturbation)
 
         val transitionRate = possibleTransitionStates.coeffs.sum()
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of d change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T
         val weightGrowthRate = transitionRate + sampleRateOfChange
@@ -65,7 +65,7 @@ fun OneHotDoubleVector<Deselby<Int>>.perturbativeMonteCarlo(hamiltonian: DoubleV
 }
 
 
-fun GroundBasis<Int>.monteCarlo(hamiltonian: FockVector<Int>, T : Double) : OneHotDoubleVector<CreationBasis<Int>> {
+fun GroundBasis<Int,GroundState<Int>>.monteCarlo(hamiltonian: FockVector<Int>, T : Double) : OneHotDoubleVector<CreationBasis<Int>> {
     var time = 0.0
     var sampleWeight = 1.0
 
@@ -79,7 +79,7 @@ fun GroundBasis<Int>.monteCarlo(hamiltonian: FockVector<Int>, T : Double) : OneH
         possibleTransitionStates.coeffs.remove(Basis.identity())
 
         val transitionRate = possibleTransitionStates.coeffs.sum()
-        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of state change
+        var timeToNextEvent = -ln(1.0 - Random.nextDouble()) / transitionRate // sum is rate of d change
         time += timeToNextEvent
         if(time > T) timeToNextEvent -= time - T
         val weightGrowthRate = transitionRate + sampleRateOfChange

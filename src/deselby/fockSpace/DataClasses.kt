@@ -1,8 +1,29 @@
 package deselby.fockSpace
 
-data class FockState<AGENT>(val creationVector: CreationVector<AGENT>, val ground: GroundState<AGENT>)
+import deselby.std.vectorSpace.DoubleVector
 
-data class GroundBasis<AGENT>(val basis: CreationBasis<AGENT>, val ground: GroundState<AGENT>)
+data class FockState<AGENT, out BASIS: GroundState<AGENT>>(val creationVector: CreationVector<AGENT>, val ground: BASIS)
+
+data class GroundBasis<AGENT, out BASIS: GroundState<AGENT>>(val basis: CreationBasis<AGENT>, val ground: BASIS) : GroundState<AGENT> {
+    val identity = Basis.identity<AGENT>()
+
+    override fun annihilate(d: AGENT): DoubleVector<CreationBasis<AGENT>> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun lambda(d: AGENT): Double {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun preMultiply(lhsBasis: Basis<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        lhsBasis.multiply(ground, termConsumer)
+        lhsBasis.commuteToPerturbation(basis) { basis, commutedWeight ->
+            ground.preMultiply(basis) { creationBasis, groundWeight ->
+                termConsumer(creationBasis, commutedWeight*groundWeight)
+            }
+        }
+    }
+}
 
 data class CommutationCoefficient(val n: Int, val m: Int, val c: Int, val q: Int) {
     fun next() : CommutationCoefficient? {

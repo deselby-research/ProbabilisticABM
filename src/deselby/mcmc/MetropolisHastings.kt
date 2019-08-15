@@ -5,8 +5,13 @@ import org.apache.commons.math3.random.RandomGenerator
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-// supply a function from which you want to sample that takes a RandomGenerator and returns
-// a pair consisting of the coeff and the coeff of the sample.
+// supply a function from which you want to take samples. The function should take a RandomGenerator,
+// from which it draws whatever random numbers it requires. To make observations, create an Observations
+// object and use its members to assert observations. Once you're done, return a pair consisting of
+// the Observation object and the value of measure you wish to take samples of, given the random draws.
+//
+// To invoke the MCMC sample process, call sampleWithGaussianProposal. The samples can then be read
+// from this MetropolisHastings object, as if from an ArrayList
 class MetropolisHastings<T>(val model : (RandomGenerator) -> Pair<Observations,T>) : ArrayList<T>() {
     val rand = MersenneTwister()
 

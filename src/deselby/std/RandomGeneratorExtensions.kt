@@ -5,6 +5,7 @@ import org.apache.commons.math3.special.Erf
 import org.apache.commons.math3.special.Erf.erf
 import org.apache.commons.math3.special.Gamma
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -65,4 +66,12 @@ fun RandomGenerator.nextPoisson(lambda : Double) : Int {
         }
         return lowerK
     }
+}
+
+
+// Exponential distribution
+// P(x) = lambda*exp(-lambda*x)
+// for x > 0
+fun RandomGenerator.nextExponential(lambda : Double) : Double {
+    return -ln(1.0-nextDouble())/lambda
 }
