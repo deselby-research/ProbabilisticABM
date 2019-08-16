@@ -5,7 +5,28 @@ import java.io.*
 import java.lang.Thread.sleep
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-
+///////////////////////////////
+// use this to plot data to Gnuplot. Use like this:
+// gnuplot {
+//    invoke("plot x*x")
+// }
+// Data can be sent in two ways. Either as a heredoc:
+// gnuplot {
+//    val data = heredoc(data,2)
+//    invoke("""
+//       plot $data with lines
+//       ...other commands...
+//    """)
+// }
+// ...or in binary format...
+// gnuplot {
+//    invoke("""
+//       plot ${binary(2,100)} with lines
+//       ...other commands...
+//    """)
+//    write(data)
+// }
+/////////////////////////////
 open class Gnuplot : Closeable {
     val execResult = DefaultExecuteResultHandler()
     val pipe : PipedOutputStream // pipe feeding the executable's standard in
@@ -24,94 +45,6 @@ open class Gnuplot : Closeable {
         exec.execute(cl, execResult)
         sleep(128) // wait for gnuplot instance to spin-up
     }
-
-
-    // This form sends data in binary format
-    // piping data over in binary is quicker, if speed is important
-    // replot doesn't work with binary data. Instead do something like:
-    //     invoke("plot '-' binary record=(100) using 1 with lines, '-' binary record=(80) using 1:2 with points")
-    //     write(data1)
-    //     write(data2)
-    fun plotBinary(data : Sequence<Number>,
-                   fieldsPerRecord: Int, recordsPerBlock: Int, ranges: String = "", plotStyle: String = "with lines"): Gnuplot {
-        val using = (2..fieldsPerRecord).fold("1") {s,i -> "$s:$i"}
-        write("plot $ranges '-' binary record=($recordsPerBlock) using $using $plotStyle\n")
-        rawWrite(data.map {it.toFloat()})
-        return this
-    }
-
-
-    // This form sends data in binary format
-    // piping data over in binary is quicker, if speed is important
-    // data in order (x0,y0), (x0,y1)...(x0,yn), (x1,y0)...
-    // replot doesn't work with binary data. Instead do something like:
-    //     invoke("splot '-' binary record=(100,100) using 1 with lines, '-' binary record=(80,50) using 1:2:3 with points")
-    //     write(data1)
-    //     write(data2)
-    fun splotBinary(data : Sequence<Number>,
-                    fieldsPerRecord: Int, xSize: Int, ySize: Int, ranges : String = "", plotStyle : String = "with lines"): Gnuplot {
-        val using = (2..fieldsPerRecord).fold("1") {s,i -> "$s:$i"}
-        write("splot $ranges '-' binary record=($ySize,$xSize) using $using $plotStyle\n")
-        rawWrite(data.map(Number::toFloat))
-        return this
-    }
-
-    fun plot(yData: Iterable<Number>, fieldsPerRecord :Int=1, recordsPerBlock: Int=-1, ranges: String="", style: String="with lines") =
-            plot(yData.asSequence(), fieldsPerRecord, recordsPerBlock, ranges, style)
-
-    fun plot(yData: Sequence<Number>, fieldsPerRecord: Int=1, recordsPerBlock: Int=-1, ranges: String="", style: String="with lines"): Gnuplot {
-        val dataId = getUniqueDataName()
-        define(dataId, yData, fieldsPerRecord, recordsPerBlock)
-        write("plot $ranges \$$dataId $style\n")
-        return(this)
-    }
-
-    fun plot(xyData: Iterable<Pair<Number,Number>>, ranges: String="", style: String="with lines") =
-            plot(xyData.asSequence(), ranges, style)
-
-    fun plot(xyData: Sequence<Pair<Number,Number>>, ranges: String="", style: String="with lines") =
-            plot(xyData.flatMap { sequenceOf(it.first, it.second) },2,-1, ranges, style)
-
-
-    fun replot(yData: Iterable<Number>, fieldsPerRecord :Int=1, recordsPerBlock: Int=-1, style: String="with lines") =
-            replot(yData.asSequence(), fieldsPerRecord, recordsPerBlock)
-
-    fun replot(yData: Sequence<Number>, fieldsPerRecord :Int=1, recordsPerBlock: Int=-1, style: String="with lines"): Gnuplot {
-        val dataId = getUniqueDataName()
-        define(dataId, yData, fieldsPerRecord, recordsPerBlock)
-        write("replot \$$dataId $style\n")
-        return(this)
-    }
-
-    fun replot(xyData: Iterable<Pair<Number,Number>>, style: String="with lines") =
-            replot(xyData.asSequence(), style)
-
-    fun replot(xyData: Sequence<Pair<Number,Number>>, style: String="with lines") =
-            replot(xyData.flatMap { sequenceOf(it.first, it.second) }, 2, -1, style)
-
-    fun replot(xyzData: Iterable<Triple<Number,Number,Number>>, recordsPerBlock: Int, style: String="with lines") =
-            replot(xyzData.asSequence(), recordsPerBlock, style)
-
-    fun replot(xyzData: Sequence<Triple<Number,Number,Number>>, recordsPerBlock: Int, style: String="with lines") =
-            replot(xyzData.flatMap {sequenceOf(it.first, it.second, it.third)}, 3, recordsPerBlock, style)
-
-
-    fun splot(xyzData: Iterable<Number>, fieldsPerRecord: Int=1, recordsPerBlock: Int, ranges: String="", style: String="with lines") =
-        splot(xyzData.asSequence(), fieldsPerRecord, recordsPerBlock, ranges, style)
-
-    fun splot(xyzData: Sequence<Number>, fieldsPerRecord: Int=1, recordsPerBlock: Int, ranges: String="", style: String="with lines") : Gnuplot {
-        val dataId = getUniqueDataName()
-        define(dataId, xyzData, fieldsPerRecord, recordsPerBlock)
-        write("splot $ranges \$$dataId $style\n")
-        return(this)
-
-    }
-
-    fun splot(xyzData: Iterable<Triple<Number,Number,Number>>, recordsPerBlock: Int, ranges: String="", style: String="with lines") =
-            splot(xyzData.asSequence(), recordsPerBlock, ranges, style)
-
-    fun splot(xyzData: Sequence<Triple<Number,Number,Number>>, recordsPerBlock: Int, ranges: String="", style: String="with lines") =
-            splot(xyzData.asSequence().flatMap { sequenceOf(it.first, it.second, it.third) }, 3, recordsPerBlock, ranges, style)
 
 
     // This is a helper for sending data to gnuplot in binary form.
@@ -140,25 +73,20 @@ open class Gnuplot : Closeable {
         return "'-' binary record=($recordsPerBlock,$nBlocks) using $using"
     }
 
+    fun heredoc(data : Iterable<Triple<Number,Number,Number>>, recordsPerBlock: Int) =
+            heredoc(data.asSequence().flatMap { sequenceOf(it.first, it.second, it.third) }, 3, recordsPerBlock)
+
+    fun heredoc(data : Sequence<Triple<Number,Number,Number>>, recordsPerBlock: Int) =
+            heredoc(data.flatMap { sequenceOf(it.first, it.second, it.third) }, 3, recordsPerBlock)
+
     fun heredoc(data : Iterable<Pair<Number,Number>>) =
             heredoc(data.asSequence().flatMap { sequenceOf(it.first, it.second) }, 2)
 
     fun heredoc(data : Sequence<Pair<Number,Number>>) =
             heredoc(data.flatMap { sequenceOf(it.first, it.second) }, 2)
 
-    fun heredoc(data : Iterable<Triple<Number,Number,Number>>, recordsPerBlock: Int) =
-            heredoc(data.asSequence().flatMap { sequenceOf(it.first, it.second) }, 3, recordsPerBlock)
-
-    fun heredoc(data : Sequence<Triple<Number,Number,Number>>, recordsPerBlock: Int) =
-            heredoc(data.flatMap { sequenceOf(it.first, it.second) }, 3, recordsPerBlock)
-
     fun heredoc(data : Iterable<Number>, fieldsPerRecord : Int = 1, recordsPerBlock : Int = -1, blocksPerFrame : Int = -1, nFrames : Int = -1) =
             heredoc(data.asSequence(), fieldsPerRecord, recordsPerBlock, blocksPerFrame, nFrames)
-
-    fun heredoc(data : Iterable<Iterable<Number>>, recordsPerBlock : Int = -1, blocksPerFrame : Int = -1, nFrames : Int = -1): String {
-        val fieldsPerRecord = data.iterator().next().count()
-        return heredoc(data.asSequence().flatMap { it.asSequence() }, fieldsPerRecord, recordsPerBlock, blocksPerFrame, nFrames)
-    }
 
     fun heredoc(data : Sequence<Number>, fieldsPerRecord : Int = 1, recordsPerBlock : Int = -1, blocksPerFrame : Int = -1, nFrames : Int = -1): String {
         val name = getUniqueDataName()
@@ -168,7 +96,7 @@ open class Gnuplot : Closeable {
 
     // define a here-document
     // N.B. this will only work with Gnuplot 5.0 upwards
-    fun define(name : String, data : Sequence<Number>, fieldsPerRecord : Int = 1, recordsPerBlock : Int = -1, blocksPerFrame : Int = -1, nFrames : Int = -1): Gnuplot {
+    fun define(name : String, data : Sequence<Number>, fieldsPerRecord : Int = 1, recordsPerBlock : Int = -1, blocksPerFrame : Int = -1, nFrames : Int = -1) {
         val dataIt = data.iterator()
         write("\$$name << EOD\n")
         var frame = nFrames
@@ -191,32 +119,28 @@ open class Gnuplot : Closeable {
         } while(if(nFrames == -1) dataIt.hasNext() else --frame != 0)
         write("EOD\n")
         if(dataIt.hasNext()) throw(IllegalArgumentException("too many data points"))
-        return this
     }
 
-    fun undefine(name : String): Gnuplot {
+    fun undefine(name : String) {
         write("undefine \$$name\n")
-        return this
     }
 
-    fun write(data: Iterable<Number>) = rawWrite(data.asSequence().map(Number::toFloat))
+    fun write(data: Iterable<Number>) { rawWrite(data.asSequence().map(Number::toFloat)) }
 
-    fun write(data: Sequence<Number>) = rawWrite(data.map(Number::toFloat))
+    fun write(data: Sequence<Number>) { rawWrite(data.map(Number::toFloat)) }
 
-    fun rawWrite(data : Iterable<Float>) = rawWrite(data.asSequence())
+    fun rawWrite(data : Iterable<Float>) { rawWrite(data.asSequence()) }
 
-    fun rawWrite(data : Sequence<Float>) : Gnuplot {
+    fun rawWrite(data : Sequence<Float>) {
         data.forEach {
             nativeBuffer.putFloat(0, it)
             pipe.write(nativeBuffer.array())
         }
-        return this
     }
 
-    fun write(s: String) = pipe.write(s.toByteArray())
+    fun write(s: String) { pipe.write(s.toByteArray()) }
 
-
-    override fun close() = pipe.close()
+    override fun close() { pipe.close() }
 
     // Use this to force gnuplot to plot without having to close the connection
     // e.g. to do animation
@@ -229,11 +153,10 @@ open class Gnuplot : Closeable {
     }
 
     // invoke gnuplot command
-    operator fun invoke(command : String): Gnuplot {
+    operator fun invoke(command : String) {
         val str = command.trimIndent()
         pipe.write(str.toByteArray())
         pipe.write('\n'.toInt())
-        return this
     }
 
 
@@ -254,9 +177,8 @@ open class Gnuplot : Closeable {
     }
 }
 
-fun<R> gnuplot(command: Gnuplot.() -> R): R {
-    return Gnuplot().use {
+fun<R> gnuplot(persist : Boolean = true, pipeOutputTo : OutputStream = System.out, pipeErrTo : OutputStream = System.err, command: Gnuplot.() -> R): R {
+    return Gnuplot(persist, pipeOutputTo, pipeErrTo).use {
         it.run(command)
     }
 }
-

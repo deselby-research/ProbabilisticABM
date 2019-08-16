@@ -20,4 +20,20 @@ class DeselbyGroundState<AGENT>(val lambdas : Map<AGENT,Double>) : GroundState<A
 
     override fun lambda(d : AGENT) = this.lambdas[d]?:0.0
 
+    fun mean(state: CreationVector<AGENT>) : Map<AGENT,Double> {
+        var mean = HashMap<AGENT,Double>()
+        lambdas.mapValuesTo(mean) {0.0}
+        state.forEach { stateTerm ->
+            mean.entries.forEach { meanEntry ->
+                val dmean = stateTerm.key[meanEntry.key] + lambda(meanEntry.key)
+                val newVal = meanEntry.value + dmean*stateTerm.value
+                meanEntry.setValue(newVal)
+            }
+        }
+        return mean
+    }
+
+    override fun toString() : String {
+        return lambdas.toString()
+    }
 }

@@ -14,6 +14,12 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : Doub
     return result
 }
 
+fun<AGENT> DoubleVector<CreationBasis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<CreationBasis<AGENT>> {
+    val result = HashDoubleVector<CreationBasis<AGENT>>()
+    this.entries.forEach { result[it.key.create(d,n)] = it.value }
+    return result
+}
+
 
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVector<Basis<AGENT>> {
     val result = HashDoubleVector<Basis<AGENT>>()
@@ -148,8 +154,22 @@ fun<AGENT> GroundState<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Doubl
 }
 
 
+fun<AGENT> FockState<AGENT,GroundState<AGENT>>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double, coeffLowerBound: Double = 1e-11) : CreationVector<AGENT> {
+    val Hdt  = hamiltonian*dt
+    val state = this.creationVector.toMutableVector()
+    var time = 0.0
+//    println("Hdt = $Hdt")
+    while(time < T) {
+        state += Hdt.timesApproximate(state,coeffLowerBound) * this.ground
+        time += dt
+//        println("t = $time state = $state")
+    }
+    return state
+}
+
+
 inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
-        multiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS,Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
+        vectorConsumerMultiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
     val result = HashDoubleVector<OUTBASIS>()
     rhs.entries.forEach { rhsTerm ->
         multiply(lhs, rhsTerm.key) { basis, weight ->

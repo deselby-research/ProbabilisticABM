@@ -1,23 +1,7 @@
 package deselby.std.vectorSpace.extensions
 
-import deselby.std.abstractAlgebra.HasPlusMinusAssign
 import deselby.std.abstractAlgebra.HasTimes
-import deselby.std.abstractAlgebra.HasTimesBySelf
 import deselby.std.vectorSpace.*
-import java.util.AbstractMap
-
-//inline fun<BASIS,OTHERBASIS,RESULTBASIS> DoubleVector<BASIS>.vectorMultiply(
-//        other : DoubleVector<OTHERBASIS>,
-//        multiplyOp : (BASIS,OTHERBASIS)->DoubleVector<RESULTBASIS>) : DoubleVector<RESULTBASIS> {
-//    var result : MutableDoubleVector<RESULTBASIS>? = null
-//    forEach {thisTerm ->
-//        other.forEach { otherTerm ->
-//            val basisProduct = multiplyOp(thisTerm.key, otherTerm.key) * (thisTerm.value*otherTerm.value)
-//            result?.plusAssign(basisProduct)?:run{ result = basisProduct.toMutableVector() }
-//        }
-//    }
-//    return result?:EmptyDoubleVector()
-//}
 
 
 inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
@@ -58,6 +42,20 @@ fun<BASIS> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASI
     }
 }
 
+
+//inline fun<BASIS,OTHERBASIS,RESULTBASIS> DoubleVector<BASIS>.vectorMultiply(
+//        other : DoubleVector<OTHERBASIS>,
+//        multiplyOp : (BASIS,OTHERBASIS)->DoubleVector<RESULTBASIS>) : DoubleVector<RESULTBASIS> {
+//    var result : MutableDoubleVector<RESULTBASIS>? = null
+//    forEach {thisTerm ->
+//        other.forEach { otherTerm ->
+//            val basisProduct = multiplyOp(thisTerm.key, otherTerm.key) * (thisTerm.value*otherTerm.value)
+//            result?.plusAssign(basisProduct)?:run{ result = basisProduct.toMutableVector() }
+//        }
+//    }
+//    return result?:EmptyDoubleVector()
+//}
+
 //operator fun<BASIS : HasTimesBySelf<BASIS>> HasTimesBySelf<BASIS>.times(other : DoubleVector<BASIS>) : MutableDoubleVector<BASIS> {
 
 
@@ -81,3 +79,4 @@ fun<BASIS> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASI
 //    }
 //    return result
 //}
+

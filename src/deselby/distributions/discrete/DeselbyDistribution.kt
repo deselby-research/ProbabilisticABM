@@ -9,6 +9,7 @@ import java.lang.Math.pow
 import kotlin.math.absoluteValue
 import kotlin.math.exp
 import kotlin.math.min
+import kotlin.math.pow
 
 class DeselbyDistribution private constructor(val lambda : List<Double>, var coeffs : DoubleNDArray) : FockState<Int, DeselbyDistribution> {
 
@@ -105,7 +106,7 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
     // But Binom(p,m,k)P(l,k) = exp(-pl)(p/(1-p))^m/m! * (k)_m (1-p)^Delta P((1-p)l,k)
     fun binomialObserve(p : Double, m : Int, variableId : Int) : DeselbyDistribution {
         val lambdap = (1.0-p)*lambda[variableId]
-        val newLambda = DoubleArray(lambda.size, {i -> if(i==variableId) lambdap else lambda[i]})
+        val newLambda = DoubleArray(lambda.size) {i -> if(i==variableId) lambdap else lambda[i]}
         var multiplier = exp(-p*lambda[variableId])
         val p1p = p/(1.0-p)
         for(i in 1..m) multiplier *= p1p/i
@@ -118,12 +119,23 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
         return premultipliedDist * FallingFactorial(variableId, m)
     }
 
+    fun binomialObserveTest(p : Double, m : Int, variableId : Int) : DeselbyDistribution {
+        val lambdap = (1.0-p)*lambda[variableId]
+        val newLambda = DoubleArray(lambda.size) {i -> if(i==variableId) lambdap else lambda[i]}
+        val premultipliedCoeffs = this.coeffs.mapIndexed { index, x ->
+            x*(1.0-p).pow(index[variableId])
+        }
+        val premultipliedDist = DeselbyDistribution(newLambda.asList(), premultipliedCoeffs)
+//        println("premultiplied dist = $premultipliedDist")
+        return premultipliedDist * FallingFactorial(variableId, m)
+    }
+
 
     fun integrate(hamiltonian : (FockState<Int, DeselbyDistribution>)-> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
         var p = this
         var time = 0.0
         while(time < T) {
-            p = (p + hamiltonian(p)*dt)//.truncateBelow(1e-8)
+            p = (p + hamiltonian(p)*dt).truncateBelow(1e-10)
             time += dt
         }
         return p

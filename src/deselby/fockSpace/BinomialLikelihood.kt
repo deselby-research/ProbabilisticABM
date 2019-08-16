@@ -1,9 +1,8 @@
 package deselby.fockSpace
 
-import deselby.fockSpace.extensions.multiply
+import deselby.fockSpace.extensions.vectorConsumerMultiply
 import deselby.fockSpace.extensions.times
-import deselby.std.abstractAlgebra.HasTimes
-import deselby.std.vectorSpace.OneHotDoubleVector
+import kotlin.math.min
 import kotlin.math.pow
 
 // Represents the likelihood of occupation number, n, given a probability
@@ -23,9 +22,12 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
 
     val amamBasis = Basis.newBasis(mapOf(d to nObserved), mapOf(d to nObserved))
 
-    operator fun times(fock: FockState<AGENT,DeselbyGroundState<AGENT>>) =
-        FockState(this * fock.creationVector * fock.ground, modifiedGroundState(fock.ground))
-
+    operator fun times(fock: FockState<AGENT,DeselbyGroundState<AGENT>>): FockState<AGENT, DeselbyGroundState<AGENT>> {
+        val newGround = modifiedGroundState(fock.ground)
+        val creationState = this * fock.creationVector * newGround
+        val normalisedState = creationState / creationState.values.sum()
+        return FockState(normalisedState, newGround)
+    }
 
     // Implementation of identity
     // B_{p,m}(k) * D_{n,l}(k) = (1-p)^n\sum_q c_q D_{n+m-q,(1-p)l}
@@ -34,16 +36,14 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
     // c_{q+1} = (m-q)(n-q)/((q+1)l) c_q
     operator fun times(deselby: GroundBasis<AGENT,DeselbyGroundState<AGENT>>): Pair<CreationVector<AGENT>, DeselbyGroundState<AGENT>> {
         val perturbationState = HashCreationVector<AGENT>()
-        val multiplier = (1.0-pObserve).pow(deselby.basis.creations[d]?:0)
-        amamBasis.multiply(deselby) { basis, weight ->
-            perturbationState.plusAssign(basis, weight * multiplier)
-        }
+        val normalise = basisNormalisation(deselby.basis.creations[d]?:0, nObserved, deselby.ground.lambda(d))
+        amamBasis.multiply(deselby) { b, w -> perturbationState.plusAssign(b, w * normalise) }
         return Pair(perturbationState, modifiedGroundState(deselby.ground))
     }
 
 
     operator fun times(creationVector: CreationVector<AGENT>) : FockVector<AGENT> =
-            multiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
+            vectorConsumerMultiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
 
 
     private fun modifiedGroundState(g: DeselbyGroundState<AGENT>) : DeselbyGroundState<AGENT> {
@@ -61,6 +61,17 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
     }
 
 
+    companion object {
+        fun basisNormalisation(n: Int, m: Int, lambda: Double) : Double {
+            var sum = 0.0
+            var c = lambda.pow(m)
+            for(q in 0..min(n,m)) {
+                sum += c
+                c *= (m-q)*(n-q)/((q+1)*lambda)
+            }
+            return sum
+        }
+    }
 //    data class Coefficient(val c: Double, val q: Int)
 //
 //    fun productCoefficients(n: Int, m: Int, lambda: Double) =

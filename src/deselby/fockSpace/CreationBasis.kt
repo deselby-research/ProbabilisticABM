@@ -54,7 +54,7 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 
     inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
 
-    fun toCreationVector(weight: Double = 1.0) = OneHotDoubleVector(this, weight)
+    fun toCreationVector(weight: Double = 1.0) : CreationVector<AGENT> = OneHotDoubleVector(this, weight)
 
     fun toMutableCreationBasis() = MutableCreationBasis(this)
 

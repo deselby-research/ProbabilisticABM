@@ -4,6 +4,7 @@ import deselby.mcmc.MetropolisHastings
 import deselby.mcmc.Observations
 import deselby.mcmc.mean
 import deselby.mcmc.standardDeviation
+import deselby.std.extensions.statistics
 import deselby.std.nextExponential
 import deselby.std.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
@@ -24,6 +25,10 @@ object NonFockSIR {
                 SIRState(S,I-1, R+1) else SIRState(S-1,I+1,R)
             return Pair(nextState, dt)
         }
+
+        operator fun plus(other: SIRState) : SIRState {
+            return SIRState(S+other.S, I+other.I, R+other.R)
+        }
     }
 
     data class DoubleSIRState(var S: Double, var I: Double, var R: Double) {
@@ -35,61 +40,78 @@ object NonFockSIR {
         }
     }
 
-    data class SIRParams(val beta: Double, val gamma:Double, val rand: RandomGenerator) {
-        fun simulateAndObserve(startState: SIRState, observationInterval: Double, totalTime: Double) : ArrayList<SIRState> {
-            val m = ArrayList<SIRState>((totalTime/observationInterval + 1.0).toInt())
+    class SIRSimulator(val params: SIRParams, val rand: RandomGenerator) {
+        fun simulateAndObserve(startState: SIRState, observationInterval: Double, totalTime: Double): ArrayList<SIRState> {
+            val m = ArrayList<SIRState>((totalTime / observationInterval + 1.0).toInt())
             var t = 0.0
             var p = startState
             m.add(startState)
-            while(t < totalTime) {
-                val (nextP, dt) = p.nextState(this, rand)
-                p = nextP
+            while (t < totalTime) {
+                val (nextP, dt) = p.nextState(params, rand)
                 t += dt
-                while(min(t, totalTime) > m.size*observationInterval) {
+                while (min(t, totalTime) >= m.size * observationInterval) {
                     m.add(p)
                 }
+                p = nextP
             }
             return m
         }
 
-        fun simulateAndObserve(startState: DoubleSIRState, observationInterval: Double, totalTime: Double) : ArrayList<DoubleSIRState> {
-            val m = ArrayList<DoubleSIRState>((totalTime/observationInterval + 1.0).toInt())
+        fun simulateAndObserve(startState: DoubleSIRState, observationInterval: Double, totalTime: Double): ArrayList<DoubleSIRState> {
+            val m = ArrayList<DoubleSIRState>((totalTime / observationInterval + 1.0).toInt())
             var t = 0.0
             m.add(startState)
             var p = startState
-            while(t < totalTime) {
-                for(i in 1..10) p = p.step(this, observationInterval/10.0)
+            while (t < totalTime) {
+                for (i in 1..10) p = p.step(params, observationInterval / 10.0)
                 m.add(p)
                 t += observationInterval
             }
             return m
         }
 
-        fun generateObservations(s0 : SIRState, observationInterval : Double, detectionProb : Double, totalTime : Double) : Array<Int> {
+        fun generateObservations(s0: SIRState, observationInterval: Double, detectionProb: Double, totalTime: Double): Array<Int> {
             val sim = simulateAndObserve(s0, observationInterval, totalTime)
-            val observations = Array(sim.size) {i ->
+            val observations = Array(sim.size) { i ->
                 BinomialDistribution(sim[i].I, detectionProb).sample()
             }
             return observations
         }
 
+        fun prior(nSamples: Int, T: Double) {
+            val simulator = SIRSimulator(params, rand)
+            val samples = ArrayList<SIRState>(nSamples)
+            for(i in 1..nSamples) {
+                val initState = SIRState(rand.nextPoisson(params.lambdaS), rand.nextPoisson(params.lambdaI), 0)
+                val finalState = simulator.simulateAndObserve(initState, T, T).last()
+                samples.add(finalState)
+            }
+            val Sstats = samples.asSequence().map{it.S}.statistics()
+            val Istats = samples.asSequence().map{it.I}.statistics()
+
+            println("S statistics = ${Sstats}")
+            println("I statistics = ${Istats}")
+        }
+
     }
 
 
-    fun metropolisHastingsPosterior(observations : Array<Int>, observationInterval: Double, r: Double) {
-        val totalTime = observationInterval * observations.size
+    fun MCMCPosterior(observations: Array<Int>, observationInterval: Double, params: SIRParams, r: Double, nSamples: Int) {
+        val totalTime = observationInterval * (observations.size-0.5)
         val mcmc = MetropolisHastings { rand ->
-            val params = SIRParams(0.01, 0.1, rand)
-            val initState = SIRState(rand.nextPoisson(40.0), rand.nextPoisson(7.0), 0)
-            val sim = params.simulateAndObserve(initState, observationInterval, totalTime)
+            val simulator = SIRSimulator(params, rand)
+            val initState = SIRState(rand.nextPoisson(params.lambdaS), rand.nextPoisson(params.lambdaI), 0)
+            val sim = simulator.simulateAndObserve(initState, observationInterval, totalTime)
             val observe = Observations()
             for (i in 0 until sim.size) {
                 observe.binomial(r, sim[i].I, observations[i])
             }
-            Pair(observe, sim.last().I)
+            Pair(observe, sim.last())
         }
-        mcmc.sampleWithGaussianProposal(100000, 0.1)
+        mcmc.sampleWithGaussianProposal(nSamples, 0.1)
         println(observations.asList())
-        println("Ibar = ${mcmc.mean()} sd = ${mcmc.standardDeviation()}")
+        println("Sstats = ${mcmc.asSequence().map {it.S}.drop(10000).statistics()}")
+        println("Istats = ${mcmc.asSequence().map {it.I}.drop(10000).statistics()}")
     }
+
 }

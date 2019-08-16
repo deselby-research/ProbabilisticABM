@@ -26,7 +26,7 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
             val (d, n) = annihilations.entries.first()
             val m = basis.creations[d]?:return
             commutationCoefficients(n, m).forEach { cq ->
-                val newBasis = newBasis(creations.plus(d,-cq.q), mapOf(d to m - cq.q))
+                val newBasis = newBasis(creations.plus(d,-cq.q), mapOf(d to n - cq.q))
                 termConsumer(newBasis, cq.c.toDouble())
             }
         } else {

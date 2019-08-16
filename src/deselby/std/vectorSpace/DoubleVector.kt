@@ -37,6 +37,13 @@ interface DoubleVector<BASIS> : CovariantDoubleVector<BASIS>, Vector<BASIS,Doubl
         return result
     }
 
+    operator fun div(divisor : Double) : DoubleVector<BASIS> {
+        val result = zero()
+        mapValuesTo(result) { it.value / divisor }
+        return result
+    }
+
+
     companion object {
 
         inline fun<LBASIS, RBASIS, OBASIS> times(lhs : LBASIS, rhs : CovariantDoubleVector<RBASIS>, operator : (LBASIS, RBASIS) -> OBASIS) : MutableDoubleVector<OBASIS> {
