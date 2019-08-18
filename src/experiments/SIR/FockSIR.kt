@@ -16,13 +16,11 @@ object FockSIR {
         for(nObs in 0 until observations.size) {
             val binomial = BinomialLikelihood(1, r, observations[nObs])
             val state = binomial * p(D0)
-            println(state.ground)
             D0 = state.ground
             p = state.creationVector
             println("stats = ${D0.mean(p)}")
             if(nObs < observations.lastIndex) {
-                p = p(D0).integrate(hamiltonian, observationInterval, 0.01, 1e-10)
-                println("stats = ${D0.mean(p)}")
+                p = p(D0).integrate(hamiltonian, observationInterval, 0.001, 1e-12)
             }
         }
         println("stats = ${D0.mean(p)}")

@@ -1,4 +1,4 @@
-package experiments.spatialPredatorPrey.traditionalABM
+package experiments.spatialPredatorPrey.timeSteppingABM
 
 import experiments.spatialPredatorPrey.Agent2D
 import kotlin.random.Random

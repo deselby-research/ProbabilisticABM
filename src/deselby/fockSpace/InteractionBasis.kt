@@ -1,6 +1,15 @@
 package deselby.fockSpace
 
-class InteractionBasis<AGENT>(creations: Map<AGENT, Int>, val d1: AGENT, val d2: AGENT) : Basis<AGENT>(creations) {
+class InteractionBasis<AGENT> : Basis<AGENT> {
+
+    val d1: AGENT
+    val d2: AGENT
+
+    constructor(creations: Map<AGENT, Int>, d1: AGENT, d2: AGENT) : super(creations) {
+        if(d1 == d2) throw(IllegalArgumentException("InteractionBasis should involve different agents. Use ReflexiveBasis instead"))
+        this.d1 = d1
+        this.d2 = d2
+    }
 
     override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) {
         entryConsumer(d1,1)

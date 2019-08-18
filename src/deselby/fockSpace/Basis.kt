@@ -62,6 +62,9 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 
         fun<AGENT> identityCreationVector() = identity<AGENT>().toCreationVector()
 
+        fun<AGENT> newBasis(creations: Collection<AGENT>, annihilations: Collection<AGENT>) =
+                newBasis(creations.toCountMap(), annihilations.toCountMap())
+
         fun<AGENT> newBasis(creations: Map<AGENT,Int>, annihilations: Map<AGENT,Int>) : Basis<AGENT> {
             val nAnnihilations = annihilations.values.sum()
             return when(nAnnihilations) {
@@ -73,6 +76,18 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
                     InteractionBasis(creations, annihilations.keys.first(), annihilations.keys.last())
 
                 else -> OperatorBasis(creations, annihilations)
+            }
+        }
+
+        inline fun<AGENT> Collection<AGENT>.toCountMap(): Map<AGENT,Int> {
+            return when(size) {
+                0 -> emptyMap()
+                1 -> mapOf(first() to 1)
+                else -> {
+                    val map = HashMap<AGENT,Int>()
+                    this.forEach { map.plusAssign(it, 1) }
+                    map
+                }
             }
         }
 

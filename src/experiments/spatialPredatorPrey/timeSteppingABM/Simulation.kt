@@ -1,4 +1,4 @@
-package experiments.spatialPredatorPrey.traditionalABM
+package experiments.spatialPredatorPrey.timeSteppingABM
 
 import experiments.spatialPredatorPrey.AgentGrid2D
 import kotlin.random.Random
@@ -15,7 +15,7 @@ fun main() {
         for (step in 1..50) {
             Simulation.step()
             if (step.rem(2) == 0) {
-//            plotter("pause 0.02")
+            plotter("pause 0.02")
                 plotter.plot(Simulation.grid)
             }
         }

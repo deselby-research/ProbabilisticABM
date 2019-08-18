@@ -11,17 +11,14 @@ object DeselbySIR {
         for (nObs in 0 until observations.size) {
             p = p.binomialObserve(r, observations[nObs], 1) //.truncateBelow(1e-5)
             p.renormalise()
-            p = p.truncateBelow(1e-8)
-            println(p.lambda)
+            p = p.truncateBelow(1e-10)
             println("Sbar = ${p.mean(0)} Ibar = ${p.mean(1)}")
             if (nObs < observations.lastIndex) {
-                p = p.integrate({ SIRHamiltonian(params, it) }, observationInterval, 0.01)
+                p = p.integrate({ SIRHamiltonian(params, it) }, observationInterval, 0.005)
 //                p = p.integrateWithLambdaOptimisation({ SIRHamiltonian(params,it) }, observationInterval, 0.01)
-                println("Sbar = ${p.mean(0)} Ibar = ${p.mean(1)}")
             }
         }
-        println("Sbar = ${p.mean(0)}")
-        println("Ibar = ${p.mean(1)}")
+        println("Sbar = ${p.mean(0)} Ibar = ${p.mean(1)}")
     }
 
     fun prior(params: SIRParams, T: Double) {

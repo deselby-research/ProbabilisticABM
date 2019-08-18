@@ -8,7 +8,7 @@ import org.junit.Test
 class TestSIR {
     val params = SIRParams(0.01, 0.1, 40.0, 7.0)
     val observationInterval = 1.0
-    val totalTime = 1.0
+    val totalTime = 4.0
     val r = 0.9 // coeff of detection of infected
     val realStartState = NonFockSIR.SIRState(35, 5, 0)
     val simulator = NonFockSIR.SIRSimulator(params, MersenneTwister())
@@ -47,7 +47,7 @@ class TestSIR {
     @Test
     fun testPosteriors() {
         println("Observations = ${observations.asList()}")
-    //    NonFockSIR.MCMCPosterior(observations, observationInterval, params, r, 1000000)
+        NonFockSIR.MCMCPosterior(observations, observationInterval, params, r, 2000000)
         println()
         FockSIR.posterior(observations, observationInterval, params, r)
         println()

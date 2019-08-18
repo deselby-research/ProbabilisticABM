@@ -36,7 +36,7 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
     // c_{q+1} = (m-q)(n-q)/((q+1)l) c_q
     operator fun times(deselby: GroundBasis<AGENT,DeselbyGroundState<AGENT>>): Pair<CreationVector<AGENT>, DeselbyGroundState<AGENT>> {
         val perturbationState = HashCreationVector<AGENT>()
-        val normalise = basisNormalisation(deselby.basis.creations[d]?:0, nObserved, deselby.ground.lambda(d))
+        val normalise = 1.0/basisSumOfWeights(deselby.basis.creations[d]?:0, deselby.ground.lambda(d))
         amamBasis.multiply(deselby) { b, w -> perturbationState.plusAssign(b, w * normalise) }
         return Pair(perturbationState, modifiedGroundState(deselby.ground))
     }
@@ -60,18 +60,22 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
         }
     }
 
+    // posterior weight for use during monte-carlo
+    // n is the Deselby order in the d'th dimension
+    fun sampleWeight(n: Int, lambda: Double) =
+            (1.0-pObserve).pow(n) * basisSumOfWeights(n, lambda)
 
-    companion object {
-        fun basisNormalisation(n: Int, m: Int, lambda: Double) : Double {
-            var sum = 0.0
-            var c = lambda.pow(m)
-            for(q in 0..min(n,m)) {
-                sum += c
-                c *= (m-q)*(n-q)/((q+1)*lambda)
-            }
-            return sum
+
+    fun basisSumOfWeights(n: Int, lambda: Double): Double {
+        var sum = 0.0
+        var c = lambda.pow(nObserved)
+        for(q in 0..min(n,nObserved)) {
+            sum += c
+            c *= (nObserved-q)*(n-q)/((q+1)*lambda)
         }
+        return sum
     }
+
 //    data class Coefficient(val c: Double, val q: Int)
 //
 //    fun productCoefficients(n: Int, m: Int, lambda: Double) =
