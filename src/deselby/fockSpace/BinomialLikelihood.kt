@@ -22,11 +22,11 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
 
     val amamBasis = Basis.newBasis(mapOf(d to nObserved), mapOf(d to nObserved))
 
-    operator fun times(fock: FockState<AGENT,DeselbyGroundState<AGENT>>): FockState<AGENT, DeselbyGroundState<AGENT>> {
+    operator fun times(fock: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedVector<AGENT, DeselbyGround<AGENT>> {
         val newGround = modifiedGroundState(fock.ground)
         val creationState = this * fock.creationVector * newGround
         val normalisedState = creationState / creationState.values.sum()
-        return FockState(normalisedState, newGround)
+        return GroundedVector(normalisedState, newGround)
     }
 
     // Implementation of identity
@@ -34,11 +34,12 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
     // where
     // c_0 = l^m
     // c_{q+1} = (m-q)(n-q)/((q+1)l) c_q
-    operator fun times(deselby: GroundBasis<AGENT,DeselbyGroundState<AGENT>>): Pair<CreationVector<AGENT>, DeselbyGroundState<AGENT>> {
+    operator fun times(deselby: GroundedBasis<AGENT,DeselbyGround<AGENT>>): GroundedVector<AGENT, DeselbyGround<AGENT>> {
         val perturbationState = HashCreationVector<AGENT>()
+        val newGround = modifiedGroundState(deselby.ground)
         val normalise = 1.0/basisSumOfWeights(deselby.basis.creations[d]?:0, deselby.ground.lambda(d))
         amamBasis.multiply(deselby) { b, w -> perturbationState.plusAssign(b, w * normalise) }
-        return Pair(perturbationState, modifiedGroundState(deselby.ground))
+        return GroundedVector(perturbationState, newGround)
     }
 
 
@@ -46,10 +47,10 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
             vectorConsumerMultiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
 
 
-    private fun modifiedGroundState(g: DeselbyGroundState<AGENT>) : DeselbyGroundState<AGENT> {
+    private fun modifiedGroundState(g: DeselbyGround<AGENT>) : DeselbyGround<AGENT> {
         val newLambda = HashMap(g.lambdas)
         newLambda[d] = g.lambda(d)*(1.0-pObserve)
-        return DeselbyGroundState(newLambda)
+        return DeselbyGround(newLambda)
     }
 
 
@@ -62,16 +63,19 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
 
     // posterior weight for use during monte-carlo
     // n is the Deselby order in the d'th dimension
-    fun sampleWeight(n: Int, lambda: Double) =
-            (1.0-pObserve).pow(n) * basisSumOfWeights(n, lambda)
+    fun sampleWeight(deselby: GroundedBasis<AGENT,DeselbyGround<AGENT>>): Double {
+        val n = deselby.basis.creations[d]?:0
+        return (1.0 - pObserve).pow(n) * basisSumOfWeights(n, deselby.ground.lambda(d))
+    }
 
 
     fun basisSumOfWeights(n: Int, lambda: Double): Double {
-        var sum = 0.0
         var c = lambda.pow(nObserved)
-        for(q in 0..min(n,nObserved)) {
+        var sum = c
+        for(q in 1..min(n,nObserved)) {
+            val qm1 = q - 1
+            c *= (nObserved-qm1)*(n-qm1)/(q*lambda)
             sum += c
-            c *= (nObserved-q)*(n-q)/((q+1)*lambda)
         }
         return sum
     }

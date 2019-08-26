@@ -4,7 +4,7 @@ import deselby.distributions.discrete.DeselbyDistribution
 import deselby.distributions.FockState
 import deselby.distributions.discrete.IntGeneratorPolynomial
 import deselby.mcmc.*
-import deselby.std.nextPoisson
+import deselby.std.extensions.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator

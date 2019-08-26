@@ -1,15 +1,14 @@
 package deselby.fockSpace
 
-import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 
 abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 
 //    abstract fun multiplyTo(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>,
+//                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit)
-//    abstract fun multiplyTo(groundBasis: GroundBasis<AGENT,GroundState<AGENT>>,
+//    abstract fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit)
     abstract fun create(d: AGENT, n: Int=1): Basis<AGENT>
     abstract fun create(entries: Iterable<Map.Entry<AGENT,Int>>): Basis<AGENT>
@@ -23,7 +22,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
         commute(otherBasis, termConsumer)
     }
 
-    fun multiply(ground: GroundState<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+    fun multiply(ground: Ground<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         ground.preMultiply(this, termConsumer)
     }
 
@@ -47,11 +46,11 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     fun toVector(weight: Double = 1.0) = OneHotDoubleVector(this, weight)
 
     override fun toString(): String {
-        var s = ""
-        for (c in creations) {
-            if (c.value == 1) s += "a*(${c.key})" else s += "a*(${c.key})^${c.value}"
+        return buildString {
+            for (c in creations) {
+                if (c.value == 1) append("a*(${c.key})") else append("a*(${c.key})^${c.value}")
+            }
         }
-        return s
     }
 
 

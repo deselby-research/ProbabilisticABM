@@ -10,7 +10,7 @@ import kotlin.math.sqrt
 // object and use its members to assert observations. Once you're done, return a pair consisting of
 // the Observation object and the value of measure you wish to take samples of, given the random draws.
 //
-// To invoke the MCMC sample process, call sampleWithGaussianProposal. The samples can then be read
+// To asGroundedVector the MCMC sample process, call sampleWithGaussianProposal. The samples can then be read
 // from this MetropolisHastings object, as if from an ArrayList
 class MetropolisHastings<T>(val model : (RandomGenerator) -> Pair<Observations,T>) : ArrayList<T>() {
     val rand = MersenneTwister()

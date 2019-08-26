@@ -1,12 +1,13 @@
 package deselby.fockSpace.extensions
 
 import deselby.fockSpace.*
-import deselby.std.extensions.asBiconsumer
 import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.MutableDoubleVector
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<Basis<AGENT>> {
     val result = HashDoubleVector<Basis<AGENT>>()
@@ -30,8 +31,6 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVec
     }
     return result
 }
-
-infix fun<AGENT, BASIS: GroundState<AGENT>> CreationBasis<AGENT>.on(ground: BASIS) = GroundBasis(this, ground)
 
 
 fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
@@ -62,12 +61,12 @@ fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, te
 
 fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>) : FockVector<AGENT> {
     val commutation = HashFockVector<AGENT>()
-    this.commute(otherBasis, commutation.asBiconsumer())
+    this.commute(otherBasis, commutation::plusAssign)
     return commutation
 }
 
 
-operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: GroundState<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
+operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: Ground<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
     val result = HashDoubleVector<CreationBasis<AGENT>>()
     this.entries.forEach { thisTerm ->
         thisTerm.key.multiply(groundBasis) { basis, weight ->
@@ -142,11 +141,12 @@ operator fun<BASIS> MutableDoubleVector<BASIS>.plusAssign(list: Collection<Pair<
 
 
 
-fun<AGENT> GroundState<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double, coeffLowerBound: Double = 1e-11) : CreationVector<AGENT> {
+fun<AGENT> Ground<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double, coeffLowerBound: Double = 1e-11) : CreationVector<AGENT> {
     val Hdt  = hamiltonian*dt
     val state =     Basis.identityCreationVector<AGENT>().toMutableVector()
     var time = 0.0
     while(time < T) {
+        println("Integrating: Time = $time state size = ${state.size}")
         state += Hdt.timesApproximate(state,coeffLowerBound) * this
         time += dt
     }
@@ -154,7 +154,7 @@ fun<AGENT> GroundState<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Doubl
 }
 
 
-fun<AGENT> FockState<AGENT,GroundState<AGENT>>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double, coeffLowerBound: Double = 1e-11) : CreationVector<AGENT> {
+fun<AGENT> GroundedVector<AGENT,Ground<AGENT>>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt: Double, coeffLowerBound: Double = 1e-11) : CreationVector<AGENT> {
     val Hdt  = hamiltonian*dt
     val state = this.creationVector.toMutableVector()
     var time = 0.0
@@ -179,7 +179,31 @@ inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
     return result
 }
 
-operator fun<AGENT,BASIS: GroundState<AGENT>> CreationVector<AGENT>.invoke(ground: BASIS) = FockState(this, ground)
+fun<AGENT,BASIS: Ground<AGENT>> CreationVector<AGENT>.asGroundedVector(ground: BASIS) = GroundedVector(this, ground)
+
+// Calculates the highest order basis, b, such that no basis in this
+// vector is of lower order than b
+fun<AGENT> CreationVector<AGENT>.join() : CreationBasis<AGENT> {
+    if(this.size == 0) throw(IllegalArgumentException("Join of an empty vector doesn't exist"))
+    val it = this.iterator()
+    val (firstBasis, _) = it.next()
+    val join = HashMap<AGENT,Int>(firstBasis.creations)
+    while(it.hasNext()) {
+        val (thisBasis, _) = it.next()
+        val joinIt = join.iterator()
+        while(joinIt.hasNext()) {
+            val entry = joinIt.next()
+            val thisExponent = thisBasis.creations[entry.key]
+            if(thisExponent != null) {
+                entry.setValue(min(entry.value, thisExponent))
+            } else {
+                joinIt.remove()
+            }
+        }
+    }
+    return CreationBasis(join)
+}
+
 
 
 //
@@ -202,7 +226,7 @@ operator fun<AGENT,BASIS: GroundState<AGENT>> CreationVector<AGENT>.invoke(groun
 
 
 
-//operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(fockState :FockState<AGENT, GroundState<AGENT>>) : DoubleVector<CreationBasis<AGENT>> {
+//operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(fockState :GroundedVector<AGENT, Ground<AGENT>>) : DoubleVector<CreationBasis<AGENT>> {
 //    val result = HashDoubleVector<CreationBasis<AGENT>>()
 //    this.entries.forEach { thisTerm ->
 //        fockState.creationVector.forEach { otherTerm ->
@@ -215,7 +239,7 @@ operator fun<AGENT,BASIS: GroundState<AGENT>> CreationVector<AGENT>.invoke(groun
 //    return result
 //}
 //
-//fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.timesApproximate(fockState :FockState<AGENT, GroundState<AGENT>>, coeffLowerBound: Double) : DoubleVector<CreationBasis<AGENT>> {
+//fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.timesApproximate(fockState :GroundedVector<AGENT, Ground<AGENT>>, coeffLowerBound: Double) : DoubleVector<CreationBasis<AGENT>> {
 //    val result = HashDoubleVector<CreationBasis<AGENT>>()
 //    this.entries.forEach { thisTerm ->
 //        fockState.creationVector.forEach { otherTerm ->
@@ -230,7 +254,7 @@ operator fun<AGENT,BASIS: GroundState<AGENT>> CreationVector<AGENT>.invoke(groun
 //}
 
 
-//operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: GroundBasis<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
+//operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: GroundedBasis<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
 //    val result = HashDoubleVector<CreationBasis<AGENT>>()
 //    this.entries.forEach { thisTerm ->
 //        thisTerm.key.multiplyTo(groundBasis) { basis, weight ->

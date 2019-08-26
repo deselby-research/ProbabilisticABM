@@ -17,12 +17,12 @@ val <T> Array2D<T>.jSize : Int
     get() = if(size == 0) 0 else get(0).size
 
 fun <T> Array2D<T>.toString2D() : String {
-    var s = String()
-    this.forEach {
-        it.forEach {
-            s += "${it} "
+    return buildString {
+        this@toString2D.forEach {
+            it.forEach {
+                append("${it} ")
+            }
+            append("\n")
         }
-        s +="\n"
     }
-    return s
 }

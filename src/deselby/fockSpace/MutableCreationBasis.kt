@@ -7,4 +7,6 @@ class MutableCreationBasis<AGENT>(private val mcreations: MutableMap<AGENT,Int>)
     operator fun timesAssign(other: CreationBasis<AGENT>) {
         mcreations.unionAssign(other.creations)
     }
+
+
 }

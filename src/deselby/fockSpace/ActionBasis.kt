@@ -37,7 +37,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>,
+//                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda = ground.lambda(d)
 //        val nCreations = otherBasis.creations[d]
@@ -54,7 +54,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 //
 //
 //
-//    override fun multiplyTo(groundBasis: GroundBasis<AGENT,GroundState<AGENT>>,
+//    override fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda = groundBasis.ground.lambda(d)
 //        if(lambda != 0.0) termConsumer(CreationBasis(creations), lambda)
@@ -80,7 +80,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
     }
 
     //    override fun multiply(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>) : Sequence<Pair<CreationBasis<AGENT>,Double>> {
+//                            ground: Ground<AGENT>) : Sequence<Pair<CreationBasis<AGENT>,Double>> {
 //        val lambda = ground.lambda(d)
 //        val nCreations = otherBasis.creationVector[d]
 //        if(lambda != 0.0) {

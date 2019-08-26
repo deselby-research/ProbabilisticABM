@@ -30,4 +30,14 @@ class SamplableDoubleVector<BASIS>(val coeffs: AbsMutableCategorical<BASIS> = Ab
         val basis = coeffs.sample()
         return OneHotDoubleVector(basis, coeffs[basis].sign)
     }
+
+    override fun toString() : String {
+        if(coeffs.isEmpty()) return "{ }"
+        return buildString {
+            coeffs.forEach {
+                append("%+fP[%s] ".format(it.value, it.key))
+            }
+        }
+    }
+
 }

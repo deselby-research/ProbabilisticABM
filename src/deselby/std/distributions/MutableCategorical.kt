@@ -350,12 +350,14 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
 
     override fun toString(): String {
-        var s = "(  "
-        for (item in entries) {
-            s += "${item.key}->${item.value}  "
+        return buildString {
+            this.
+            append("(  ")
+            for (item in entries) {
+                append("${item.key}->${item.value}  ")
+            }
+            append(")")
         }
-        s += ")"
-        return s
     }
 
 }

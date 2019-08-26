@@ -1,13 +1,12 @@
 package experiments.spatialPredatorPrey.discreteEventABM
 
-import deselby.std.nextExponential
-import deselby.std.nextPoisson
+import deselby.std.extensions.nextExponential
 
 class Prey : Agent {
     companion object {
         const val rDie = 0.03 // death rate per unit time
-        const val rReproduce = 0.045 // reproduction rate per step
-        const val rDiffuse = 4.0 // rate of movement
+        const val rReproduce = 0.06 // reproduction rate per step
+        const val rDiffuse = 1.0 // rate of movement
         const val totalRate = rDie + rReproduce + rDiffuse
     }
 
@@ -44,14 +43,8 @@ class Prey : Agent {
         }
     }
 
-    override fun hashCode(): Int {
-        return id
-    }
+    override fun toString() = "r($xPos,$yPos)"
 
-//    override fun equals(other: Any?): Boolean {
-//        if(other !is Prey) return false
-//        return id == other.id
-//    }
-
-
+    override fun fockId() = hashCode()
+    override fun hashCode() = id
 }

@@ -4,7 +4,7 @@ import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 import kotlin.math.pow
 
-class DeselbyGroundState<AGENT>(val lambdas : Map<AGENT,Double>) : GroundState<AGENT> {
+class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT> {
 
     override fun preMultiply(basis: Basis<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         var multiplier = 1.0
@@ -24,6 +24,7 @@ class DeselbyGroundState<AGENT>(val lambdas : Map<AGENT,Double>) : GroundState<A
         var mean = HashMap<AGENT,Double>()
         lambdas.mapValuesTo(mean) {0.0}
         state.forEach { stateTerm ->
+            // TODO: inefficient: most bases in each stateTerm will have zero exponent
             mean.entries.forEach { meanEntry ->
                 val dmean = stateTerm.key[meanEntry.key] + lambda(meanEntry.key)
                 val newVal = meanEntry.value + dmean*stateTerm.value
@@ -32,6 +33,8 @@ class DeselbyGroundState<AGENT>(val lambdas : Map<AGENT,Double>) : GroundState<A
         }
         return mean
     }
+
+
 
     override fun toString() : String {
         return lambdas.toString()

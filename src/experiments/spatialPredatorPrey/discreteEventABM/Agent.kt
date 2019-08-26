@@ -17,7 +17,7 @@ abstract class Agent(var id: Int) {
 
     abstract fun scheduleNextEvent(sim: Simulation)
     abstract fun executeEvent(sim: Simulation)
-
+    abstract fun fockId(): Int
 
     constructor(xPos: Int, yPos: Int): this(
             (xPos+Simulation.GRIDSIZE).rem(Simulation.GRIDSIZE) +

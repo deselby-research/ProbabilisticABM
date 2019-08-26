@@ -34,9 +34,9 @@ class TestSIR {
     @Test
     fun testBinomialMult() {
         val H = Basis.identityCreationVector<Int>().create(0, 2)
-        val deselby = DeselbyGroundState(mapOf(0 to 0.1))
+        val deselby = DeselbyGround(mapOf(0 to 0.1))
         val binomialLikelihood = BinomialLikelihood(0, 0.7, 3)
-        println(binomialLikelihood * H(deselby))
+        println(binomialLikelihood * H.asGroundedVector(deselby))
     }
 
     @Test

@@ -220,11 +220,11 @@ open class DoubleNDArray {
 
 
     override fun toString() : String {
-        var s = ""
-        for(ndi in indexSet) {
-            s += "${ndi.asList()} -> ${this[ndi]}\n"
+        return buildString {
+            for(ndi in indexSet) {
+                append("${ndi.asList()} -> ${this@DoubleNDArray[ndi]}\n")
+            }
         }
-        return s
     }
 
     open operator fun iterator() : Iterator<Double> = data.iterator()

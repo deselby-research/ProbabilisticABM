@@ -4,7 +4,7 @@ import kotlin.random.Random
 
 class Predator(iPos : Int, jPos : Int) : Agent(iPos, jPos) {
     val gamma = 0.03 // death rate per step
-    val beta  = 0.5  // prey capture rate per step per prey
+    val beta  = 0.5  // prey captureOnly rate per step per prey
     val delta = 0.4
     val deltaP = delta/beta // reproduction rate per step per prey caught
 

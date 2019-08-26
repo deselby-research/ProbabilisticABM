@@ -32,7 +32,7 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>,
+//                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda = ground.lambda(d)
 //        val nCreations = otherBasis.creations[d]?:run {
@@ -50,7 +50,7 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
 //    }
 //
 //
-//    override fun multiplyTo(groundBasis: GroundBasis<AGENT,GroundState<AGENT>>,
+//    override fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda = groundBasis.ground.lambda(d)
 //        val nCreations = groundBasis.basis.creations[d]?:0

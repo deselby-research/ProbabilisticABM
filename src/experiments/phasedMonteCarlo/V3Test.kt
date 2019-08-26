@@ -4,7 +4,6 @@ import deselby.fockSpace.*
 import deselby.fockSpace.extensions.annihilate
 import deselby.fockSpace.extensions.create
 import deselby.fockSpace.extensions.integrate
-import deselby.fockSpace.extensions.on
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -18,13 +17,13 @@ class V3Test {
     @Test
     fun monteCarloV3Test() {
         val H = hamiltonian()
-        val deselbyGround = DeselbyGroundState(mapOf(0 to lambda))
+        val deselbyGround = DeselbyGround(mapOf(0 to lambda))
         val exactIntegral = deselbyGround.integrate(H, T, dt)
         println(exactIntegral)
 
         val nSamples = 1000000
         val monteCarloSum = HashCreationVector<Int>()
-        val initialState = Basis.identity<Int>() on deselbyGround
+        val initialState =  Basis.identity<Int>().asGroundedBasis(deselbyGround)
 //        val hamiltonian = VectorH(OneHotDoubleVector(Operator.identity<Int>(),1.0))
 
         var effectiveSamples= 0.0

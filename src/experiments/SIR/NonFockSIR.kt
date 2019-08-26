@@ -2,11 +2,9 @@ package experiments.SIR
 
 import deselby.mcmc.MetropolisHastings
 import deselby.mcmc.Observations
-import deselby.mcmc.mean
-import deselby.mcmc.standardDeviation
 import deselby.std.extensions.statistics
-import deselby.std.nextExponential
-import deselby.std.nextPoisson
+import deselby.std.extensions.nextExponential
+import deselby.std.extensions.nextPoisson
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.random.RandomGenerator
 import kotlin.math.min

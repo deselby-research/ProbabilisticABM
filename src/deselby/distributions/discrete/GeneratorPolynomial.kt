@@ -82,7 +82,7 @@ class GeneratorPolynomial<ABM: MutableCollection<AGENT>, AGENT> private construc
 //
 //    // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the d that is transitioned
 //    // to from this.
-//    fun sampleNext(hamiltonian : (FockState<Int, GeneratorPolynomial<AGENT>>) -> GeneratorPolynomial<AGENT>, rand : RandomGenerator = MersenneTwister()) : Pair<Double, GeneratorPolynomial<AGENT>> {
+//    fun sampleNext(hamiltonian : (GroundedVector<Int, GeneratorPolynomial<AGENT>>) -> GeneratorPolynomial<AGENT>, rand : RandomGenerator = MersenneTwister()) : Pair<Double, GeneratorPolynomial<AGENT>> {
 //        val p0 = if(this.size == 1) this else this.sample()
 //        val SparseH = hamiltonian(p0)
 //        if(SparseH.size == 0) return Pair(Double.POSITIVE_INFINITY, this)

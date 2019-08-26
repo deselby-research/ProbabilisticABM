@@ -1,6 +1,7 @@
 package experiments.spatialPredatorPrey.discreteEventABM
 
 import deselby.std.Gnuplot
+import deselby.std.extensions.nextPoisson
 import org.apache.commons.math3.random.MersenneTwister
 import java.util.*
 import kotlin.collections.ArrayList
@@ -9,7 +10,8 @@ import kotlin.math.max
 
 class Simulation {
     companion object {
-        const val GRIDSIZE = 128
+        const val GRIDSIZE = 3
+        const val GRIDSIZESQ = GRIDSIZE* GRIDSIZE
     }
 
     data class Event(val time: Double, val agent: Agent) : Comparable<Event> {
@@ -32,7 +34,7 @@ class Simulation {
     val gp = Gnuplot()
 
     constructor() {
-        positionIndex = Array(GRIDSIZE * GRIDSIZE) {ArrayList<Agent>()}
+        positionIndex = Array(GRIDSIZESQ) {ArrayList<Agent>()}
         gp("set linetype 1 lc 'red'")
         gp("set linetype 2 lc 'blue'")
     }
@@ -41,6 +43,14 @@ class Simulation {
         for(i in 1..nPredator)  add(Predator(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
         for(i in 1..nPrey)      add(Prey(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
     }
+
+    constructor(lambdaPred: Double, lambdaPrey: Double) : this() {
+        val nPredator = rand.nextPoisson(lambdaPred * GRIDSIZESQ)
+        val nPrey = rand.nextPoisson(lambdaPrey * GRIDSIZESQ)
+        for(i in 1..nPredator)  add(Predator(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
+        for(i in 1..nPrey)      add(Prey(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
+    }
+
 
     fun schedule(event: Event) = eventQueue.add(event)
 
@@ -52,7 +62,7 @@ class Simulation {
 
     fun remove(event: Event) {
         eventQueue.remove(event)
-        event.agent.nextEvent = null
+//        event.agent.nextEvent = null
     }
 
 
@@ -145,12 +155,37 @@ class Simulation {
     fun nAgents() = eventQueue.size
 
     fun simulate(T: Double) {
-        val startTime = time
-        while(time < startTime + T) {
+        val endTime = time + T
+        while(time < endTime) {
             val event = nextEvent()?:return
-            time = event.time
-            event.agent.executeEvent(this)
-            isConsistent()
+            if(event.time < endTime) {
+                time = event.time
+                event.agent.executeEvent(this)
+            } else {
+                time = endTime
+                eventQueue.add(event)
+            }
         }
+    }
+
+    // returns a map of agent to numberObserved
+    fun observe(pObserve: Double) : Observation {
+        val agents = Observation()
+        eventQueue.forEach { (_,agent) ->
+            agents.real.merge(agent, 1,Int::plus)
+            if(rand.nextDouble() < pObserve) agents.observed.merge(agent, 1,Int::plus)
+        }
+        return agents
+    }
+
+    // returns a list of observations.
+    // Each member is a map from agent to number observed
+    fun generateObservations(pObserve: Double, nObservations: Int, observationInterval: Double): List<Observation> {
+        val observations = ArrayList<Observation>()
+        for(i in 1..nObservations) {
+            simulate(observationInterval)
+            observations.add(observe(pObserve))
+        }
+        return observations
     }
 }

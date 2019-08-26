@@ -52,7 +52,7 @@ fun Hamiltonian(d : FockState<Int, DeselbyDistribution>) : DeselbyDistribution {
     return a.create(0) - a
 }
 
-//fun SparseH(d : FockState<Int, DeselbyDistribution>) : DeselbyDistribution {
+//fun SparseH(d : GroundedVector<Int, DeselbyDistribution>) : DeselbyDistribution {
 //    val a = d.create(0)
 //    return a.create(0) - a
 //}

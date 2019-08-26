@@ -8,19 +8,19 @@ import java.nio.ByteOrder
 ///////////////////////////////
 // use this to plot data to Gnuplot. Use like this:
 // gnuplot {
-//    invoke("plot x*x")
+//    asGroundedVector("plot x*x")
 // }
 // Data can be sent in two ways. Either as a heredoc:
 // gnuplot {
 //    val data = heredoc(data,2)
-//    invoke("""
+//    asGroundedVector("""
 //       plot $data with lines
 //       ...other commands...
 //    """)
 // }
 // ...or in binary format...
 // gnuplot {
-//    invoke("""
+//    asGroundedVector("""
 //       plot ${binary(2,100)} with lines
 //       ...other commands...
 //    """)
@@ -50,18 +50,18 @@ open class Gnuplot : Closeable {
     // This is a helper for sending data to gnuplot in binary form.
     // Piping data over in binary is quicker, if speed is important
     // To send data in binsry format use the syntax
-    //    invoke("plot '-' binary record=(nRecords) using 1:2 with lines")
+    //    asGroundedVector("plot '-' binary record=(nRecords) using 1:2 with lines")
     //    write(data)
     // or
-    //    invoke("splot '-' binary record=(recordsPerBlock, nBlocks) using 1:2:3 with lines")
+    //    asGroundedVector("splot '-' binary record=(recordsPerBlock, nBlocks) using 1:2:3 with lines")
     //    write(data)
     //
     // replot doesn't work with binary data. Instead do something like:
-    //    invoke("plot '-' binary record=(100) using 1 with lines, '-' binary record=(80) using 1:2 with points")
+    //    asGroundedVector("plot '-' binary record=(100) using 1 with lines, '-' binary record=(80) using 1:2 with points")
     //    write(data1)
     //    write(data2)
-    // use this function as a helper inside string literals. E.g. the above invoke could be written
-    //    invoke("splot ${binary(1,100)} with lines, ${binary(2,80)} with points")
+    // use this function as a helper inside string literals. E.g. the above asGroundedVector could be written
+    //    asGroundedVector("splot ${binary(1,100)} with lines, ${binary(2,80)} with points")
     //
     fun binary(fieldsPerRecord: Int, nRecords: Int=-1) : String {
         val using = (2..fieldsPerRecord).fold("1") {s,i -> "$s:$i"}
@@ -152,7 +152,7 @@ open class Gnuplot : Closeable {
         return this
     }
 
-    // invoke gnuplot command
+    // asGroundedVector gnuplot command
     operator fun invoke(command : String) {
         val str = command.trimIndent()
         pipe.write(str.toByteArray())

@@ -3,30 +3,33 @@ package experiments.spatialPredatorPrey.fock
 import deselby.fockSpace.*
 
 abstract class Agent {
-    private val pos: Int
+    companion object {
+        const val GRIDSIZE = Simulation.GRIDSIZE
+    }
+
+    protected val pos: Int
 
     val xPos: Int
         get() = pos.rem(GRIDSIZE)
     val yPos: Int
         get() = pos.div(GRIDSIZE)
 
-    companion object {
-        const val GRIDSIZE = 32
-    }
-
 
     constructor(xPos: Int, yPos: Int) {
         pos = (xPos+GRIDSIZE).rem(GRIDSIZE) + GRIDSIZE*(yPos+GRIDSIZE).rem(GRIDSIZE)
     }
 
+    constructor(id: Int) { pos = id }
+
+
     abstract fun copyAt(xPos: Int, yPos: Int): Agent
 
 
     fun diffuse(h: HashFockVector<Agent>, rate: Double) {
-        h += action(rate, copyAt(xPos + 1, yPos))
-        h += action(rate, copyAt(xPos - 1, yPos))
-        h += action(rate, copyAt(xPos, yPos + 1))
-        h += action(rate, copyAt(xPos, yPos - 1))
+        h += action(rate/4.0, copyAt(xPos + 1, yPos))
+        h += action(rate/4.0, copyAt(xPos - 1, yPos))
+        h += action(rate/4.0, copyAt(xPos, yPos + 1))
+        h += action(rate/4.0, copyAt(xPos, yPos - 1))
     }
 
 

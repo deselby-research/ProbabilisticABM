@@ -81,7 +81,7 @@ fun DeselbyDistribution.monteCarloContinuous(H: (FockState<Int, DeselbyDistribut
 }
 
 
-//fun DeselbyDistribution.monteCarloDiscrete(SparseH: (FockState<Int, DeselbyDistribution>) -> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
+//fun DeselbyDistribution.monteCarloDiscrete(SparseH: (GroundedVector<Int, DeselbyDistribution>) -> DeselbyDistribution, T : Double, dt : Double) : DeselbyDistribution {
 //    var p = this
 //    var time = 0.0
 //    while(time < T) {

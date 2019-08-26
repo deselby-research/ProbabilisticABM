@@ -57,11 +57,12 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
 
 
     override fun toString(): String {
-        var s = ""
-        for (c in annihilations) {
-            if (c.value == 1) s += "a(${c.key})" else s += "a(${c.key})^${c.value}"
+        return buildString {
+            append(super.toString())
+            for (c in annihilations) {
+                if (c.value == 1) append("a(${c.key})") else append("a(${c.key})^${c.value}")
+            }
         }
-        return super.toString() + s
     }
 
 }

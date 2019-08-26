@@ -27,15 +27,15 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
         return ActionBasis(creations, d)
     }
 
-    operator fun<GROUND: GroundState<AGENT>> invoke(g: GROUND) = GroundBasis(this, g)
+    fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>,
+//                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        termConsumer(CreationBasis(this.creations union otherBasis.creations),1.0)
 //    }
 //
-//    override fun multiplyTo(groundBasis: GroundBasis<AGENT,GroundState<AGENT>>,
+//    override fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
 //                        termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        termConsumer(this, 1.0)
 //    }

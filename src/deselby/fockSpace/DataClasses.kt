@@ -2,10 +2,11 @@ package deselby.fockSpace
 
 import deselby.std.vectorSpace.DoubleVector
 
-data class FockState<AGENT, out BASIS: GroundState<AGENT>>(val creationVector: CreationVector<AGENT>, val ground: BASIS)
+data class GroundedVector<AGENT, out BASIS: Ground<AGENT>>(val creationVector: CreationVector<AGENT>, val ground: BASIS)
 
-data class GroundBasis<AGENT, out BASIS: GroundState<AGENT>>(val basis: CreationBasis<AGENT>, val ground: BASIS) : GroundState<AGENT> {
-    val identity = Basis.identity<AGENT>()
+data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBasis<AGENT>, val ground: BASIS) : Ground<AGENT> {
+
+    //val identity = Basis.identity<AGENT>()
 
     override fun annihilate(d: AGENT): DoubleVector<CreationBasis<AGENT>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

@@ -57,7 +57,7 @@ class InteractionBasis<AGENT> : Basis<AGENT> {
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
-//                            ground: GroundState<AGENT>,
+//                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda1 = ground.lambda(d1)
 //        val lambda2 = ground.lambda(d2)
@@ -88,7 +88,7 @@ class InteractionBasis<AGENT> : Basis<AGENT> {
 //    }
 //
 //
-//    override fun multiplyTo(groundBasis: GroundBasis<AGENT,GroundState<AGENT>>,
+//    override fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        val lambda1 = groundBasis.ground.lambda(d1)
 //        val lambda2 = groundBasis.ground.lambda(d2)

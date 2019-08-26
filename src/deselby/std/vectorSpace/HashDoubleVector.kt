@@ -1,8 +1,9 @@
 package deselby.std.vectorSpace
 
 import java.util.function.BiFunction
+import kotlin.math.abs
 
-class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : AbstractMutableMap<BASIS,Double>(), MutableDoubleVector<BASIS> {
+class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : MutableDoubleVector<BASIS>, AbstractMutableMap<BASIS,Double>() {
     override val entries
             get() = coeffs.entries
 
@@ -31,10 +32,17 @@ class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : AbstractMuta
 
     override fun toString() : String {
         if(coeffs.isEmpty()) return "{ }"
-        var s = ""
-        coeffs.forEach {
-            s += "%+fP[%s] ".format(it.value, it.key)// ""${it.coeff}P[${it.key}] "
+        val sortedTerms = entries.sortedByDescending { abs(it.value) }
+        return buildString {
+            sortedTerms.forEach {
+                append("%+fP[%s] ".format(it.value, it.key))
+            }
         }
-        return s
+//        var s = ""
+//        s.as
+//        coeffs.forEach {
+//            s += "%+fP[%s] ".format(it.value, it.key)// ""${it.coeff}P[${it.key}] "
+//        }
+//        return s
     }
 }

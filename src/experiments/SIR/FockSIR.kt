@@ -2,37 +2,36 @@ package experiments.SIR
 
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
-import deselby.std.vectorSpace.OneHotDoubleVector
 
 object FockSIR {
 
     fun posterior(observations : Array<Int>, observationInterval: Double, params: SIRParams, r: Double) {
 
-        var D0 = DeselbyGroundState(mapOf(0 to 40.0, 1 to 7.0)) // initial prior
+        var D0 = DeselbyGround(mapOf(0 to 40.0, 1 to 7.0)) // initial prior
         var p : CreationVector<Int> = Basis.identityCreationVector<Int>()
         val hamiltonian = Hamiltonian(params)
 
         println(p)
         for(nObs in 0 until observations.size) {
             val binomial = BinomialLikelihood(1, r, observations[nObs])
-            val state = binomial * p(D0)
+            val state = binomial * p.asGroundedVector(D0)
             D0 = state.ground
             p = state.creationVector
             println("stats = ${D0.mean(p)}")
             if(nObs < observations.lastIndex) {
-                p = p(D0).integrate(hamiltonian, observationInterval, 0.001, 1e-12)
+                p = p.asGroundedVector(D0).integrate(hamiltonian, observationInterval, 0.001, 1e-12)
             }
         }
         println("stats = ${D0.mean(p)}")
     }
 
     fun prior(params: SIRParams, T: Double) {
-        val D0 = DeselbyGroundState(mapOf(0 to params.lambdaS, 1 to params.lambdaI))
+        val D0 = DeselbyGround(mapOf(0 to params.lambdaS, 1 to params.lambdaI))
         var p : CreationVector<Int> = Basis.identityCreationVector()
         val hamiltonian = Hamiltonian(params)
         println(p)
         println("initial means = ${D0.mean(p).entries}")
-        p = p(D0).integrate(hamiltonian, T, 0.001, 1e-10)
+        p = p.asGroundedVector(D0).integrate(hamiltonian, T, 0.001, 1e-10)
         println(p)
         println("normalisation = ${p.values.sum()}")
         println("means = ${D0.mean(p).entries}")
@@ -54,15 +53,15 @@ object FockSIR {
     fun binomialProduct(m: Int, delta: Int, p: Double, lambda: Double) : CreationVector<Int> {
         val binom = BinomialLikelihood(0, p, m)
         val vec = Basis.identityCreationVector<Int>().create(0,delta)
-        val D0 = DeselbyGroundState(mapOf(0 to lambda))
-        val (state, _) = binom * vec(D0)
+        val D0 = DeselbyGround(mapOf(0 to lambda))
+        val (state, _) = binom * vec.asGroundedVector(D0)
         return state
     }
 
     fun fallingFactorial(m: Int, delta: Int, lambda: Double) : CreationVector<Int> {
         val amamBasis = Basis.newBasis(mapOf(0 to m), mapOf(0 to m))
         val vec = Basis.identityCreationVector<Int>().create(0,delta)
-        val D0 = DeselbyGroundState(mapOf(0 to lambda))
+        val D0 = DeselbyGround(mapOf(0 to lambda))
         return amamBasis * vec * D0
     }
 
