@@ -12,38 +12,38 @@ class Predator : Agent {
 //    }
 
 
-    constructor(xPos: Int, yPos: Int, gridSize: Int) : super(xPos, yPos, gridSize)
-    constructor(pos: Int, gridSize: Int) : super(pos, gridSize)
+//    constructor(xPos: Int, yPos: Int, gridSize: Int) : super(xPos, yPos, gridSize)
+    constructor(pos: Int) : super(pos)
 
 
-    override fun copyAt(xPos: Int, yPos: Int) = Predator(xPos, yPos, GRIDSIZE)
+    override fun copyAt(pos: Int) = Predator(pos)
 
 
     fun hamiltonian(h: HashFockVector<Agent>, params: Params) {
-        diffuse(h, params.predDiffuse)
-        capture(h, params.predCaptureOnly)
-        captureAndReproduce(h, params.predCaptureAndReproduce)
+        diffuse(h, params.GRIDSIZE, params.predDiffuse)
+        capture(h, params)
+        captureAndReproduce(h, params)
         die(h, params.predDie)
     }
 
-    fun capture(h: HashFockVector<Agent>, rate: Double) {
-        h += interaction(rate, Prey(xPos, yPos,GRIDSIZE), this)
-        h += interaction(rate, Prey(xPos + 1, yPos,GRIDSIZE), this)
-        h += interaction(rate, Prey(xPos - 1, yPos,GRIDSIZE), this)
-        h += interaction(rate, Prey(xPos, yPos + 1,GRIDSIZE), this)
-        h += interaction(rate, Prey(xPos, yPos - 1,GRIDSIZE), this)
+    fun capture(h: HashFockVector<Agent>, params: Params) {
+        h += interaction(params.predCaptureOnly, Prey(pos), this)
+        h += interaction(params.predCaptureOnly, Prey(right(params.GRIDSIZE)), this)
+        h += interaction(params.predCaptureOnly, Prey(left(params.GRIDSIZE)), this)
+        h += interaction(params.predCaptureOnly, Prey(up(params.GRIDSIZE)), this)
+        h += interaction(params.predCaptureOnly, Prey(down(params.GRIDSIZE)), this)
     }
 
-    fun captureAndReproduce(h: HashFockVector<Agent>, rate: Double) {
-        h += interaction(rate, Prey(xPos + 1, yPos,GRIDSIZE), this, Predator(xPos+1, yPos,GRIDSIZE))
-        h += interaction(rate, Prey(xPos - 1, yPos,GRIDSIZE), this, Predator(xPos-1, yPos,GRIDSIZE))
-        h += interaction(rate, Prey(xPos, yPos + 1,GRIDSIZE), this, Predator(xPos, yPos+1,GRIDSIZE))
-        h += interaction(rate, Prey(xPos, yPos - 1,GRIDSIZE), this, Predator(xPos, yPos-1,GRIDSIZE))
+    fun captureAndReproduce(h: HashFockVector<Agent>, params: Params) {
+        h += interaction(params.predCaptureAndReproduce, Prey(right(params.GRIDSIZE)), this, Predator(right(params.GRIDSIZE)))
+        h += interaction(params.predCaptureAndReproduce, Prey(left(params.GRIDSIZE)), this, Predator(left(params.GRIDSIZE)))
+        h += interaction(params.predCaptureAndReproduce, Prey(up(params.GRIDSIZE)), this, Predator(up(params.GRIDSIZE)))
+        h += interaction(params.predCaptureAndReproduce, Prey(down(params.GRIDSIZE)), this, Predator(down(params.GRIDSIZE)))
     }
 
-    override fun toString() = "f($xPos,$yPos)"
+    override fun toString() = "f($pos)"
 
-    override fun hashCode() = pos + GRIDSIZE*GRIDSIZE
+    override fun hashCode() = pos*2 + 1
 
     override fun equals(other: Any?) = (other is Predator && pos == other.pos)
 }

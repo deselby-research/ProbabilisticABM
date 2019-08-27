@@ -10,27 +10,27 @@ class Prey : Agent {
 //        const val rDiffuse = 1.0 // rate of movement
 //    }
 
-    constructor(xPos: Int, yPos: Int, gridSize: Int) : super(xPos, yPos, gridSize)
-    constructor(pos: Int, gridSize: Int) : super(pos, gridSize)
+//    constructor(xPos: Int, yPos: Int, gridSize: Int) : super(xPos, yPos, gridSize)
+    constructor(pos: Int) : super(pos)
 
-    override fun copyAt(xPos: Int, yPos: Int) = Prey(xPos,yPos,GRIDSIZE)
+    override fun copyAt(pos: Int) = Prey(pos)
 
     fun hamiltonian(h: HashFockVector<Agent>, params: Params) {
-        reproduce(h, params.preyReproduce)
-        diffuse(h, params.preyDiffuse)
+        reproduce(h, params)
+        diffuse(h, params.GRIDSIZE, params.preyDiffuse)
         die(h, params.preyDie)
     }
 
-    fun reproduce(h: HashFockVector<Agent>, rate: Double) {
-        h += action(rate/4.0, Prey(xPos + 1, yPos,GRIDSIZE), this)
-        h += action(rate/4.0, Prey(xPos - 1, yPos,GRIDSIZE), this)
-        h += action(rate/4.0, Prey(xPos, yPos + 1,GRIDSIZE), this)
-        h += action(rate/4.0, Prey(xPos, yPos - 1,GRIDSIZE), this)
+    fun reproduce(h: HashFockVector<Agent>, params: Params) {
+        h += action(params.preyReproduce/4.0, Prey(left(params.GRIDSIZE)), this)
+        h += action(params.preyReproduce/4.0, Prey(right(params.GRIDSIZE)), this)
+        h += action(params.preyReproduce/4.0, Prey(up(params.GRIDSIZE)), this)
+        h += action(params.preyReproduce/4.0, Prey(down(params.GRIDSIZE)), this)
     }
 
-    override fun toString() = "r($xPos,$yPos)"
+    override fun toString() = "r($pos)"
 
-    override fun hashCode() = pos
+    override fun hashCode() = pos*2
 
     override fun equals(other: Any?) = (other is Prey && pos == other.pos)
 }

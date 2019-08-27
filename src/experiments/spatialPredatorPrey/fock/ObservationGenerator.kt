@@ -25,7 +25,7 @@ object ObservationGenerator {
 
 
     fun experiments.spatialPredatorPrey.discreteEventABM.Agent.toFockAgent(): Agent {
-        if(this is experiments.spatialPredatorPrey.discreteEventABM.Predator) return Predator(this.id, this.SIZE)
-        return Prey(this.id, this.SIZE)
+        if(this is experiments.spatialPredatorPrey.discreteEventABM.Predator) return Predator(this.id)
+        return Prey(this.id)
     }
 }

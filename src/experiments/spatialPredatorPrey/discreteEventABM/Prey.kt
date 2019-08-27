@@ -11,6 +11,7 @@ class Prey : Agent {
 //    }
 
     constructor(x: Int, y: Int, gridSize: Int) : super(x,y,gridSize)
+    constructor(id: Int, gridSize: Int) : super(id,gridSize)
 
     override fun scheduleNextEvent(sim: Simulation) {
         val t = sim.time + sim.rand.nextExponential(sim.params.preyTotal)
@@ -42,6 +43,8 @@ class Prey : Agent {
             3 -> sim.add(Prey(xPos, yPos-1, sim.params.GRIDSIZE))
         }
     }
+
+    override fun copy() = Prey(id, SIZE)
 
     override fun toString() = "r($xPos,$yPos)"
 

@@ -1,6 +1,8 @@
 package deselby.fockSpace
 
+import deselby.fockSpace.extensions.asGroundedVector
 import deselby.fockSpace.extensions.join
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -21,6 +23,9 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
 
 
     fun timesApproximate(prior: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedBasis<AGENT,DeselbyGround<AGENT>> {
+//        val filteredMap = HashMap<CreationBasis<AGENT>,Double>()
+//        prior.creationVector.filterTo(filteredMap) {abs(it.value) < 1e-5}
+//        val filteredPrior = HashCreationVector(filteredMap)
         val cPrimes = reweight(prior)
         val basisFit = calcBasisFit(prior.creationVector)
         val newLambdas = HashMap<AGENT,Double>()
@@ -29,7 +34,7 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
             val lambdap = lambda*pNotObserve
             val newLambda = mj + lambdap - (basisFit.creations[agent]?:0) + meanSum(cPrimes, mj, lambdap, agent)
             if(newLambda < 0.0) println("Got -ve lambda: $newLambda")
-            max(newLambda, 0.0)
+            max(newLambda, 1e-8)
         }
         return basisFit.asGroundedBasis(DeselbyGround(newLambdas))
     }

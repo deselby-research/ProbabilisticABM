@@ -59,6 +59,8 @@ class Predator : Agent {
         sim.add(Predator(prey.id, sim.params.GRIDSIZE))
     }
 
+    override fun copy() = Predator(id, SIZE)
+
     override fun toString() = "f($xPos,$yPos)"
 
 //    override fun fockId() = hashCode()

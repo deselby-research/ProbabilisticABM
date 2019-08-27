@@ -21,7 +21,7 @@ abstract class Agent {
     abstract fun scheduleNextEvent(sim: Simulation)
     abstract fun executeEvent(sim: Simulation)
 //    abstract fun fockId(): Int
-
+    abstract fun copy(): Agent
 
     constructor(id: Int, SIZE: Int) {
         this.id = id

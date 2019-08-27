@@ -29,9 +29,9 @@ object StandardParams : Params(
 )
 
 object SmallParams : Params(
-        3,
-        0.1,
-        0.2,
+        10,
+        0.025,
+        0.05,
         0.03,
         0.06,
         1.0,

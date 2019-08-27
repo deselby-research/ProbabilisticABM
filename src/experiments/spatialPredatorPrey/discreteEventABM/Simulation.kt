@@ -178,8 +178,9 @@ class Simulation {
     fun observe(pObserve: Double) : Observation {
         val agents = Observation()
         eventQueue.forEach { (_,agent) ->
-            agents.real.merge(agent, 1,Int::plus)
-            if(rand.nextDouble() < pObserve) agents.observed.merge(agent, 1,Int::plus)
+            val copiedAgent = agent.copy()
+            agents.real.merge(copiedAgent, 1,Int::plus)
+            if(rand.nextDouble() < pObserve) agents.observed.merge(copiedAgent, 1,Int::plus)
         }
         return agents
     }

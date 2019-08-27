@@ -25,8 +25,8 @@ class Simulation {
         hIndex = H.toAnnihilationIndex()
         val lambdas = HashMap<Agent,Double>()
         for(pos in 0 until params.GRIDSIZESQ) {
-            lambdas[Predator(pos, params.GRIDSIZE)] = params.lambdaPred
-            lambdas[Prey(pos, params.GRIDSIZE)] = params.lambdaPrey
+            lambdas[Predator(pos)] = params.lambdaPred
+            lambdas[Prey(pos)] = params.lambdaPrey
         }
         D0 = DeselbyGround(lambdas)
     }
@@ -34,11 +34,9 @@ class Simulation {
 
     fun calcFullHamiltonian(): FockVector<Agent> {
         val H = HashFockVector<Agent>()
-        for(x in 0 until params.GRIDSIZE) {
-            for(y in 0 until params.GRIDSIZE) {
-                Predator(x,y,params.GRIDSIZE).hamiltonian(H, params)
-                Prey(x,y,params.GRIDSIZE).hamiltonian(H, params)
-            }
+        for(pos in 0 until params.GRIDSIZESQ) {
+            Predator(pos).hamiltonian(H, params)
+            Prey(pos).hamiltonian(H, params)
         }
         return H
     }
