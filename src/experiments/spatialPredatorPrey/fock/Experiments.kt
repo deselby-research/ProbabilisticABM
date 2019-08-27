@@ -4,14 +4,17 @@ import deselby.fockSpace.Basis
 import deselby.fockSpace.CreationBasis
 import deselby.fockSpace.GroundedBasis
 import deselby.fockSpace.extensions.asGroundedVector
+import deselby.fockSpace.extensions.logProb
+import experiments.spatialPredatorPrey.SmallParams
+import experiments.spatialPredatorPrey.StandardParams
 import org.junit.Test
 
 class Experiments {
 
     @Test
     fun simulate() {
-        val integrationTime = 1.0
-        val sim = Simulation(0.01,0.02)
+        val integrationTime = 0.25
+        val sim = Simulation(StandardParams)
         val startState = CreationBasis<Agent>(emptyMap()) //Basis.identity<Agent>()
 //        val sample= GroundedBasis(startState, sim.D0)
 
@@ -19,7 +22,7 @@ class Experiments {
 //    println("integral = $p")
         println()
 
-        val nSamples = 1000
+        val nSamples = 10000
         val finalState = sim.monteCarloIntegrate(startState, nSamples, integrationTime)
         println("final state = $finalState")
         println("nTerms = ${finalState.size}")
@@ -28,28 +31,28 @@ class Experiments {
 
     @Test
     fun assimilate() {
-        val lambdaPred = 0.1
-        val lambdaPrey = 0.2
+        val sim = Simulation(SmallParams)
         val obsInterval = 1.0
         val pObserve = 0.5
-        val nObservations = 4
-        val sim = Simulation(lambdaPred,lambdaPrey)
+        val nObservations = 10
         var sample= Basis.identity<Agent>()
-        val observations = ObservationGenerator.generate(lambdaPred, lambdaPrey, pObserve, nObservations, obsInterval)
+        val observations = ObservationGenerator.generate(sim.params, pObserve, nObservations, obsInterval)
 
         println("prior ground = ${sim.D0}")
 
-        val nSamples = 10000
+        val nSamples = 100000
         observations.forEach { (realState, observedState) ->
-            val stateT = sim.monteCarloIntegrate(sample, nSamples, obsInterval)
-            val posterior = observedState.timesApproximate(stateT.asGroundedVector(sim.D0))
-            sim.D0 = posterior.ground
-            sample = posterior.basis
             println()
             println("real = $realState")
             println("observed = $observedState")
+            val stateT = sim.monteCarloIntegrate(sample, nSamples, obsInterval)
+            println("priorT size = ${stateT.size}  sum = ${stateT.values.sum()}")
+            val posterior = observedState.timesApproximate(stateT.asGroundedVector(sim.D0))
+            sim.D0 = posterior.ground
+            sample = posterior.basis
             println("posterior sample = $sample")
             println("posterior ground = ${posterior.ground}")
+            println("logProb of real state = ${posterior.logProb(realState)}")
         }
     }
 }

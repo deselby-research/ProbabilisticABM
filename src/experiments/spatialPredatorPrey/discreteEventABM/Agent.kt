@@ -1,8 +1,11 @@
 package experiments.spatialPredatorPrey.discreteEventABM
 
-abstract class Agent(var id: Int) {
+abstract class Agent {
+    var id: Int
+    val SIZE: Int
+
     var nextEvent :Simulation.Event? = null
-    val SIZE = Simulation.GRIDSIZE
+//    val SIZE = Simulation.GRIDSIZE
     var xPos: Int
         get() = id.rem(SIZE)
         set(x: Int) {
@@ -17,11 +20,16 @@ abstract class Agent(var id: Int) {
 
     abstract fun scheduleNextEvent(sim: Simulation)
     abstract fun executeEvent(sim: Simulation)
-    abstract fun fockId(): Int
+//    abstract fun fockId(): Int
 
-    constructor(xPos: Int, yPos: Int): this(
-            (xPos+Simulation.GRIDSIZE).rem(Simulation.GRIDSIZE) +
-            Simulation.GRIDSIZE*(yPos+Simulation.GRIDSIZE).rem(Simulation.GRIDSIZE))
+
+    constructor(id: Int, SIZE: Int) {
+        this.id = id
+        this.SIZE = SIZE
+    }
+
+    constructor(xPos: Int, yPos: Int, gridSize: Int): this(
+            (xPos+gridSize).rem(gridSize) + gridSize*(yPos+gridSize).rem(gridSize), gridSize)
 
 
     fun diffuse(sim: Simulation) {
@@ -42,7 +50,7 @@ abstract class Agent(var id: Int) {
 
 
     fun sphereOfInfluence(): List<Int> {
-        val S = Simulation.GRIDSIZE
+        val S = SIZE
         val x = id.rem(S)
         val y = id.div(S)
         return listOf(

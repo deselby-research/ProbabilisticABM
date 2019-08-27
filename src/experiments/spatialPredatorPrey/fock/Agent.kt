@@ -3,11 +3,12 @@ package experiments.spatialPredatorPrey.fock
 import deselby.fockSpace.*
 
 abstract class Agent {
-    companion object {
-        const val GRIDSIZE = Simulation.GRIDSIZE
-    }
+//    companion object {
+//        const val GRIDSIZE = Simulation.GRIDSIZE
+//    }
 
     protected val pos: Int
+    protected val GRIDSIZE: Int
 
     val xPos: Int
         get() = pos.rem(GRIDSIZE)
@@ -15,11 +16,15 @@ abstract class Agent {
         get() = pos.div(GRIDSIZE)
 
 
-    constructor(xPos: Int, yPos: Int) {
+    constructor(xPos: Int, yPos: Int, gridSize: Int) {
+        this.GRIDSIZE = gridSize
         pos = (xPos+GRIDSIZE).rem(GRIDSIZE) + GRIDSIZE*(yPos+GRIDSIZE).rem(GRIDSIZE)
     }
 
-    constructor(id: Int) { pos = id }
+    constructor(id: Int, gridSize: Int) {
+        pos = id
+        GRIDSIZE = gridSize
+    }
 
 
     abstract fun copyAt(xPos: Int, yPos: Int): Agent

@@ -3,23 +3,23 @@ package experiments.spatialPredatorPrey.discreteEventABM
 import deselby.std.extensions.nextExponential
 
 class Predator : Agent {
-    companion object {
-        const val rDie = 0.07 // death rate per unit time
-        const val rCaptureOnly  = 0.05  // prey captureOnly rate per unit time per prey
-        const val rCaptureAndReproduce = 0.5 // reproduction rate per unit time per prey
-        const val rCapture = rCaptureOnly + rCaptureAndReproduce
-        const val rDiffuse = 1.0 // rate of movement
-    }
+//    companion object {
+//        const val rDie = 0.07 // death rate per unit time
+//        const val rCaptureOnly  = 0.05  // prey captureOnly rate per unit time per prey
+//        const val rCaptureAndReproduce = 0.5 // reproduction rate per unit time per prey
+//        const val rCapture = rCaptureOnly + rCaptureAndReproduce
+//        const val rDiffuse = 1.0 // rate of movement
+//    }
 
     var totalRate = 0.0
     val preyInRange = ArrayList<Prey>()
 
-    constructor(x: Int, y: Int) : super(x,y)
-    constructor(id: Int) : super(id)
+    constructor(x: Int, y: Int, gridSize: Int) : super(x,y, gridSize)
+    constructor(id: Int, gridSize: Int) : super(id, gridSize)
 
     override fun scheduleNextEvent(sim: Simulation) {
         findPreyInRange(sim)
-        totalRate = rDie + rDiffuse + rCapture*preyInRange.size
+        totalRate = sim.params.predDie + sim.params.predDiffuse + sim.params.predCapture*preyInRange.size
         val nextEventTime = sim.time + sim.rand.nextExponential(totalRate)
         nextEvent = sim.schedule(nextEventTime, this)
     }
@@ -27,17 +27,17 @@ class Predator : Agent {
     override fun executeEvent(sim: Simulation) {
         var r = sim.rand.nextDouble()* totalRate
 
-        if(r < rDie) {
+        if(r < sim.params.predDie) {
             die(sim)
             return
-        } else r -= rDie
-        if(r < rDiffuse) {
+        } else r -= sim.params.predDie
+        if(r < sim.params.predDiffuse) {
             diffuse(sim)
             return
-        } else r -= rDiffuse
+        } else r -= sim.params.predDiffuse
         if(preyInRange.size > 0) {
-            val chosenPrey = preyInRange[(r / rCapture).toInt()]
-            if (r.rem(rCapture) < rCaptureOnly)
+            val chosenPrey = preyInRange[(r / sim.params.predCapture).toInt()]
+            if (r.rem(sim.params.predCapture) < sim.params.predCaptureOnly)
                 captureOnly(chosenPrey, sim)
             else
                 captureAndReproduce(chosenPrey, sim)
@@ -56,11 +56,11 @@ class Predator : Agent {
 
     fun captureAndReproduce(prey: Prey, sim: Simulation) {
         sim.remove(prey)
-        sim.add(Predator(prey.id))
+        sim.add(Predator(prey.id, sim.params.GRIDSIZE))
     }
 
     override fun toString() = "f($xPos,$yPos)"
 
-    override fun fockId() = hashCode()
-    override fun hashCode() = id + Simulation.GRIDSIZE*Simulation.GRIDSIZE
+//    override fun fockId() = hashCode()
+    override fun hashCode() = id*2 + 1
 }

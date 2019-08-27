@@ -5,23 +5,28 @@ import deselby.fockSpace.extensions.integrate
 import deselby.fockSpace.extensions.times
 import deselby.fockSpace.extensions.toAnnihilationIndex
 import experiments.phasedMonteCarlo.monteCarlo
+import experiments.spatialPredatorPrey.Params
 
 class Simulation {
-    companion object {
-        const val GRIDSIZE = 3
-    }
+//    companion object {
+//        const val GRIDSIZE = 3
+//    }
 
-    var samples = ArrayList<MutableCreationBasis<Agent>>()
+//    var samples = ArrayList<MutableCreationBasis<Agent>>()
     var D0: DeselbyGround<Agent>
-    val H = calcFullHamiltonian()
-    val hIndex = H.toAnnihilationIndex()
+    val H: FockVector<Agent>
+    val hIndex: Map<Agent, List<Map.Entry<Basis<Agent>, Double>>>
+    val params: Params
 
 
-    constructor(lambdaPred: Double, lambdaPrey: Double) {
+    constructor(params: Params) {
+        this.params = params
+        H = calcFullHamiltonian()
+        hIndex = H.toAnnihilationIndex()
         val lambdas = HashMap<Agent,Double>()
-        for(pos in 0 until GRIDSIZE*GRIDSIZE) {
-            lambdas[Predator(pos)] = lambdaPred
-            lambdas[Prey(pos)] = lambdaPrey
+        for(pos in 0 until params.GRIDSIZESQ) {
+            lambdas[Predator(pos, params.GRIDSIZE)] = params.lambdaPred
+            lambdas[Prey(pos, params.GRIDSIZE)] = params.lambdaPrey
         }
         D0 = DeselbyGround(lambdas)
     }
@@ -29,10 +34,10 @@ class Simulation {
 
     fun calcFullHamiltonian(): FockVector<Agent> {
         val H = HashFockVector<Agent>()
-        for(x in 0 until GRIDSIZE) {
-            for(y in 0 until GRIDSIZE) {
-                Predator(x,y).hamiltonian(H)
-                Prey(x,y).hamiltonian(H)
+        for(x in 0 until params.GRIDSIZE) {
+            for(y in 0 until params.GRIDSIZE) {
+                Predator(x,y,params.GRIDSIZE).hamiltonian(H, params)
+                Prey(x,y,params.GRIDSIZE).hamiltonian(H, params)
             }
         }
         return H
@@ -49,12 +54,4 @@ class Simulation {
         }
         return total / nSamples.toDouble()
     }
-
-
-    fun simulate(nParticles: Int, T: Double) {
-
-    }
-
-
-
 }

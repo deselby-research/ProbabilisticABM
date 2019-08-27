@@ -5,7 +5,9 @@ import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.MutableDoubleVector
+import org.apache.commons.math3.special.Gamma
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 
@@ -204,7 +206,21 @@ fun<AGENT> CreationVector<AGENT>.join() : CreationBasis<AGENT> {
     return CreationBasis(join)
 }
 
-
+fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>): Double {
+    var logProb = 0.0
+    ground.lambdas.forEach { (agent, lambda) ->
+        val ki = K[agent]?:0
+        val Di = basis[agent]
+        if(ki < Di) return Double.NEGATIVE_INFINITY
+        val k = ki - Di
+        if(lambda > 0.0) {
+            logProb += k*ln(lambda) - lambda - Gamma.logGamma(k+1.0)
+        } else {
+            if(k != 0) return Double.NEGATIVE_INFINITY
+        }
+    }
+    return logProb
+}
 
 //
 //

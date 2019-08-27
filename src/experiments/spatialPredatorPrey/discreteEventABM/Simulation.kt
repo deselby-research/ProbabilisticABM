@@ -2,6 +2,7 @@ package experiments.spatialPredatorPrey.discreteEventABM
 
 import deselby.std.Gnuplot
 import deselby.std.extensions.nextPoisson
+import experiments.spatialPredatorPrey.Params
 import org.apache.commons.math3.random.MersenneTwister
 import java.util.*
 import kotlin.collections.ArrayList
@@ -9,10 +10,10 @@ import kotlin.collections.HashMap
 import kotlin.math.max
 
 class Simulation {
-    companion object {
-        const val GRIDSIZE = 3
-        const val GRIDSIZESQ = GRIDSIZE* GRIDSIZE
-    }
+//    companion object {
+//        const val GRIDSIZE = 3
+//        const val GRIDSIZESQ = GRIDSIZE* GRIDSIZE
+//    }
 
     data class Event(val time: Double, val agent: Agent) : Comparable<Event> {
         override fun compareTo(other: Event): Int {
@@ -32,23 +33,28 @@ class Simulation {
     var time = 0.0
     val rand = MersenneTwister()
     val gp = Gnuplot()
+    val params: Params
 
-    constructor() {
-        positionIndex = Array(GRIDSIZESQ) {ArrayList<Agent>()}
+//    constructor() {
+//        positionIndex = Array(GRIDSIZESQ) {ArrayList<Agent>()}
+//        gp("set linetype 1 lc 'red'")
+//        gp("set linetype 2 lc 'blue'")
+//    }
+//
+//    constructor(nPredator: Int, nPrey: Int) : this() {
+//        for(i in 1..nPredator)  add(Predator(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
+//        for(i in 1..nPrey)      add(Prey(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
+//    }
+
+    constructor(params: Params) {
+        this.params = params
+        positionIndex = Array(params.GRIDSIZESQ) {ArrayList<Agent>()}
         gp("set linetype 1 lc 'red'")
         gp("set linetype 2 lc 'blue'")
-    }
-
-    constructor(nPredator: Int, nPrey: Int) : this() {
-        for(i in 1..nPredator)  add(Predator(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
-        for(i in 1..nPrey)      add(Prey(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
-    }
-
-    constructor(lambdaPred: Double, lambdaPrey: Double) : this() {
-        val nPredator = rand.nextPoisson(lambdaPred * GRIDSIZESQ)
-        val nPrey = rand.nextPoisson(lambdaPrey * GRIDSIZESQ)
-        for(i in 1..nPredator)  add(Predator(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
-        for(i in 1..nPrey)      add(Prey(rand.nextInt(GRIDSIZE), rand.nextInt(GRIDSIZE)))
+        val nPredator = rand.nextPoisson(params.lambdaPred * params.GRIDSIZESQ)
+        val nPrey = rand.nextPoisson(params.lambdaPrey * params.GRIDSIZESQ)
+        for(i in 1..nPredator)  add(Predator(rand.nextInt(params.GRIDSIZE), rand.nextInt(params.GRIDSIZE), params.GRIDSIZE))
+        for(i in 1..nPrey)      add(Prey(rand.nextInt(params.GRIDSIZE), rand.nextInt(params.GRIDSIZE), params.GRIDSIZE))
     }
 
 
@@ -68,7 +74,7 @@ class Simulation {
 
     fun nextEvent() = eventQueue.pollFirst()
 
-    fun agentsAt(i: Int, j: Int) = agentsAt((i+GRIDSIZE).rem(GRIDSIZE)+(j+GRIDSIZE).rem(GRIDSIZE)*GRIDSIZE)
+    fun agentsAt(i: Int, j: Int) = agentsAt((i+params.GRIDSIZE).rem(params.GRIDSIZE)+(j+params.GRIDSIZE).rem(params.GRIDSIZE)*params.GRIDSIZE)
 
     fun agentsAt(id: Int) = positionIndex[id]
 
@@ -102,7 +108,7 @@ class Simulation {
 
 //        val name = gp.heredoc(data, 3, data.size/3)
 //        gp("plot [0:${GRIDSIZE}][0:${GRIDSIZE}] ${name} with points pointtype 5 pointsize 0.5 lc variable")
-        gp("plot [0:${GRIDSIZE}][0:${GRIDSIZE}] '-' binary record=(${data.size/3}) using 1:2:3 with points pointtype 5 pointsize 0.5 lc variable")
+        gp("plot [0:${params.GRIDSIZE}][0:${params.GRIDSIZE}] '-' binary record=(${data.size/3}) using 1:2:3 with points pointtype 5 pointsize 0.5 lc variable")
         gp.write(data)
 
     }

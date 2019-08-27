@@ -27,7 +27,9 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
         prior.ground.lambdas.mapValuesTo(newLambdas) { (agent, lambda) ->
             val mj = observations[agent]?:0
             val lambdap = lambda*pNotObserve
-            mj + lambdap - (basisFit.creations[agent]?:0) + meanSum(cPrimes, mj, lambdap, agent)
+            val newLambda = mj + lambdap - (basisFit.creations[agent]?:0) + meanSum(cPrimes, mj, lambdap, agent)
+            if(newLambda < 0.0) println("Got -ve lambda: $newLambda")
+            max(newLambda, 0.0)
         }
         return basisFit.asGroundedBasis(DeselbyGround(newLambdas))
     }
@@ -99,9 +101,7 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
     override fun toString(): String {
         return buildString {
             append("p=$pObserve ")
-            for (c in observations) {
-                append("${c.key}->${c.value} ")
-            }
+            append(observations.toString())
         }
     }
 
