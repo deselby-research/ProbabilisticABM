@@ -1,11 +1,14 @@
 package experiments.spatialPredatorPrey.fock
 
 import deselby.fockSpace.*
-import deselby.fockSpace.extensions.integrate
 import deselby.fockSpace.extensions.times
 import deselby.fockSpace.extensions.toAnnihilationIndex
+import deselby.std.vectorSpace.SamplableDoubleVector
 import experiments.phasedMonteCarlo.monteCarlo
 import experiments.spatialPredatorPrey.Params
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 class Simulation {
 //    companion object {
@@ -32,6 +35,18 @@ class Simulation {
     }
 
 
+    fun setLambdas(lambda: (Agent) -> Double) {
+        val lambdas = HashMap<Agent,Double>()
+        for(pos in 0 until params.GRIDSIZESQ) {
+            val pred = Predator(pos)
+            val prey = Prey(pos)
+            lambdas[pred] = lambda(pred)
+            lambdas[prey] = lambda(prey)
+        }
+        D0 = DeselbyGround(lambdas)
+    }
+
+
     fun calcFullHamiltonian(): FockVector<Agent> {
         val H = HashFockVector<Agent>()
         for(pos in 0 until params.GRIDSIZESQ) {
@@ -42,11 +57,40 @@ class Simulation {
     }
 
 
+    fun monteCarloIntegrateParallel(startState: CreationBasis<Agent>, nSamples: Int, nThreads: Int, integrationTime: Double) : CreationVector<Agent> {
+        val reducedHamiltonian = H * startState.asGroundedBasis(D0)
+
+        val threadTotals = Array(nThreads) {
+            GlobalScope.async {
+                val total = HashCreationVector<Agent>()
+                val possibleTransitionStates = SamplableDoubleVector(reducedHamiltonian)
+                val threadQuota = nSamples.div(nThreads) + if(it < nSamples.rem(nThreads)) 1 else 0
+                for(i in 1..threadQuota) {
+                    val mcSample = startState.asGroundedBasis(D0).monteCarlo(hIndex, possibleTransitionStates, integrationTime)
+                    total += mcSample
+                }
+                total / nSamples.toDouble()
+            }
+        }
+
+        val allTotal = runBlocking {
+            val sum = HashCreationVector<Agent>()
+            threadTotals.forEach {
+                sum += it.await()
+            }
+            sum
+        }
+        return allTotal
+    }
+
+
     fun monteCarloIntegrate(startState: CreationBasis<Agent>, nSamples: Int, integrationTime: Double) : CreationVector<Agent> {
         val reducedHamiltonian = H * startState.asGroundedBasis(D0)
+        println("Reduced hamiltonian size = ${reducedHamiltonian.size}")
         val total = HashCreationVector<Agent>()
+        val possibleTransitionStates = SamplableDoubleVector(reducedHamiltonian)
         for(i in 1..nSamples) {
-            val mcSample = startState.asGroundedBasis(D0).monteCarlo(hIndex, reducedHamiltonian, integrationTime)
+            val mcSample = startState.asGroundedBasis(D0).monteCarlo(hIndex, possibleTransitionStates, integrationTime)
             total += mcSample
 //            if(i.rem(2000) == 0) println(mcSample)
         }

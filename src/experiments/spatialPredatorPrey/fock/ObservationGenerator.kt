@@ -4,6 +4,7 @@ import deselby.fockSpace.BinomialBasis
 import deselby.fockSpace.BinomialLikelihood
 import experiments.spatialPredatorPrey.Params
 import experiments.spatialPredatorPrey.discreteEventABM.Simulation
+import experiments.spatialPredatorPrey.toFockMap
 
 
 object ObservationGenerator {
@@ -20,12 +21,4 @@ object ObservationGenerator {
     }
 
 
-    fun Map<experiments.spatialPredatorPrey.discreteEventABM.Agent,Int>.toFockMap() =
-            mapKeys {(deAgent,_) -> deAgent.toFockAgent()}
-
-
-    fun experiments.spatialPredatorPrey.discreteEventABM.Agent.toFockAgent(): Agent {
-        if(this is experiments.spatialPredatorPrey.discreteEventABM.Predator) return Predator(this.id)
-        return Prey(this.id)
-    }
 }

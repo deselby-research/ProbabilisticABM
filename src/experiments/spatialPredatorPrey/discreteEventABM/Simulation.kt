@@ -9,7 +9,7 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.max
 
-class Simulation {
+open class Simulation {
 //    companion object {
 //        const val GRIDSIZE = 3
 //        const val GRIDSIZESQ = GRIDSIZE* GRIDSIZE
@@ -32,8 +32,9 @@ class Simulation {
     val eventQueue = TreeSet<Event>()
     var time = 0.0
     val rand = MersenneTwister()
-    val gp = Gnuplot()
     val params: Params
+    val agents: Sequence<Agent>
+        get() = eventQueue.asSequence().map { it.agent }
 
 //    constructor() {
 //        positionIndex = Array(GRIDSIZESQ) {ArrayList<Agent>()}
@@ -49,8 +50,6 @@ class Simulation {
     constructor(params: Params) {
         this.params = params
         positionIndex = Array(params.GRIDSIZESQ) {ArrayList<Agent>()}
-        gp("set linetype 1 lc 'red'")
-        gp("set linetype 2 lc 'blue'")
         val nPredator = rand.nextPoisson(params.lambdaPred * params.GRIDSIZESQ)
         val nPrey = rand.nextPoisson(params.lambdaPrey * params.GRIDSIZESQ)
         for(i in 1..nPredator)  add(Predator(rand.nextInt(params.GRIDSIZE), rand.nextInt(params.GRIDSIZE), params.GRIDSIZE))
@@ -78,6 +77,8 @@ class Simulation {
 
     fun agentsAt(id: Int) = positionIndex[id]
 
+    fun count(agent: Agent) = agentsAt(agent.id).count { it::class == agent::class}
+
     fun add(agent: Agent) {
         agentsAt(agent.id).add(agent)
         agent.scheduleNextEvent(this)
@@ -102,16 +103,6 @@ class Simulation {
         }
     }
 
-    fun plot() {
-        val data = eventQueue.asSequence().flatMap { (_, agent) ->
-            sequenceOf(agent.xPos, agent.yPos, if(agent is Prey) 1 else 2) }.toList()
-
-//        val name = gp.heredoc(data, 3, data.size/3)
-//        gp("plot [0:${GRIDSIZE}][0:${GRIDSIZE}] ${name} with points pointtype 5 pointsize 0.5 lc variable")
-        gp("plot [0:${params.GRIDSIZE}][0:${params.GRIDSIZE}] '-' binary record=(${data.size/3}) using 1:2:3 with points pointtype 5 pointsize 0.5 lc variable")
-        gp.write(data)
-
-    }
 
     fun isConsistent(): Boolean {
         var consistent = true

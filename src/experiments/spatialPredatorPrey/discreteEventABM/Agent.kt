@@ -22,6 +22,7 @@ abstract class Agent {
     abstract fun executeEvent(sim: Simulation)
 //    abstract fun fockId(): Int
     abstract fun copy(): Agent
+//    abstract override fun hashCode(): Int
 
     constructor(id: Int, SIZE: Int) {
         this.id = id
