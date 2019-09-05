@@ -115,6 +115,18 @@ operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVec
 }
 
 
+operator fun<AGENT> FockVector<AGENT>.times(rhs: Basis<AGENT>) : FockVector<AGENT> {
+    val multiplied = HashDoubleVector<Basis<AGENT>>()
+    this.forEach { (thisBasis, thisWeight) ->
+        multiplied.plusAssign(thisBasis.operatorUnion(rhs), thisWeight)
+        thisBasis.commute(rhs) { commutedBasis, cWeight ->
+            multiplied.plusAssign(commutedBasis, cWeight * thisWeight)
+        }
+    }
+    return multiplied
+}
+
+
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.timesApproximate(creationVector: CreationVector<AGENT>, coeffLowerBound: Double) : FockVector<AGENT> {
     val result = HashDoubleVector<Basis<AGENT>>()
     this.entries.forEach { thisTerm ->
@@ -148,7 +160,7 @@ fun<AGENT> Ground<AGENT>.integrate(hamiltonian: FockVector<AGENT>, T: Double, dt
     val state =     Basis.identityCreationVector<AGENT>().toMutableVector()
     var time = 0.0
     while(time < T) {
-        println("Integrating: Time = $time state size = ${state.size}")
+//        println("Integrating: Time = $time state size = ${state.size}")
         state += Hdt.timesApproximate(state,coeffLowerBound) * this
         time += dt
     }

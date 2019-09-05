@@ -4,6 +4,7 @@ import deselby.fockSpace.*
 import deselby.fockSpace.extensions.annihilate
 import deselby.fockSpace.extensions.create
 import deselby.fockSpace.extensions.integrate
+import deselby.std.gnuplot
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -12,7 +13,25 @@ import kotlin.system.measureTimeMillis
 class V3Test {
     val lambda = 0.1
     val dt = 0.0001
-    val T = 0.5
+    val T = 2.0
+
+    @Test
+    fun absSize() {
+        val H = hamiltonian()
+        val deselbyGround = DeselbyGround(mapOf(0 to lambda))
+        val data = ArrayList<Double>()
+        for(T in 1..10) {
+            val exactIntegral = deselbyGround.integrate(H, T*0.5, dt)
+            val absSum = exactIntegral.values.sumByDouble(::abs)
+            println(absSum)
+            data.add(absSum)
+        }
+
+        gnuplot {
+            val d = heredoc(data, 1)
+            invoke("plot $d with lines")
+        }
+    }
 
     @Test
     fun monteCarloV3Test() {

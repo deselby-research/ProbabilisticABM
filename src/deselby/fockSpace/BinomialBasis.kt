@@ -1,8 +1,10 @@
 package deselby.fockSpace
 
-import deselby.fockSpace.extensions.asGroundedVector
 import deselby.fockSpace.extensions.join
-import kotlin.math.abs
+import deselby.std.FallingFactorial
+import deselby.std.extensions.fallingFactorial
+import org.apache.commons.math3.distribution.BinomialDistribution
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -77,13 +79,48 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
     }
 
 
-    // calculates the sum over k of B_m D_n,lambda
-    fun binomialSum(m: Int, n: Int, lambda: Double): Double {
-        var c = 1.0 //lambda.pow(m)
+    // Calculates the log likelihood of the observations in this
+    // for the supplied 'concreteState'
+    fun logLikelihood(concreteState: CreationBasis<AGENT>, allAgents: Iterable<AGENT>) : Double {
+        var l = 0.0
+//        val allAgents = observations.keys.union(concreteState.creations.keys)
+        allAgents.forEach {agent ->
+            l += BinomialDistribution(null, concreteState[agent], pObserve).logProbability(observations[agent]?:0) + ln(pObserve)
+        }
+        return l
+    }
+
+    // Calculates the log-probability of 'concreteState' on the
+    // re-normalised product of this and 'prior'
+    fun posteriorProbability(prior: GroundedVector<AGENT,DeselbyGround<AGENT>>, concreteState: CreationBasis<AGENT>): Double {
+        var l = 0.0
+        var normalisation = 0.0
+        var prob = 0.0
+        prior.creationVector.forEach { (priorBasis, priorWeight) ->
+            var basisNormalisation = 1.0
+            var basisProb = 1.0
+            prior.ground.lambdas.forEach { (agent, lambda) ->
+                val k = concreteState[agent]
+                val m = observations[agent]?:0
+                val delta = priorBasis[agent]
+                val pm1d = pNotObserve.pow(delta)
+                val lambdap = pNotObserve*lambda
+                basisProb *= pm1d * k.fallingFactorial(m) * DeselbyGround.probability(k, delta, lambdap)
+                basisNormalisation *= pm1d * binomialSum(m, delta, lambdap, lambdap.pow(m))
+            }
+            normalisation += priorWeight*basisNormalisation
+            prob += priorWeight*basisProb
+        }
+        return prob / normalisation
+    }
+
+    // calculates the sum over k of B_m D_d,lambda
+    fun binomialSum(m: Int, d: Int, lambda: Double, c0: Double = 1.0): Double {
+        var c = c0
         var sum = c
-        for(q in 1..min(n,m)) {
+        for(q in 1..min(d,m)) {
             val qm1 = q-1
-            c *= (m-qm1)*(n-qm1)/(q*lambda)
+            c *= (m-qm1)*(d-qm1)/(q*lambda)
             sum += c
         }
         return sum

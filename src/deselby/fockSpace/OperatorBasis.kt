@@ -43,6 +43,9 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
                 Coefficient(it.c*(n-it.q)*(m-it.q)/newq, newq)
             }.drop(1)
 
+    override fun toAnnihilationMap(): Map<AGENT, Int> {
+        return annihilations
+    }
 
     override fun hashCode(): Int {
         return  creations.hashCode() + 31*annihilations.hashCode()

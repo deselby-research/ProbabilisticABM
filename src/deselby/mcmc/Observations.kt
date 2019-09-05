@@ -23,7 +23,7 @@ class Observations(var logp : Double = 0.0) {
         return this
     }
 
-    fun getLogP() = logp
+//    fun getLogP() = logp
 
     fun getP() = exp(logp)
 }

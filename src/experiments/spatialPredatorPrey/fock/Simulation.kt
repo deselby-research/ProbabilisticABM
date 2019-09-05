@@ -9,6 +9,8 @@ import experiments.spatialPredatorPrey.Params
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 class Simulation {
 //    companion object {

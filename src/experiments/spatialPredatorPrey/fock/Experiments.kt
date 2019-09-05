@@ -10,6 +10,7 @@ import experiments.spatialPredatorPrey.SmallParams
 import experiments.spatialPredatorPrey.StandardParams
 import org.junit.Test
 import kotlin.math.exp
+import kotlin.math.ln
 
 class Experiments {
 
@@ -67,9 +68,9 @@ class Experiments {
     @Test
     fun assimilateFromKnownInitialState() {
         val params = Params(
-                20,
-                0.01,
-                0.02,
+                8,
+                0.1,
+                0.2,
                 0.03,
                 0.06,
                 1.0,
@@ -81,7 +82,7 @@ class Experiments {
         val sim = Simulation(params)
         val obsInterval = 0.5
         val pObserve = 0.5
-        val nObservations = 2
+        val nObservations = 5
         val observations = ObservationGenerator.generate(sim.params, pObserve, nObservations, obsInterval)
         var sample= CreationBasis(observations[0].real)
         sim.setLambdas { 1e-6 }
@@ -95,16 +96,19 @@ class Experiments {
             println()
             println("real = $realState")
             println("observed = $observedState")
+            println("binomial logProb of real state = ${observedState.logLikelihood(CreationBasis(realState), sim.D0.lambdas.keys)}")
             val stateT = sim.monteCarloIntegrateParallel(sample, nSamples, 8, obsInterval)
             println("priorT size = ${stateT.size}  sum = ${stateT.values.sum()}")
             val renormalisedState = stateT / stateT.values.sum()
             val posterior = observedState.timesApproximate(renormalisedState.asGroundedVector(sim.D0))
+            println("posterior logProb of real state = ${ln(observedState.posteriorProbability(renormalisedState.asGroundedVector(sim.D0), CreationBasis(realState)))}")
             sim.D0 = posterior.ground
             sample = posterior.basis
             println("posterior sample = $sample")
             println("posterior ground = ${posterior.ground.lambdas.entries.sortedByDescending { it.value }}")
-            println("logProb of real state = ${posterior.logProb(realState)}")
+            println("basis logProb of real state = ${posterior.logProb(realState)}")
             println("mean prob of present agent = ${exp(posterior.logProb(realState)/realState.size)}")
+
 //            plot(posterior, realState, sim.params.GRIDSIZE)
         }
     }

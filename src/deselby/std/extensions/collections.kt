@@ -35,6 +35,10 @@ fun Sequence<Number>.variance() : Double {
     return sumOfSquares/n - mean*mean
 }
 
+fun Iterable<Number>.standardDeviation() = sqrt(this.asSequence().variance())
+fun Sequence<Number>.standardDeviation() = sqrt(this.variance())
+
+
 inline fun<T: Number> Iterable<T>.expectationValue(f : (T) -> Double) = this.asSequence().expectationValue(f)
 inline fun<T: Number> Sequence<T>.expectationValue(f : (T) -> Double) : Double {
     var n = 0

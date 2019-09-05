@@ -5,6 +5,7 @@ import deselby.distributions.FockState
 import deselby.distributions.discrete.IntGeneratorPolynomial
 import deselby.mcmc.*
 import deselby.std.extensions.nextPoisson
+import deselby.std.extensions.standardDeviation
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
@@ -65,12 +66,12 @@ fun metropolisHastingsPosterior(observations : Array<Int>) {
         for (i in 0 until sim.size) {
             observe.binomial(r, sim[i].I, observations[i])
         }
-        Pair(observe, sim.last().I)
+        Pair(observe.logp, sim.last().I)
     }
 
-    mcmc.sampleWithGaussianProposal(100000, 0.1)
+    val samples = mcmc.sampleToList(100000)
     println(observations.asList())
-    println("Ibar = ${mcmc.mean()} sd = ${mcmc.standardDeviation()}")
+    println("Ibar = ${samples.average()} sd = ${samples.standardDeviation()}")
 
 }
 

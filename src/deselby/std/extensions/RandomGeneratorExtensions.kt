@@ -1,5 +1,6 @@
 package deselby.std.extensions
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.random.RandomGenerator
 import org.apache.commons.math3.special.Erf
 import org.apache.commons.math3.special.Gamma
@@ -74,11 +75,20 @@ object Distributions {
         return -ln(1.0-nextDouble)/lambda
     }
 
+    fun nextCategorical(nextDouble: Double, p0: Double, vararg pn: Double) : Int {
+        val cdf = ArrayList<Double>(pn.size+1)
+        cdf.add(p0)
+        var t = p0
+        for(i in pn.indices) {
+            t += pn[i]
+            cdf.add(t)
+        }
+        val insertionPoint = cdf.binarySearch(nextDouble*t)
+        if(insertionPoint < 0) return -(insertionPoint + 1)
+        return insertionPoint
+    }
 }
 
-inline fun Random.nextPoisson(lambda : Double) : Int {
-    return Distributions.nextPoisson(nextDouble(), lambda)
-}
 
 inline fun RandomGenerator.nextPoisson(lambda : Double) : Int {
     return Distributions.nextPoisson(nextDouble(), lambda)
@@ -88,6 +98,31 @@ inline fun RandomGenerator.nextExponential(lambda : Double) : Double {
     return Distributions.nextExponential(nextDouble(), lambda)
 }
 
+inline fun RandomGenerator.nextCategorical(p0 : Double, vararg pn: Double) : Int {
+    return Distributions.nextCategorical(nextDouble(), p0, *pn)
+}
+
+inline fun Random.nextPoisson(lambda : Double) : Int {
+    return Distributions.nextPoisson(nextDouble(), lambda)
+}
+
 inline fun Random.nextExponential(lambda : Double) : Double {
     return Distributions.nextExponential(nextDouble(), lambda)
+}
+
+inline fun Random.nextCategorical(p0 : Double, vararg pn: Double) : Int {
+    return Distributions.nextCategorical(nextDouble(), p0, *pn)
+}
+
+inline fun Random.nextGaussian(): Double {
+    return sqrt(2.0) * Erf.erfInv(nextDouble()*2.0 - 1.0)
+}
+
+// Creates a matrix of given size filled with 'nextDouble's
+fun Random.nextDoubleMatrix(iSize: Int, jSize: Int): Array2DRowRealMatrix {
+    return Array2DRowRealMatrix(Array(iSize) {
+        DoubleArray(jSize) {
+            this.nextDouble()
+        }
+    })
 }

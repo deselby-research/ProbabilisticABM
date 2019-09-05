@@ -2,6 +2,7 @@ package deselby.fockSpace
 
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
+import org.apache.commons.math3.distribution.PoissonDistribution
 import kotlin.math.pow
 
 class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT> {
@@ -34,9 +35,15 @@ class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT> {
         return mean
     }
 
-
-
     override fun toString() : String {
         return lambdas.toString()
+    }
+
+    companion object {
+        fun logProbability(k: Int, delta: Int, lambda: Double) =
+                PoissonDistribution(null, lambda, 0.1, 1).logProbability(k - delta)
+
+        fun probability(k: Int, delta: Int, lambda: Double) =
+                PoissonDistribution(null, lambda, 0.1, 1).probability(k - delta)
     }
 }

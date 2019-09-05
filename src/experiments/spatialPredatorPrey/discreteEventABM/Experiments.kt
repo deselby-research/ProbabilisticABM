@@ -8,6 +8,7 @@ import org.junit.Test
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.pow
+import kotlin.system.measureTimeMillis
 
 class Experiments {
 
@@ -85,17 +86,6 @@ class Experiments {
             binom *= i*notP/(i-k)
         }
         return binom
-    }
-
-    @Test
-    fun testBinomial() {
-        val p = 0.5
-        for(k in 0..10) {
-            for(n in k..10) {
-                val b = BinomialDistribution(n,p)
-                println("${binomial(p, n, k)} ${b.probability(k)} ${binomial(p, n, k) - b.probability(k)}")
-            }
-        }
     }
 
 }

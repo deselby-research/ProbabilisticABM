@@ -19,6 +19,10 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
         keyConsumer(d)
     }
 
+    override fun toAnnihilationMap(): Map<AGENT, Int> {
+        return mapOf(d to 1)
+    }
+
 //    override fun commute(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
 //        val m = basis.creations[d]?:return
 //        termConsumer(CreationBasis(basis.creations.plus(d,-1) union this.creations), m.toDouble())

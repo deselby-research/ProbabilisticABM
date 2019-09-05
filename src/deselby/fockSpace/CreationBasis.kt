@@ -29,6 +29,14 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 
     fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
+    override fun toAnnihilationMap(): Map<AGENT, Int> {
+        return emptyMap()
+    }
+
+    override fun operatorUnion(other: Basis<AGENT>): Basis<AGENT> {
+        return newBasis(this.creations union other.creations, other.toAnnihilationMap())
+    }
+
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
 //                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {

@@ -1,4 +1,5 @@
 import deselby.mcmc.*
+import deselby.std.extensions.standardDeviation
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -13,18 +14,16 @@ class MetropolisHastingsTest {
             val x = rand.nextGaussian() * sqrt(2.0) + 4.0
             val obs = Observations()
             obs.gaussian(x, noiseSD, observation)
-            Pair(obs, x)
+            Pair(obs.logp, x)
         }
 
-        sampler.sampleWithGaussianProposal(100000, 0.1)
-        val nmu = sampler.mean()
-        val nsd = sampler.standardDeviation()
-        println(nmu - 4.5)
-        println(nsd - 1.0)
+        val samples = sampler.sampleToList(100000)
+        val nmu = samples.average()
+        val nsd = samples.standardDeviation()
+        println("Error in mean = ${nmu - 4.5}")
+        println("Error in SD = ${nsd - 1.0}")
         assert(abs(nmu - 4.5) < 0.1)
         assert(abs(nsd - 1.0) < 0.05)
-//       println(sampler)
-//        printHistogram(2.5, 6.5, 80, sampler)
     }
 
     @Test

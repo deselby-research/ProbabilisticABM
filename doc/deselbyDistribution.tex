@@ -125,9 +125,13 @@ where $S$ is the state of the system, $O$ is the observation, $P(S)$ is the prio
 
 As an example of data assimilation with Deselby distributions, we ran numerical experiments with a compartmental SIR epidemiological model. The observation to assimilate was the number of hospital admissions. If we assume that each agent, upon infection, has a fixed probability, $r$, of being hospitalised, then the likelihood function is just the binomial distribution. Multiplying a Deselby distribution by a Binomial gives
 \[
-P(k|m) \propto \frac{k!}{m!(k-m)!}r^m(1-r)^{k-m} (k)_\Delta \frac{\lambda^{(k-\Delta)}e^{-\lambda}}{k!}
+P(k \wedge m) = \frac{k!}{m!(k-m)!}r^m(1-r)^{k-m} (k)_\Delta \frac{\lambda^{(k-\Delta)}e^{-\lambda}}{k!}
 \]
-which, after some rearranging and dropping of constants gives
+which after some rearranging gives
+\[
+P(k \wedge m) = \frac{1}{m!}\left(\frac{r}{1-r}\right)^m e^{-r\lambda} (1-r)^\Delta (k)_m D_{\Delta,(1-r)\lambda}(k)
+\]
+dropping constants
 \begin{equation}
 P(k|m) \propto (1-r)^\Delta \, (k)_m \,D_{\Delta,(1-r)\lambda}(k)
 \label{posterior}

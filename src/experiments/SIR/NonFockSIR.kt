@@ -104,12 +104,12 @@ object NonFockSIR {
             for (i in 0 until sim.size) {
                 observe.binomial(r, sim[i].I, observations[i])
             }
-            Pair(observe, sim.last())
+            Pair(observe.logp, sim.last())
         }
-        mcmc.sampleWithGaussianProposal(nSamples, 0.1)
+        val samples = mcmc.sampleToList(nSamples)
         println(observations.asList())
-        println("Sstats = ${mcmc.asSequence().map {it.S}.drop(10000).statistics()}")
-        println("Istats = ${mcmc.asSequence().map {it.I}.drop(10000).statistics()}")
+        println("Sstats = ${samples.asSequence().map {it.S}.drop(10000).statistics()}")
+        println("Istats = ${samples.asSequence().map {it.I}.drop(10000).statistics()}")
     }
 
 }

@@ -1,5 +1,6 @@
 package deselby.fockSpace
 
+import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 
@@ -27,10 +28,53 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
-    inline fun commute(basis: CreationBasis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
-        commuteToPerturbation(basis) { perturbation, weight ->
-            termConsumer(basis * perturbation, weight)
+//    inline fun commute(basis: CreationBasis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
+//        commuteToPerturbation(basis) { perturbation, weight ->
+//            termConsumer(basis * perturbation, weight)
+//        }
+//    }
+
+
+    inline fun commute(basis: Basis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
+        commuteToPerturbation(CreationBasis(basis.creations)) { perturbation, weight ->
+            termConsumer(basis.operatorUnion(perturbation), weight)
         }
+    }
+
+    fun commute(vector: DoubleVector<Basis<AGENT>>): DoubleVector<Basis<AGENT>> {
+        val commutation = HashDoubleVector<Basis<AGENT>>()
+        vector.forEach { (vBasis, vWeight) ->
+            this.commute(vBasis) { commutedBasis, cWeight ->
+                commutation.plusAssign(commutedBasis, cWeight *vWeight)
+            }
+        }
+        return commutation
+    }
+
+
+    fun operatorUnion(other: CreationBasis<AGENT>) : Basis<AGENT> {
+        return newBasis(this.creations union other.creations, this.toAnnihilationMap())
+    }
+
+
+    open fun operatorUnion(other: Basis<AGENT>) : Basis<AGENT> {
+        val annihilations = HashMap<AGENT,Int>()
+        forEachAnnihilationEntry { agent, count ->
+            annihilations[agent] = count
+        }
+        other.forEachAnnihilationEntry {agent, count ->
+            annihilations.plusAssign(agent, count)
+        }
+        return newBasis(this.creations union other.creations, annihilations)
+    }
+
+
+    open fun toAnnihilationMap(): Map<AGENT,Int> {
+        val annihilations = HashMap<AGENT,Int>()
+        forEachAnnihilationEntry { agent, count ->
+            annihilations[agent] = count
+        }
+        return annihilations
     }
 
 

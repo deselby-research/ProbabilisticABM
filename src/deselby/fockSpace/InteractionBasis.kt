@@ -53,7 +53,11 @@ class InteractionBasis<AGENT> : Basis<AGENT> {
     }
 
     override fun timesAnnihilate(d: AGENT): Basis<AGENT> {
-        throw(NotImplementedError())
+        val annihilations = HashMap<AGENT,Int>()
+        annihilations[d1] = 1
+        annihilations[d2] = 1
+        annihilations.unionAssign(mapOf(d to 1))
+        return OperatorBasis(creations, annihilations)
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
