@@ -35,12 +35,21 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 //    }
 
 
+    // Performs a semi-commutation which commutes the lhs annihilations over the rhs creations:
+    //
+    // ca semicommute CA = c[a,C]A
+    //
+    // where c and C are creations and a and A are annihilations.
+    // This can be used to multiply two bases to cannonical form since ca * CA = cCaA + c[a,C]A
+    //
+    // Uses commuteToPerturbation which calculates (C^-1)c[a,C]
     inline fun commute(basis: Basis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
         commuteToPerturbation(CreationBasis(basis.creations)) { perturbation, weight ->
             termConsumer(basis.operatorUnion(perturbation), weight)
         }
     }
 
+    // only commutes over creations
     fun commute(vector: DoubleVector<Basis<AGENT>>): DoubleVector<Basis<AGENT>> {
         val commutation = HashDoubleVector<Basis<AGENT>>()
         vector.forEach { (vBasis, vWeight) ->

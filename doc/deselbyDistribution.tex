@@ -171,7 +171,51 @@ P(k|m) \propto (1-r)^\Delta a^{\dag m}a^m D_{\Delta,(1-r)\lambda}
 
 Numerical experiemtns showed that data assimilation into an SIR model using this technique was faster than using Metropolis-Hastings MCMC for the same level of accuracy.
 
-\section{Posterior}
+\subsection{The $L_{ir}$ and $e_{ir}$ operators}
+
+In order to formalise the change in $\lambda$ upon multiplication of a Deselby with a Binomial, we introduce the $L_{ir}$ operator, which has the effect of multiplying the $i^{th}$ element of lambda by $1-r$. It can be seen immediately that
+\[
+[L_{ir},a_i^\dag] = 0
+\]
+and
+\[
+[L_{ir}, a_i] = r\lambda L_r
+\]
+
+So we can express the binomial multiplication as
+\begin{equation}
+P(k|m) \propto (1-r)^\Delta a^{\dag m}a^mL_r D_{\Delta}
+\end{equation}
+which, using the commutation relation, is equivalent to
+\begin{equation}
+P(k|m) \propto (1-r)^\Delta L_r a^{\dag m}(a - r\lambda)^m D_{\Delta}
+\end{equation}
+
+Finally, we define the $e_{ir}$ operator that has the properties
+\[
+[a_i^\dag, e_{ir}] = ra_i^\dag e_{ir}
+\]
+and
+\[
+e_{ir}D_0 = 1
+\]
+so that
+\[
+e_{ir}a_i^\dag = a_i^\dag e_{ir} - ra_i^\dag e_{ir} = (1-r)a_i^\dag e_{ir}
+\]
+so
+\[
+e_{ir}D_\Delta = (1-r)^\Delta D_\Delta
+\]
+If we restrict ourselves to Deselby distributions we can say
+\[
+[a_i, e_{ir}] = \frac{r(\lambda - a_i)}{1-r}e_{ir}
+\]
+We can now express Binomial multiplication entirely in operator format
+\begin{equation}
+P(k|m) \propto a^{\dag m}a^m L_re_r D_{\Delta}
+\end{equation}
+
 
 \section{The Deselby distribution in the continuous limit}
 

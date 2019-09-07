@@ -4,6 +4,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 
     constructor(creations: Collection<AGENT>, annihilation: AGENT) : this(creations.toCountMap(), annihilation)
 
+    // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val m = basis.creations[d]?:return
         termConsumer(CreationBasis(this.creations.plus(d,-1)), m.toDouble())
