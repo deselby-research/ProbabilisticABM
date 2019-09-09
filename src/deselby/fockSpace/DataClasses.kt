@@ -16,6 +16,8 @@ data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBas
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    // calculate this.basis^(-1)(lhsBasis * this.basis) * this.ground
+    // = (lhsBasis + this.basis^(-1)[lhsBasis, this.basis]) * this.ground
     override fun preMultiply(lhsBasis: Basis<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         lhsBasis.multiply(ground, termConsumer)
         lhsBasis.commuteToPerturbation(basis) { basis, commutedWeight ->
@@ -26,19 +28,6 @@ data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBas
     }
 }
 
-data class CommutationCoefficient(val n: Int, val m: Int, val c: Int, val q: Int) {
-    fun next() : CommutationCoefficient? {
-        val newq = q+1
-        val newState = CommutationCoefficient(n-1, m-1, c*n*m/newq, newq)
-        return if(newState.c == 0) null else newState
-    }
+data class OperatorPair<AGENT>(val d: AGENT, val weight: Int, val nCreations: Int, val nAnnihilations: Int)
 
-    companion object {
-        fun getStandardForm(n: Int, m: Int) =
-                generateSequence(CommutationCoefficient(n, m, 1, 0), CommutationCoefficient::next)
-
-        fun getCommutation(n: Int, m: Int) =
-                generateSequence(CommutationCoefficient(n-1, m-1, n*m, 1), CommutationCoefficient::next)
-    }
-}
 

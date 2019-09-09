@@ -83,7 +83,7 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
     // for the supplied 'concreteState'
     fun logLikelihood(concreteState: CreationBasis<AGENT>, allAgents: Iterable<AGENT>) : Double {
         var l = 0.0
-//        val allAgents = observations.keys.union(concreteState.creations.keys)
+//        val allAgents = observations.keys.times(concreteState.creations.keys)
         allAgents.forEach {agent ->
             l += BinomialDistribution(null, concreteState[agent], pObserve).logProbability(observations[agent]?:0) + ln(pObserve)
         }

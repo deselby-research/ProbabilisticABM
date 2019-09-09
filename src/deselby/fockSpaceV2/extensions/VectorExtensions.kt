@@ -70,9 +70,9 @@ operator fun <AGENT, OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>>
 // agent states, d, to Operators such that d -> a^-_d[a*_d,S]
 //
 // Uses the identity
-// [a*,a^m] = -ma^(m-1)
+// [a*,a^nCreations] = -ma^(nCreations-1)
 // so
-// a^-_d[a*,a^m] = -m a^-_da^(m-1)
+// a^-_d[a*,a^nCreations] = -nCreations a^-_da^(nCreations-1)
 fun<AGENT> DoubleVector<Operator<AGENT>>.toCreationCommutationMap() : HashMap<AGENT, HashDoubleVector<Operator<AGENT>>> {
     val commutations = HashMap<AGENT, HashDoubleVector<Operator<AGENT>>>()
     forEach { entry ->

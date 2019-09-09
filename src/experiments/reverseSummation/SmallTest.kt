@@ -3,7 +3,6 @@ package experiments.reverseSummation
 import deselby.fockSpace.Basis
 import deselby.fockSpace.DeselbyGround
 import deselby.fockSpace.extensions.*
-import deselby.std.vectorSpace.extensions.times
 import experiments.SIR.FockSIR
 import experiments.SIR.SIRParams
 import org.junit.Test
@@ -18,7 +17,7 @@ class SmallTest {
         val H = FockSIR.Hamiltonian(params)
         val aH = H.annihilate(0)
         val a = Basis.newBasis(emptyMap(), mapOf(0 to 1))
-        val commutation = a.commute(H)
+        val commutation = a.semicommute(H)
         println("H = $H")
         println("aH = $aH")
         println("[a,H] = $commutation")

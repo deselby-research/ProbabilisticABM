@@ -14,9 +14,9 @@ import kotlin.random.Random
 
 class MatrixMultiplyTest {
 
-    // Attempt to calculate matrix to the power n using
+    // Attempt to calculate matrix to the power nAnnihilations using
     // phased mcmc.
-    // Works to an extent but unstable for large n
+    // Works to an extent but unstable for large nAnnihilations
     @Test
     fun matrixMultiply() {
         val nPow = 16

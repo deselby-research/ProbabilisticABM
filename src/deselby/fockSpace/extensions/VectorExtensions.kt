@@ -1,6 +1,7 @@
 package deselby.fockSpace.extensions
 
 import deselby.fockSpace.*
+import deselby.std.extensions.asBiconsumer
 import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
@@ -8,8 +9,8 @@ import deselby.std.vectorSpace.MutableDoubleVector
 import org.apache.commons.math3.special.Gamma
 import kotlin.math.abs
 import kotlin.math.ln
-import kotlin.math.max
 import kotlin.math.min
+
 
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<Basis<AGENT>> {
     val result = HashDoubleVector<Basis<AGENT>>()
@@ -54,7 +55,7 @@ fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, te
         }
     }
     activeTerms.forEach { (indexedBasis, indexedWeight) ->
-        indexedBasis.commute(otherBasis) { commutedBasis, commutedWeight ->
+        indexedBasis.semicommute(otherBasis) { commutedBasis, commutedWeight ->
             termConsumer(commutedBasis, commutedWeight * indexedWeight)
         }
     }
@@ -119,7 +120,7 @@ operator fun<AGENT> FockVector<AGENT>.times(rhs: Basis<AGENT>) : FockVector<AGEN
     val multiplied = HashDoubleVector<Basis<AGENT>>()
     this.forEach { (thisBasis, thisWeight) ->
         multiplied.plusAssign(thisBasis.operatorUnion(rhs), thisWeight)
-        thisBasis.commute(rhs) { commutedBasis, cWeight ->
+        thisBasis.semicommute(rhs) { commutedBasis, cWeight ->
             multiplied.plusAssign(commutedBasis, cWeight * thisWeight)
         }
     }
@@ -243,7 +244,7 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 //        creationVector.entries.forEach {otherTerm ->
 //            val vectorWeight = thisTerm.value * otherTerm.value
 //            consumerTimes(thisTerm.key,otherTerm.key) { basis, weight ->
-//                result.plusAssign(basis, weight * vectorWeight)
+//                result.timesAssign(basis, weight * vectorWeight)
 //            }
 //        }
 //    }
@@ -260,7 +261,7 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 //        fockState.creationVector.forEach { otherTerm ->
 //            val coeffProduct = thisTerm.value * otherTerm.value
 //            thisTerm.key.multiplyTo(otherTerm.key, fockState.ground) { basis, weight ->
-//                result.plusAssign(basis, weight*coeffProduct)
+//                result.timesAssign(basis, weight*coeffProduct)
 //            }
 //        }
 //    }
@@ -274,7 +275,7 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 //            val coeffProduct = thisTerm.value * otherTerm.value
 //            thisTerm.key.multiplyTo(otherTerm.key, fockState.ground) { basis, weight ->
 //                val finalCoeffProduct = weight * coeffProduct
-//                if(abs(finalCoeffProduct) > coeffLowerBound) result.plusAssign(basis, finalCoeffProduct)
+//                if(abs(finalCoeffProduct) > coeffLowerBound) result.timesAssign(basis, finalCoeffProduct)
 //            }
 //        }
 //    }
@@ -286,7 +287,7 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 //    val result = HashDoubleVector<CreationBasis<AGENT>>()
 //    this.entries.forEach { thisTerm ->
 //        thisTerm.key.multiplyTo(groundBasis) { basis, weight ->
-//            result.plusAssign(basis, weight*thisTerm.value)
+//            result.timesAssign(basis, weight*thisTerm.value)
 //        }
 //    }
 //    return result
@@ -297,15 +298,15 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 // agent states, d, to Operators such that d -> a^-_d[a*_d,S]
 //
 // Uses the identity
-// [a*,a^m] = -ma^(m-1)
+// [a*,a^nCreations] = -ma^(nCreations-1)
 // so
-// a^-_d[a*,a^m] = -m a^-_da^(m-1)
+// a^-_d[a*,a^nCreations] = -nCreations a^-_da^(nCreations-1)
 //fun<AGENT> FockVector<AGENT>.toCreationCommutationMap(): CommutationMap<AGENT> {
 //    val commutations = HashMap<AGENT, HashDoubleVector<Basis<AGENT>>>()
 //    forEach { (basis, basisWeight) ->
 //        basis.commutationsTo { d, basis, commutationWeight ->
 //            commutations.getOrPut(d, { HashDoubleVector() }).
-//                    plusAssign(basis.create(d,-1), basisWeight*commutationWeight)
+//                    timesAssign(basis.create(d,-1), basisWeight*commutationWeight)
 //        }
 //    }
 //    return commutations
@@ -314,7 +315,7 @@ fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>):
 
 
 
-//fun<AGENT> CommutationMap<AGENT>.commute(basis: CreationBasis<AGENT>): FockVector<AGENT> {
+//fun<AGENT> CommutationMap<AGENT>.semicommute(basis: CreationBasis<AGENT>): FockVector<AGENT> {
 //    basis.creationVector.forEach {
 //        val commutation = this[it.key] ?: Basis.identityVector()
 //        if (it.value > 0) {

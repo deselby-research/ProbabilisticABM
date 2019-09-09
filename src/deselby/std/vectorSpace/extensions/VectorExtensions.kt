@@ -50,7 +50,7 @@ fun<BASIS> MutableDoubleVector<BASIS>.integrate(hamiltonian : (DoubleVector<BASI
 //    forEach {thisTerm ->
 //        other.forEach { otherTerm ->
 //            val basisProduct = multiplyOp(thisTerm.key, otherTerm.key) * (thisTerm.value*otherTerm.value)
-//            result?.plusAssign(basisProduct)?:run{ result = basisProduct.toMutableVector() }
+//            result?.timesAssign(basisProduct)?:run{ result = basisProduct.toMutableVector() }
 //        }
 //    }
 //    return result?:EmptyDoubleVector()

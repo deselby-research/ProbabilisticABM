@@ -5,15 +5,15 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 object Fourier {
-    // NDArray should have shape (2^n,2) final dimension is for
+    // NDArray should have shape (2^nAnnihilations,2) final dimension is for
     // real and imaginary components.
     // Forward transform is defined as
     //
-    // H_n = \sum_{k=0}^{N-1} h_k e^{2\pi i k n / N}
+    // H_n = \sum_{k=0}^{N-1} h_k e^{2\pi i k nAnnihilations / N}
     //
     // Backward is defined as
     //
-    // h_k = 1/N \sum_{n=0}^{N-1} H_n e^{-2\pi i k n / N}
+    // h_k = 1/N \sum_{nAnnihilations=0}^{N-1} H_n e^{-2\pi i k nAnnihilations / N}
     //
     // See Numerical Recipes 3rd Edition Section 12.1
     fun transformInPlace(data : DoubleNDArray, isForward : Boolean) {

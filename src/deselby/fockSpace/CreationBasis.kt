@@ -7,20 +7,21 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) {
     }
 
-    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = CreationBasis(creations union entries)
+    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = CreationBasis(creations * entries)
 
     override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) { }
 
 //    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) { } // zero
 
+    // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) { } // zero
 
     inline fun commute(basis: ActionBasis<AGENT>, crossinline termConsumer: (Basis<AGENT>, Double) -> Unit) =
-        basis.commute(this) { basis, weight -> termConsumer(basis, -weight) }
+        basis.semicommute(this) { basis, weight -> termConsumer(basis, -weight) }
 
 
     override fun create(d: AGENT, n: Int): CreationBasis<AGENT> {
-        return CreationBasis(creations.plus(d,n))
+        return CreationBasis(creations.times(d,n))
     }
 
     override fun timesAnnihilate(d: AGENT): ActionBasis<AGENT> {
@@ -34,13 +35,13 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     }
 
     override fun operatorUnion(other: Basis<AGENT>): Basis<AGENT> {
-        return newBasis(this.creations union other.creations, other.toAnnihilationMap())
+        return newBasis(this.creations * other.creations, other.toAnnihilationMap())
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
 //                            ground: Ground<AGENT>,
 //                            termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
-//        termConsumer(CreationBasis(this.creations union otherBasis.creations),1.0)
+//        termConsumer(CreationBasis(this.creations times otherBasis.creations),1.0)
 //    }
 //
 //    override fun multiplyTo(groundBasis: GroundedBasis<AGENT,Ground<AGENT>>,
@@ -55,7 +56,7 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     operator fun div(other: CreationBasis<AGENT>) : CreationBasis<AGENT> {
         val newCreations = HashMap(this.creations)
         other.creations.forEach {
-            newCreations.plusAssign(it.key, -it.value)
+            newCreations.timesAssign(it.key, -it.value)
         }
         return(CreationBasis(newCreations))
     }

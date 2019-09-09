@@ -38,7 +38,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
 
     // Sets this to be the Huffman tree of the given categories with the given probabilities
-    // This creates an optimally efficient tree but runs in O(n log(n)) time as the entries
+    // This creates an optimally efficient tree but runs in O(nAnnihilations log(nAnnihilations)) time as the entries
     // need to be sorted
     fun createHuffmanTree(categories: Iterable<T>, probabilities: Iterable<Double>, initialCapacity: Int = -1) {
         val heapComparator = Comparator<SumTreeNode<T>> { i, j -> i.probability.compareTo(j.probability) }
@@ -51,7 +51,7 @@ open class MutableCategorical<T> : AbstractMutableMap<T, Double> {
 
 
     // Sets this to be a binary tree of the given categories with the given probabilities
-    // This creates a tree with minimal total depth and runs in O(n) time
+    // This creates a tree with minimal total depth and runs in O(nAnnihilations) time
     fun createBinaryTree(categories: Iterable<T>, probabilities: Iterable<Double>, initialCapacity: Int = -1) {
         if (initialCapacity > 0)
             createTree(categories, probabilities, ArrayDeque(initialCapacity))

@@ -1,5 +1,6 @@
 package deselby.fockSpace
 
+import deselby.std.combinatorics.combinations
 import java.lang.IllegalArgumentException
 
 class OperatorBasis<AGENT> : Basis<AGENT> {
@@ -7,41 +8,49 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
     val annihilations: Map<AGENT, Int>
 
     constructor(creations: Map<AGENT, Int>, annihilations: Map<AGENT, Int>) : super(creations) {
-        if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
+  //      if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
         this.annihilations = annihilations
     }
 
-    override fun create(entries: Iterable<Map.Entry<AGENT, Int>>) = OperatorBasis(creations union entries, annihilations)
+    override fun create(entries: Iterable<Map.Entry<AGENT, Int>>) = OperatorBasis(creations * entries, annihilations)
 
-    override fun create(d: AGENT, n: Int) = OperatorBasis(creations.plus(d,n), annihilations)
+    override fun create(d: AGENT, n: Int) = OperatorBasis(creations.times(d,n), annihilations)
 
-    override fun timesAnnihilate(d: AGENT) = OperatorBasis(creations, annihilations.plus(d,1))
+    override fun timesAnnihilate(d: AGENT) = OperatorBasis(creations, annihilations.times(d,1))
 
     override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) { annihilations.keys.forEach(keyConsumer) }
 
     override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) { annihilations.forEach(entryConsumer) }
 
+    // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-        if(annihilations.size == 1) {
-            val (d, n) = annihilations.entries.first()
-            val m = basis.creations[d]?:return
-            commutationCoefficients(n, m).forEach { cq ->
-                val newBasis = newBasis(creations.plus(d,-cq.q), mapOf(d to n - cq.q))
-                termConsumer(newBasis, cq.c.toDouble())
+        val annihilationIterator = annihilations.iterator()
+        val commutationSequences = Array(annihilations.size) {
+            val (agent, nAnnihilations) = annihilationIterator.next()
+            CommutationSequence(agent, nAnnihilations, basis.creations[agent] ?: 0).asIterable()
+        }.asList()
+        commutationSequences.combinations().drop(1).forEach { combination ->
+            val termAnnihilations = HashMap<AGENT, Int>()
+            val termCreations = HashMap<AGENT, Int>()
+            var weight = 1.0
+            combination.forEach { caPair ->
+                val nOtherCreations = basis[caPair.d]
+                if(caPair.nCreations != nOtherCreations) termCreations[caPair.d] = caPair.nCreations - nOtherCreations
+                if(caPair.nAnnihilations != 0) termAnnihilations[caPair.d] = caPair.nAnnihilations
+                weight *= caPair.weight
             }
-        } else {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            val termBasis = newBasis(creations * termCreations, termAnnihilations)
+            termConsumer(termBasis, weight)
         }
     }
 
-    data class Coefficient(val c: Int, val q: Int)
-
-    fun commutationCoefficients(n: Int, m: Int) =
-            generateSequence(Coefficient(1, 0)) {
-                if(it.q == n || it.q == m) return@generateSequence null
-                val newq = it.q+1
-                Coefficient(it.c*(n-it.q)*(m-it.q)/newq, newq)
-            }.drop(1)
+//    data class Coefficient(val c: Int, val q: Int)
+//    fun commutationCoefficients(nAnnihilations: Int, nCreations: Int) =
+//            generateSequence(Coefficient(1, 0)) {
+//                if(it.q == nAnnihilations || it.q == nCreations) return@generateSequence null
+//                val newq = it.q+1
+//                Coefficient(it.c*(nAnnihilations-it.q)*(nCreations-it.q)/newq, newq)
+//            }.drop(1)
 
     override fun toAnnihilationMap(): Map<AGENT, Int> {
         return annihilations

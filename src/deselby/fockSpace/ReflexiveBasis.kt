@@ -6,17 +6,17 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
         entryConsumer(d,2)
     }
 
-    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = ReflexiveBasis(creations union entries, d)
+    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = ReflexiveBasis(creations * entries, d)
 
     override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) {
         keyConsumer(d)
     }
 
-
+    // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val m = basis.creations[d]?:return
-        termConsumer(ActionBasis(creations.plus(d,-1), d), 2.0*m)
-        if(m>1) termConsumer(CreationBasis(creations.plus(d,-2)), (m*(m-1)).toDouble())
+        termConsumer(ActionBasis(creations.times(d,-1), d), 2.0*m)
+        if(m>1) termConsumer(CreationBasis(creations.times(d,-2)), (m*(m-1)).toDouble())
     }
 
 //    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) {
@@ -24,7 +24,7 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
 //    }
 
     override fun create(d: AGENT, n: Int): Basis<AGENT> {
-        return ReflexiveBasis(creations.plus(d,n), d)
+        return ReflexiveBasis(creations.times(d,n), d)
     }
 
     override fun timesAnnihilate(d: AGENT): Basis<AGENT> {
@@ -39,13 +39,13 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
 //            if(lambda == 0.0) return@multiplyTo
 //            0
 //        }
-//        val creationUnion = this.creations union otherBasis.creations
+//        val creationUnion = this.creations times otherBasis.creations
 //        if(lambda != 0.0) {
 //            termConsumer(CreationBasis(creationUnion), lambda*lambda)
-//            if(nCreations != 0) termConsumer(CreationBasis(creationUnion.plus(d,-1)), 2.0*lambda*nCreations)
+//            if(nCreations != 0) termConsumer(CreationBasis(creationUnion.times(d,-1)), 2.0*lambda*nCreations)
 //        }
 //        if(nCreations > 1) {
-//            termConsumer(CreationBasis(creationUnion.plus(d,-2)), (nCreations*(nCreations-1)).toDouble())
+//            termConsumer(CreationBasis(creationUnion.times(d,-2)), (nCreations*(nCreations-1)).toDouble())
 //        }
 //    }
 //
@@ -56,9 +56,9 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
 //        val nCreations = groundBasis.basis.creations[d]?:0
 //        if(lambda != 0.0) {
 //            termConsumer(CreationBasis(creations), lambda*lambda)
-//            if(nCreations != 0) termConsumer(CreationBasis(creations.plus(d,-1)), 2.0*lambda*nCreations)
+//            if(nCreations != 0) termConsumer(CreationBasis(creations.times(d,-1)), 2.0*lambda*nCreations)
 //        }
-//        if(nCreations > 1) termConsumer(CreationBasis(creations.plus(d,-2)), (nCreations*(nCreations-1)).toDouble())
+//        if(nCreations > 1) termConsumer(CreationBasis(creations.times(d,-2)), (nCreations*(nCreations-1)).toDouble())
 //    }
 
 

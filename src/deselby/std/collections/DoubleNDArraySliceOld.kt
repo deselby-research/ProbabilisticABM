@@ -77,7 +77,7 @@ class DoubleNDArraySliceOld {
     override fun toString() : String {
         var s = ""
         for(ndi in indexSet) {
-            s += "${ndi.asList()} -> ${this[ndi]}\n"
+            s += "${ndi.asList()} -> ${this[ndi]}\nAnnihilations"
         }
         return s
     }

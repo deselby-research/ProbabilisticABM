@@ -20,7 +20,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 
     fun multiply(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         termConsumer(otherBasis * this, 1.0)
-        commute(otherBasis, termConsumer)
+        semicommute(otherBasis, termConsumer)
     }
 
     fun multiply(ground: Ground<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
@@ -28,7 +28,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
-//    inline fun commute(basis: CreationBasis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
+//    inline fun semicommute(basis: CreationBasis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
 //        commuteToPerturbation(basis) { perturbation, weight ->
 //            termConsumer(basis * perturbation, weight)
 //        }
@@ -43,17 +43,18 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     // This can be used to multiply two bases to cannonical form since ca * CA = cCaA + c[a,C]A
     //
     // Uses commuteToPerturbation which calculates (C^-1)c[a,C]
-    inline fun commute(basis: Basis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
-        commuteToPerturbation(CreationBasis(basis.creations)) { perturbation, weight ->
-            termConsumer(basis.operatorUnion(perturbation), weight)
+    inline fun semicommute(other: Basis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
+        commuteToPerturbation(CreationBasis(other.creations)) { perturbation, weight ->
+            termConsumer(other.operatorUnion(perturbation), weight)
         }
     }
 
-    // only commutes over creations
-    fun commute(vector: DoubleVector<Basis<AGENT>>): DoubleVector<Basis<AGENT>> {
+
+    // ca semicommute CA = c[a,C]A
+    fun semicommute(vector: DoubleVector<Basis<AGENT>>): DoubleVector<Basis<AGENT>> {
         val commutation = HashDoubleVector<Basis<AGENT>>()
         vector.forEach { (vBasis, vWeight) ->
-            this.commute(vBasis) { commutedBasis, cWeight ->
+            this.semicommute(vBasis) { commutedBasis, cWeight ->
                 commutation.plusAssign(commutedBasis, cWeight *vWeight)
             }
         }
@@ -61,8 +62,16 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
+    // calculates [this, other] = [ca,CA]
+    // uses the identity [ca,CA] = c[a,C]A - C[A,c]a
+    fun commute(other: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        this.semicommute(other, termConsumer)
+        other.semicommute(this) { basis, weight -> termConsumer(basis, -weight) }
+    }
+
+
     fun operatorUnion(other: CreationBasis<AGENT>) : Basis<AGENT> {
-        return newBasis(this.creations union other.creations, this.toAnnihilationMap())
+        return newBasis(this.creations * other.creations, this.toAnnihilationMap())
     }
 
 
@@ -72,9 +81,9 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
             annihilations[agent] = count
         }
         other.forEachAnnihilationEntry {agent, count ->
-            annihilations.plusAssign(agent, count)
+            annihilations.timesAssign(agent, count)
         }
-        return newBasis(this.creations union other.creations, annihilations)
+        return newBasis(this.creations * other.creations, annihilations)
     }
 
 
@@ -137,43 +146,43 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
                 1 -> mapOf(first() to 1)
                 else -> {
                     val map = HashMap<AGENT,Int>()
-                    this.forEach { map.plusAssign(it, 1) }
+                    this.forEach { map.timesAssign(it, 1) }
                     map
                 }
             }
         }
 
-        inline infix fun<AGENT> Map<AGENT, Int>.union(other: Map<AGENT, Int>): Map<AGENT, Int> {
+        inline operator fun<AGENT> Map<AGENT, Int>.times(other: Map<AGENT, Int>): Map<AGENT, Int> {
             val union = HashMap<AGENT,Int>(this)
-            union.unionAssign(other)
+            union *= other
             return union
         }
 
 
-        inline fun<AGENT> Map<AGENT, Int>.union(vararg entries: Pair<AGENT,Int>): Map<AGENT, Int> {
+        inline fun<AGENT> Map<AGENT, Int>.times(vararg entries: Pair<AGENT,Int>): Map<AGENT, Int> {
             val union = HashMap(this)
-            entries.forEach { union.plusAssign(it.first, it.second) }
+            entries.forEach { union.timesAssign(it.first, it.second) }
             return union
         }
 
-        inline infix fun<AGENT> Map<AGENT, Int>.union(entries: Iterable<Map.Entry<AGENT,Int>>): Map<AGENT, Int> {
+        inline operator fun<AGENT> Map<AGENT, Int>.times(entries: Iterable<Map.Entry<AGENT,Int>>): Map<AGENT, Int> {
             val union = HashMap(this)
-            entries.forEach { union.plusAssign(it.key, it.value) }
+            entries.forEach { union.timesAssign(it.key, it.value) }
             return union
         }
 
 
-        inline fun<AGENT> Map<AGENT, Int>.plus(d: AGENT, n: Int): Map<AGENT, Int> {
+        inline fun<AGENT> Map<AGENT, Int>.times(d: AGENT, n: Int): Map<AGENT, Int> {
             val union = HashMap(this)
-            union.plusAssign(d,n)
+            union.timesAssign(d,n)
             return union
         }
 
-        inline fun<AGENT> MutableMap<AGENT, Int>.unionAssign(other: Map<AGENT, Int>) =
-            other.forEach { plusAssign(it.key, it.value) }
+        inline operator fun<AGENT> MutableMap<AGENT, Int>.timesAssign(other: Map<AGENT, Int>) =
+            other.forEach { timesAssign(it.key, it.value) }
 
 
-        inline fun<AGENT> MutableMap<AGENT, Int>.plusAssign(d: AGENT, n: Int) {
+        inline fun<AGENT> MutableMap<AGENT, Int>.timesAssign(d: AGENT, n: Int) {
             merge(d, n) { a, b ->
                 val sum = a + b
                 if (sum == 0) null else sum

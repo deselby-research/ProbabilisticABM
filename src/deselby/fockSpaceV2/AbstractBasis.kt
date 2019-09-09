@@ -35,10 +35,10 @@ abstract class AbstractBasis<AGENT,BASIS : AbstractBasis<AGENT, BASIS>> : FockBa
 
 
     // using the commutation relation
-    // [a,a*^n] = na*^(n-1)
+    // [a,a*^nAnnihilations] = na*^(nAnnihilations-1)
     // so
-    // aa*^n = n.a*^(n-1) + (a*^n)a
-    // for all n
+    // aa*^nAnnihilations = nAnnihilations.a*^(nAnnihilations-1) + (a*^nAnnihilations)a
+    // for all nAnnihilations
     override fun annihilate(d: AGENT): DoubleVector<BASIS> {
         val nd = creations[d]?:return groundStateAnnihilate(d).create(creations)
         return this.remove(d)*nd.toDouble() + groundStateAnnihilate(d).create(creations)

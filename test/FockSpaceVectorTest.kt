@@ -91,7 +91,7 @@ class FockSpaceVectorTest {
         val other = CreationBasis(mapOf(0 to 3))
         println(ob)
         println(other)
-        ob.commute(other) { basis, weight ->
+        ob.semicommute(other) { basis, weight ->
             println("$weight $basis")
         }
     }

@@ -9,9 +9,9 @@ class CreationCommutations<AGENT> : AbstractMap<AGENT, MapFockState<AGENT>> {
         get() = index.entries
 
     // implement commutation relation
-    // [a*,a^m] = -ma^(m-1)
+    // [a*,a^nCreations] = -ma^(nCreations-1)
     // so
-    // a^-_d[a*,a^m] = -m a^-_da^(m-1)
+    // a^-_d[a*,a^nCreations] = -nCreations a^-_da^(nCreations-1)
     constructor(stateToIndex : MapFockState<AGENT>) {
         stateToIndex.coeffs.entries.forEach { entry ->
             val basis = entry.key as OperatorBasis<AGENT>

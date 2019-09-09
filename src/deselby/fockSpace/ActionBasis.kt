@@ -5,16 +5,19 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
     constructor(creations: Collection<AGENT>, annihilation: AGENT) : this(creations.toCountMap(), annihilation)
 
     // ca commuteToPerturbation C = (C^-1)c[a,C]
+    // = nCreations c a_d*^(-1)
+    // since [a_d, a_d*^nCreations] = nCreations a_d*^(nCreations-1)
+    //
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val m = basis.creations[d]?:return
-        termConsumer(CreationBasis(this.creations.plus(d,-1)), m.toDouble())
+        termConsumer(CreationBasis(this.creations.times(d,-1)), m.toDouble())
     }
 
     override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) {
         entryConsumer(d,1)
     }
 
-    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = ActionBasis(creations union entries, d)
+    override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = ActionBasis(creations * entries, d)
 
     override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) {
         keyConsumer(d)
@@ -24,9 +27,9 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
         return mapOf(d to 1)
     }
 
-//    override fun commute(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-//        val m = basis.creations[d]?:return
-//        termConsumer(CreationBasis(basis.creations.plus(d,-1) union this.creations), m.toDouble())
+//    override fun semicommute(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+//        val nCreations = basis.creations[d]?:return
+//        termConsumer(CreationBasis(basis.creations.times(d,-1) times this.creations), nCreations.toDouble())
 //    }
 
 //    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) {
@@ -34,7 +37,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 //    }
 
     override fun create(d: AGENT, n: Int): Basis<AGENT> {
-        return ActionBasis(creations.plus(d,n), d)
+        return ActionBasis(creations.times(d,n), d)
     }
 
     override fun timesAnnihilate(d: AGENT): Basis<AGENT> {
@@ -48,11 +51,11 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 //        val nCreations = otherBasis.creations[d]
 //        var creationUnion: Map<AGENT,Int>? = null
 //        if(lambda != 0.0) {
-//            creationUnion = this.creations union otherBasis.creations
+//            creationUnion = this.creations times otherBasis.creations
 //            termConsumer(CreationBasis(creationUnion), lambda)
 //        }
 //        if(nCreations != null) {
-//            creationUnion = creationUnion?.plus(d,-1)?:(this.creations union otherBasis.creations).plus(d,-1)
+//            creationUnion = creationUnion?.times(d,-1)?:(this.creations times otherBasis.creations).times(d,-1)
 //            termConsumer(CreationBasis(creationUnion), nCreations.toDouble())
 //        }
 //    }
@@ -64,7 +67,7 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 //        val lambda = groundBasis.ground.lambda(d)
 //        if(lambda != 0.0) termConsumer(CreationBasis(creations), lambda)
 //        val nCreations = groundBasis.basis.creations[d]
-//        if(nCreations != null) termConsumer(CreationBasis(creations.plus(d,-1)), nCreations.toDouble())
+//        if(nCreations != null) termConsumer(CreationBasis(creations.times(d,-1)), nCreations.toDouble())
 //    }
 
 
@@ -89,17 +92,17 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
 //        val lambda = ground.lambda(d)
 //        val nCreations = otherBasis.creationVector[d]
 //        if(lambda != 0.0) {
-//            val creationUnion = this.creationVector union otherBasis.creationVector
+//            val creationUnion = this.creationVector times otherBasis.creationVector
 //            if(nCreations != null) {
 //                return sequenceOf(
-//                        Pair(CreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()),
+//                        Pair(CreationBasis(creationUnion.times(d, -1)), nCreations.toDouble()),
 //                        Pair(CreationBasis(creationUnion), lambda)
 //                )
 //            }
 //            return sequenceOf(Pair(CreationBasis(creationUnion), lambda))
 //        } else if(nCreations != null) {
-//            val creationUnion = this.creationVector union otherBasis.creationVector
-//            return sequenceOf(Pair(CreationBasis(creationUnion.plus(d, -1)), nCreations.toDouble()))
+//            val creationUnion = this.creationVector times otherBasis.creationVector
+//            return sequenceOf(Pair(CreationBasis(creationUnion.times(d, -1)), nCreations.toDouble()))
 //        }
 //        return emptySequence()
 //    }

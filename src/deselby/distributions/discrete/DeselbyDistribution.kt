@@ -99,11 +99,11 @@ class DeselbyDistribution private constructor(val lambda : List<Double>, var coe
 
 
 
-    // observe that the variable with id 'variableId' has coeff 'm'
+    // observe that the variable with id 'variableId' has coeff 'nCreations'
     // given that the coeff of detection is 'p'
     // this amounts to multiplying this by the binomial distribution
-    // P'(k) = Binom(p,m,k)P(k)
-    // But Binom(p,m,k)P(l,k) = exp(-pl)(p/(1-p))^m/m! * (k)_m (1-p)^Delta P((1-p)l,k)
+    // P'(k) = Binom(p,nCreations,k)P(k)
+    // But Binom(p,nCreations,k)P(l,k) = exp(-pl)(p/(1-p))^nCreations/nCreations! * (k)_m (1-p)^Delta P((1-p)l,k)
     fun binomialObserve(p : Double, m : Int, variableId : Int) : DeselbyDistribution {
         val lambdap = (1.0-p)*lambda[variableId]
         val newLambda = DoubleArray(lambda.size) {i -> if(i==variableId) lambdap else lambda[i]}
