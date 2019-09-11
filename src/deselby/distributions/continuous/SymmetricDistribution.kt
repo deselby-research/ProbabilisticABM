@@ -1,6 +1,6 @@
 package deselby.distributions.continuous
 
-import deselby.std.DoubleNDArray
+import deselby.std.collections.DoubleNDArray
 
 class SymmetricDistribution : FourierDistribution {
 

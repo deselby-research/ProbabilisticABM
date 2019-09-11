@@ -1,9 +1,12 @@
 package deselby.mcmc
 
+import deselby.std.extensions.nextGaussian
 import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.random.RandomGenerator
 import org.apache.commons.math3.special.Erf
+import kotlin.math.floor
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = ArrayList(),
                                 val rand : RandomGenerator = MersenneTwister()) : RandomGenerator {
@@ -20,15 +23,7 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
         }
     }
 
-    // perturb the random source so that calls to nextGaussian are updated
-    // by a randSource.nDimensions dimensional Gaussian with no correlation and
-    // SD of sigma (i.e. correlation matrix of sigma times the identity matrix)
-    fun perturbWithGaussian(sigma : Double) : MonteCarloRandomGenerator {
-            return MonteCarloRandomGenerator(randSource.size) { i ->
-                val y = (randSource[i] + rand.nextGaussian() * sigma).rem(1.0)
-                if (y < 0.0) y + 1.0 else y
-            }
-    }
+    fun perturbWithGaussian(sigma : Double) = gaussianProposal(this, sigma)
 
     override fun nextDouble(): Double {
         if(sourceCounter == randSource.size) randSource.add(rand.nextDouble())
@@ -70,8 +65,34 @@ class MonteCarloRandomGenerator(private val randSource : ArrayList<Double> = Arr
         }
     }
 
-    inline fun uniformToGaussian(uniform : Double) : Double {
-        return sqrt(2.0) * Erf.erfInv(uniform*2.0 - 1.0)
+
+    companion object {
+        // perturb the random source so that calls to nextGaussian are updated
+        // by a randSource.nDimensions dimensional Gaussian with no correlation and
+        // SD of sigma (i.e. correlation matrix of sigma create the identity matrix)
+        fun gaussianProposal(currentState: MonteCarloRandomGenerator, sigma : Double = 0.1) : MonteCarloRandomGenerator {
+            return MonteCarloRandomGenerator(currentState.randSource.size) { i ->
+                val y = currentState.randSource[i] + Random.nextGaussian() * sigma
+                y - floor(y)
+            }
+        }
+
+
+        fun singlePerturbationGaussianProposal(currentState: MonteCarloRandomGenerator, sigma : Double = 0.1) : MonteCarloRandomGenerator {
+            val perturbed = MonteCarloRandomGenerator(ArrayList(currentState.randSource))
+            if(currentState.sourceCounter > 0) {
+                val indexToPerturb = Random.nextInt(currentState.sourceCounter)
+                val perturbedVal = perturbed.randSource[indexToPerturb] + Random.nextGaussian() * sigma
+                perturbed.randSource[indexToPerturb] = perturbedVal - floor(perturbedVal)
+            }
+            return perturbed
+        }
+
+
+
+        inline fun uniformToGaussian(uniform : Double) : Double {
+            return sqrt(2.0) * Erf.erfInv(uniform*2.0 - 1.0)
+        }
     }
 
 }

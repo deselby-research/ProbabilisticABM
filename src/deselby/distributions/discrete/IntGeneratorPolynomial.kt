@@ -8,7 +8,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.ln
 import kotlin.math.max
 
-// For representing agents whose state maps to the set of integers.
+// For representing agents whose d maps to the set of integers.
 // This is a dense representation, so only suitable when there are
 // a small number of states. Use GeneratorPolynomial for a sparse
 // representation
@@ -76,7 +76,7 @@ class IntGeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,
         coeffs[index] = v
     }
 
-    // randomly chooses a single monomial from this polynomial with probability proportional to
+    // randomly chooses a single monomial from this polynomial with coeff proportional to
     // its coefficient and returns a IntGeneratorPolynomial with just that monomial in, with
     // coefficient of 1
     // assumes that this polynomial is normalised
@@ -94,7 +94,7 @@ class IntGeneratorPolynomial private constructor(val coeffs : HashMap<List<Int>,
         return result
     }
 
-    // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the state that is transitioned
+    // returns a (dt, monomial) pair where dt is the time elapsed, and monomial is the d that is transitioned
     // to from this.
     fun sampleNext(hamiltonian : (FockState<Int, IntGeneratorPolynomial>) -> IntGeneratorPolynomial, rand : RandomGenerator = MersenneTwister()) : Pair<Double, IntGeneratorPolynomial> {
         val p0 = if(this.size == 1) this else this.sample()

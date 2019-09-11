@@ -125,9 +125,13 @@ where $S$ is the state of the system, $O$ is the observation, $P(S)$ is the prio
 
 As an example of data assimilation with Deselby distributions, we ran numerical experiments with a compartmental SIR epidemiological model. The observation to assimilate was the number of hospital admissions. If we assume that each agent, upon infection, has a fixed probability, $r$, of being hospitalised, then the likelihood function is just the binomial distribution. Multiplying a Deselby distribution by a Binomial gives
 \[
-P(k|m) \propto \frac{k!}{m!(k-m)!}r^m(1-r)^{k-m} (k)_\Delta \frac{\lambda^{(k-\Delta)}e^{-\lambda}}{k!}
+P(k \wedge m) = \frac{k!}{m!(k-m)!}r^m(1-r)^{k-m} (k)_\Delta \frac{\lambda^{(k-\Delta)}e^{-\lambda}}{k!}
 \]
-which, after some rearranging and dropping of constants gives
+which after some rearranging gives
+\[
+P(k \wedge m) = \frac{1}{m!}\left(\frac{r}{1-r}\right)^m e^{-r\lambda} (1-r)^\Delta (k)_m D_{\Delta,(1-r)\lambda}(k)
+\]
+dropping constants
 \begin{equation}
 P(k|m) \propto (1-r)^\Delta \, (k)_m \,D_{\Delta,(1-r)\lambda}(k)
 \label{posterior}
@@ -140,27 +144,77 @@ The product of a Deselby distribution and a falling factorial in $k$ can be calu
 \]
 So
 \[
-(k)_m D_\Delta = \sum_{q=0}^{\min(m,\Delta)} \frac{m!\Delta!\lambda^{(m-q)}}{q!(m-q)!(\Delta-q)!} D_{m+\Delta-q}
+(k)_m D_\Delta = \sum_{q=0}^{\min(m,\Delta)} \frac{m!\Delta!\left((1-r)\lambda\right)^{(m-q)}}{q!(m-q)!(\Delta-q)!} D_{m+\Delta-q}
 \]
 The multiplying factors can be efficiently computed using a recursive form. Let
 \[
-c_q = \frac{m!\Delta!\lambda^{(m-q)}}{q!(m-q)!(\Delta-q)!}
+c_q = \frac{m!\Delta!\left((1-r)\lambda\right)^{(m-q)}}{q!(m-q)!(\Delta-q)!}
 \]
 then
 \[
-c_0 = \lambda^m
+c_0 = ((1-r)\lambda)^m
 \]
 and
 \[
-c_{q+1} = \frac{(m-q)(\Delta - q)}{(q+1)\lambda} c_q
+c_{q+1} = \frac{(m-q)(\Delta - q)}{(q+1)(1-r)\lambda} c_q
 \]
 Substituting this back into equation \ref{posterior} gives the final form of the posterior
 \begin{equation}
 P(k|m) \propto (1-r)^\Delta \sum_{q=0}^{\min(\Delta,m)} c_q D_{\Delta+m-q,(1-r)\lambda}
 \end{equation}
 
+Interestingly, this is equivalent to
+\begin{equation}
+P(k|m) \propto (1-r)^\Delta a^{\dag m}a^m D_{\Delta,(1-r)\lambda}
+\end{equation}
+
+
 Numerical experiemtns showed that data assimilation into an SIR model using this technique was faster than using Metropolis-Hastings MCMC for the same level of accuracy.
 
+\subsection{The $L_{ir}$ and $g_{ir}$ operators}
+
+In order to formalise the change in $\lambda$ upon multiplication of a Deselby with a Binomial, we introduce the $L_{ir}$ operator, which has the effect of multiplying the $i^{th}$ element of lambda by $1-r$. It can be seen immediately that
+\[
+[L_{ir},a_i^\dag] = 0
+\]
+and
+\[
+[L_{ir}, a_i] = r\lambda L_r
+\]
+
+So we can express the binomial multiplication as
+\begin{equation}
+P(k|m) \propto (1-r)^\Delta a^{\dag m}a^mL_r D_{\Delta}
+\end{equation}
+which, using the commutation relation, is equivalent to
+\begin{equation}
+P(k|m) \propto (1-r)^\Delta L_r a^{\dag m}(a - r\lambda)^m D_{\Delta}
+\end{equation}
+
+Finally, we define the $g_{ir}$ operator that has the properties
+\[
+[a_i^\dag, g_{ir}] = ra_i^\dag g_{ir}
+\]
+and
+\[
+g_{ir}D_0 = 1
+\]
+so that
+\[
+g_{ir}a_i^\dag = a_i^\dag g_{ir} - ra_i^\dag g_{ir} = (1-r)a_i^\dag g_{ir}
+\]
+so
+\[
+g_{ir}D_\Delta = (1-r)^\Delta D_\Delta
+\]
+Also
+\[
+[a_i, g_{ir}] = \frac{r(\lambda - a_i)}{1-r}g_{ir}
+\]
+We can now express Binomial multiplication entirely in operator format
+\begin{equation}
+P(k|m) \propto a^{\dag m}a^m L_r g_r D_{\Delta}
+\end{equation}
 
 \section{The Deselby distribution in the continuous limit}
 

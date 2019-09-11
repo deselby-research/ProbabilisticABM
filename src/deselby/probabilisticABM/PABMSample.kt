@@ -1,6 +1,6 @@
 package deselby.probabilisticABM
 
-import deselby.std.HashMultiset
+import deselby.std.collections.HashMultiset
 import java.util.*
 import kotlin.math.ln
 
@@ -69,7 +69,7 @@ class PABMSample<AGENT> : PABM<AGENT> {
         var remainingTime = t
 
         var totalActRate = acts.sumByDouble { it.rate }
-        remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative value
+        remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative coeff
         while(remainingTime > 0.0) {
 
             // choose next act
@@ -96,7 +96,7 @@ class PABMSample<AGENT> : PABM<AGENT> {
             }
 
             totalActRate = acts.sumByDouble { it.rate }
-            remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative value
+            remainingTime += ln(1.0 - rand.nextDouble()) / totalActRate // negative coeff
         }
 
         return this

@@ -1,5 +1,6 @@
-import deselby.std.HashMultiset
-import org.junit.jupiter.api.Test
+import deselby.std.collections.HashMultiset
+import deselby.std.collections.hashMultisetOf
+import org.junit.Test
 
 class HashMultisetTest {
     val data = arrayListOf(1, 4, 5, 5, 1, 6)
@@ -68,6 +69,17 @@ class HashMultisetTest {
         data.sorted().forEachIndexed {index, element ->
             assert(element == hs.elementAt(index))
         }
+    }
 
+    @Test
+    fun testIterator() {
+        val hs = hashMultisetOf(1,4,1,2,3,3,3)
+        val count = arrayOf(0,2,1,3,1)
+        for(i in hs) {
+            count[i]--
+        }
+        for(c in count) {
+            assert(c == 0)
+        }
     }
 }

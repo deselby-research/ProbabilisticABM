@@ -1,34 +1,24 @@
-import deselby.std.DoubleNDArray
-import deselby.std.fourierTransformInPlace
+import deselby.fockSpace.Basis
+import deselby.fockSpace.BinomialLikelihood
+import deselby.fockSpace.CommutationSequence
+import deselby.fockSpace.OperatorBasis
+import deselby.std.Gnuplot
+import deselby.std.combinatorics.combinations
+import deselby.std.gnuplot
+import deselby.std.step
+import deselby.std.vectorSpace.HashDoubleVector
+import java.util.*
+import kotlin.math.floor
 
-
-class MyClass(var i : Int, var j : Int) {
-    override fun equals(other : Any?) : Boolean {
-        if(other is MyClass) {
-            if(super.equals(other)) {
-                return true
-            }
-            return other.i == i && other.j == j
-        }
-        return false
-    }
-
-
-}
 
 fun main() {
-    val a = ArrayList<MyClass>()
+//    val a = OperatorBasis(mapOf(0 to 1), mapOf(0 to 3, 1 to 1))
+//    val b = OperatorBasis(mapOf(0 to 2, 1 to 1), mapOf(0 to 3))
 
-    val x = MyClass(1,2)
-    val y = MyClass(1,2)
-    val z = MyClass(2,2)
+    val a = OperatorBasis(mapOf(3 to 1), mapOf(0 to 3, 1 to 1))
+    val b = OperatorBasis(mapOf(0 to 2, 1 to 1), mapOf(3 to 1))
 
-
-    a.add(x)
-    if(a.contains(x)) println("contains x")
-    if(a.contains(y)) println("contains y")
-    if(a.contains(z)) println("contains z")
-    if(a.find {it.equals(x)} != null) println("found x")
-    if(a.find {it.equals(y)} != null) println("found y")
-    if(a.find {it.equals(z)} != null) println("found z")
+    val commutation = HashDoubleVector<Basis<Int>>()
+    a.semicommute(b, commutation::plusAssign)
+    println(commutation)
 }

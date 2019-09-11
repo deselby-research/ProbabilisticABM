@@ -1,6 +1,6 @@
 import deselby.distributions.discrete.DeselbyDistribution
 import deselby.std.FallingFactorial
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class DeselbyDistributionTest {
     @Test
@@ -23,7 +23,7 @@ class DeselbyDistributionTest {
         val p = DeselbyDistribution(listOf(20.0, 40.0, 2.0))
         val dP = SIRHamiltonian(p)*0.001
         println(dP)
-//        println(p.lambda)
+//        println(p.lambdas)
         val pp = p.perturbWithLambda2(dP)
         println(pp)
         println(pp.lambda)

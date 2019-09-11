@@ -1,6 +1,6 @@
 package deselby.distributions.discrete
 
-import deselby.std.DoubleNDArray
+import deselby.std.collections.DoubleNDArray
 import kotlin.math.absoluteValue
 import kotlin.math.max
 

@@ -17,9 +17,9 @@ fun main(args : Array<String>) {
                 N-1 -> a[i] + ((lambda-i)*a[i] - lambda*a[i-1])*dt
                 else -> a[i] + ((lambda-i)*a[i] + (i+1)*a[i+1] - lambda*a[i-1])*dt
 
-//                0 -> a[0] + (lambda*a[0] + a[1])*dt
-//                N-1 -> a[i] + ((lambda-i)*a[i] - lambda*i*a[i-1])*dt
-//                else -> a[i] + ((lambda-i)*a[i] + a[i+1] - lambda*i*a[i-1])*dt
+//                0 -> a[0] + (lambdas*a[0] + a[1])*dt
+//                N-1 -> a[i] + ((lambdas-i)*a[i] - lambdas*i*a[i-1])*dt
+//                else -> a[i] + ((lambdas-i)*a[i] + a[i+1] - lambdas*i*a[i-1])*dt
             }
         })
         println("${a.asList().subList(0,min(20,N))}")
