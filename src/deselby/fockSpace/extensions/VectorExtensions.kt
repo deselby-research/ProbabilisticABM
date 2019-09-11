@@ -47,6 +47,17 @@ fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
 }
 
 
+fun<AGENT> FockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
+    val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
+    forEach { entry ->
+        entry.key.creations.keys.forEach { d ->
+            index.getOrPut(d, { ArrayList() }).add(entry)
+        }
+    }
+    return index
+}
+
+
 fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
     val activeTerms = HashSet<Map.Entry<Basis<AGENT>,Double>>()
     otherBasis.creations.keys.forEach { d ->

@@ -13,6 +13,5 @@ typealias CovariantFockVector<AGENT> = CovariantDoubleVector<Basis<AGENT>>
 typealias HashFockVector<AGENT> = HashDoubleVector<Basis<AGENT>>
 typealias HashCreationVector<AGENT> = HashDoubleVector<CreationBasis<AGENT>>
 
-typealias CommutationMap<AGENT> = Map<AGENT,FockVector<AGENT>>
-
 typealias AnnihilationIndex<AGENT> = Map<AGENT, List<Map.Entry<Basis<AGENT>,Double>>>
+typealias CreationIndex<AGENT> = Map<AGENT, List<Map.Entry<Basis<AGENT>,Double>>>
