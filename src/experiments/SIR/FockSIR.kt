@@ -20,7 +20,7 @@ object FockSIR {
             val state = binomial * p.asGroundedVector(D0)
             D0 = state.ground
             p = state.creationVector
-            println("stats = ${D0.mean(p)}")
+            println("stats = ${p.asGroundedVector(D0).means()}")
             if(nObs < observations.lastIndex) {
                 p = p.asGroundedVector(D0).integrate(hamiltonian, observationInterval, 0.001, 1e-15)
             }
@@ -33,11 +33,11 @@ object FockSIR {
         var p : CreationVector<Int> = Basis.identityCreationVector()
         val hamiltonian = Hamiltonian(params)
         println(p)
-        println("initial means = ${D0.mean(p).entries}")
+        println("initial means = ${p.asGroundedVector(D0).means()}")
         p = p.asGroundedVector(D0).integrate(hamiltonian, T, 0.001, 1e-10)
         println(p)
         println("normalisation = ${p.values.sum()}")
-        println("means = ${D0.mean(p).entries}")
+        println("means = ${p.asGroundedVector(D0).means()}")
     }
 
 
@@ -48,7 +48,7 @@ object FockSIR {
         val p = sample.asGroundedBasis(D0).monteCarloIntegrate(hamiltonian, T, nSamples)
         println(p)
         println("normalisation = ${p.values.sum()}")
-        println("means = ${D0.mean(p)}")
+        println("means = ${p.asGroundedVector(D0).means()}")
     }
 
 
@@ -65,7 +65,7 @@ object FockSIR {
             val observation = BinomialBasis(r, mapOf(1 to observations[nObs]))
             val renormalisedState = forecast / forecast.values.sum()
             posterior = observation.timesApproximate(renormalisedState.asGroundedVector(posterior.ground))
-            println("stats = ${posterior.ground.mean(posterior.basis.toCreationVector())}")
+            println("stats = ${posterior.means()}")
             if(nObs < observations.lastIndex) {
                 forecast = posterior.monteCarloIntegrate(hamiltonian, observationInterval, nSamples)
                 println("forecast size = ${forecast.size}  sum = ${forecast.values.sum()}")

@@ -12,6 +12,7 @@ import kotlin.math.ln
 import kotlin.math.min
 
 
+
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<Basis<AGENT>> {
     val result = HashDoubleVector<Basis<AGENT>>()
     this.entries.forEach { result[it.key.create(d,n)] = it.value }
@@ -39,7 +40,7 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVec
 fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
     val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
     forEach { entry ->
-        entry.key.forEachAnnihilationKey { d ->
+        entry.key.annihilations.keys.forEach { d ->
             index.getOrPut(d, { ArrayList() }).add(entry)
         }
     }
@@ -58,26 +59,18 @@ fun<AGENT> FockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
 }
 
 
-fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-    val activeTerms = HashSet<Map.Entry<Basis<AGENT>,Double>>()
-    otherBasis.creations.keys.forEach { d ->
-        this[d]?.forEach { term ->
-            activeTerms.add(term)
-        }
-    }
-    activeTerms.forEach { (indexedBasis, indexedWeight) ->
-        indexedBasis.semicommute(otherBasis) { commutedBasis, commutedWeight ->
-            termConsumer(commutedBasis, commutedWeight * indexedWeight)
-        }
-    }
-}
 
-
-fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>) : FockVector<AGENT> {
+fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
     val commutation = HashFockVector<AGENT>()
-    this.commute(otherBasis, commutation::plusAssign)
+    forEach { termBasis, termWeight ->
+        termBasis.semicommute(creationIndex) { commutedBasis, commutedWeight ->
+            commutation.plusAssign(commutedBasis, commutedWeight * termWeight)
+        }
+    }
     return commutation
 }
+
+
 
 
 operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: Ground<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
@@ -195,7 +188,7 @@ fun<AGENT> GroundedVector<AGENT,Ground<AGENT>>.integrate(hamiltonian: FockVector
 
 
 inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
-        vectorConsumerMultiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
+        vectorMultiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
     val result = HashDoubleVector<OUTBASIS>()
     rhs.entries.forEach { rhsTerm ->
         multiply(lhs, rhsTerm.key) { basis, weight ->

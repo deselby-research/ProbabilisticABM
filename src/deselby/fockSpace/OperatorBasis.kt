@@ -5,7 +5,7 @@ import java.lang.IllegalArgumentException
 
 class OperatorBasis<AGENT> : Basis<AGENT> {
 
-    val annihilations: Map<AGENT, Int>
+    override val annihilations: Map<AGENT, Int>
 
     constructor(creations: Map<AGENT, Int>, annihilations: Map<AGENT, Int>) : super(creations) {
   //      if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
@@ -17,10 +17,6 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
     override fun create(d: AGENT, n: Int) = OperatorBasis(creations.times(d,n), annihilations)
 
     override fun timesAnnihilate(d: AGENT) = OperatorBasis(creations, annihilations.times(d,1))
-
-    override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) { annihilations.keys.forEach(keyConsumer) }
-
-    override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) { annihilations.forEach(entryConsumer) }
 
     // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
@@ -44,17 +40,6 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
         }
     }
 
-//    data class Coefficient(val c: Int, val q: Int)
-//    fun commutationCoefficients(nAnnihilations: Int, nCreations: Int) =
-//            generateSequence(Coefficient(1, 0)) {
-//                if(it.q == nAnnihilations || it.q == nCreations) return@generateSequence null
-//                val newq = it.q+1
-//                Coefficient(it.c*(nAnnihilations-it.q)*(nCreations-it.q)/newq, newq)
-//            }.drop(1)
-
-    override fun toAnnihilationMap(): Map<AGENT, Int> {
-        return annihilations
-    }
 
     override fun hashCode(): Int {
         return  creations.hashCode() + 31*annihilations.hashCode()

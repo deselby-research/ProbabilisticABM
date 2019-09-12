@@ -26,6 +26,7 @@ data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBas
             }
         }
     }
+
 }
 
 data class OperatorPair<AGENT>(val d: AGENT, val weight: Int, val nCreations: Int, val nAnnihilations: Int)

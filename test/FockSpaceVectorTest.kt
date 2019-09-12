@@ -23,7 +23,7 @@ class FockSpaceVectorTest {
         println(prior)
         println(posterior)
         println(newGround)
-        println(newGround.mean(posterior))
+        println(posterior.asGroundedVector(newGround).means())
         val reducedPosterior = binom.timesApproximate(prior.asGroundedVector(D0))
         println(reducedPosterior)
     }

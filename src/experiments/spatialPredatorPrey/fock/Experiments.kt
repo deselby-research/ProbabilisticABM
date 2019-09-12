@@ -3,6 +3,7 @@ package experiments.spatialPredatorPrey.fock
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.asGroundedVector
 import deselby.fockSpace.extensions.logProb
+import deselby.fockSpace.extensions.means
 import deselby.std.Gnuplot
 import deselby.std.gnuplot
 import experiments.spatialPredatorPrey.Params
@@ -166,7 +167,7 @@ class Experiments {
         val sim = Simulation(params)
         val prior = sim.monteCarloIntegrateParallel(startState, nSamples, 8, time)
         println("prior size = ${prior.size} sum = ${prior.values.sum()}")
-        return sim.D0.mean(prior)
+        return prior.asGroundedVector(sim.D0).means()
     }
 
 

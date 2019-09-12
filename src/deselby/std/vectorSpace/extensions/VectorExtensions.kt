@@ -4,6 +4,8 @@ import deselby.std.abstractAlgebra.HasTimes
 import deselby.std.vectorSpace.*
 
 
+operator fun<BASIS> Double.times(vector: DoubleVector<BASIS>) = vector.times(this)
+
 inline fun<LBASIS,RBASIS,OBASIS> DoubleVector<LBASIS>.times(other : DoubleVector<RBASIS>, op : (LBASIS,RBASIS)->OBASIS) : MutableDoubleVector<OBASIS>
         = DoubleVector.times(this, other, op)
 

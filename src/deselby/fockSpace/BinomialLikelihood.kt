@@ -1,6 +1,6 @@
 package deselby.fockSpace
 
-import deselby.fockSpace.extensions.vectorConsumerMultiply
+import deselby.fockSpace.extensions.vectorMultiply
 import deselby.fockSpace.extensions.times
 import kotlin.math.min
 import kotlin.math.pow
@@ -44,7 +44,7 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
 
 
     operator fun times(creationVector: CreationVector<AGENT>) : FockVector<AGENT> =
-            vectorConsumerMultiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
+            vectorMultiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
 
 
     private fun modifiedGroundState(g: DeselbyGround<AGENT>) : DeselbyGround<AGENT> {

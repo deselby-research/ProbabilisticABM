@@ -1,10 +1,15 @@
 package deselby.fockSpace
 
+import deselby.fockSpace.extensions.allTermsContaining
+import deselby.fockSpace.extensions.vectorMultiply
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 
 abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
+
+    open val annihilations: Map<AGENT,Int>
+        get() = emptyMap()
 
 //    abstract fun multiplyTo(otherBasis: CreationBasis<AGENT>,
 //                            ground: Ground<AGENT>,
@@ -15,8 +20,6 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     abstract fun create(entries: Iterable<Map.Entry<AGENT,Int>>): Basis<AGENT>
     abstract fun timesAnnihilate(d: AGENT): Basis<AGENT>  // this * annihilation operator
     abstract fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer:(Basis<AGENT>, Double) -> Unit) // other^-1[this,other]
-    abstract fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit)
-    abstract fun forEachAnnihilationEntry(entryConsumer: (AGENT,Int) -> Unit)
 
     fun multiply(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         termConsumer(otherBasis * this, 1.0)
@@ -26,13 +29,6 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     fun multiply(ground: Ground<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         ground.preMultiply(this, termConsumer)
     }
-
-
-//    inline fun semicommute(basis: CreationBasis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
-//        commuteToPerturbation(basis) { perturbation, weight ->
-//            termConsumer(basis * perturbation, weight)
-//        }
-//    }
 
 
     // Performs a semi-commutation which commutes the lhs annihilations over the rhs creations:
@@ -51,14 +47,16 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 
 
     // ca semicommute CA = c[a,C]A
-    fun semicommute(vector: DoubleVector<Basis<AGENT>>): DoubleVector<Basis<AGENT>> {
-        val commutation = HashDoubleVector<Basis<AGENT>>()
-        vector.forEach { (vBasis, vWeight) ->
-            this.semicommute(vBasis) { commutedBasis, cWeight ->
-                commutation.plusAssign(commutedBasis, cWeight *vWeight)
+    fun semicommute(vector: DoubleVector<Basis<AGENT>>) : FockVector<AGENT> = vectorMultiply(this, vector, Basis<AGENT>::semicommute)
+
+
+    // ca semicommute CA = c[a,C]A
+    inline fun semicommute(creationIndex: CreationIndex<AGENT>, crossinline termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        creationIndex.allTermsContaining(this.annihilations.keys).forEach { (indexedBasis, indexedWeight) ->
+            this.semicommute(indexedBasis) { commutedBasis, commutedWeight ->
+                termConsumer(commutedBasis, commutedWeight * indexedWeight)
             }
         }
-        return commutation
     }
 
 
@@ -70,29 +68,23 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
+    fun commute(vector: DoubleVector<Basis<AGENT>>) : FockVector<AGENT> = vectorMultiply(this, vector, Basis<AGENT>::commute)
+
+
     fun operatorUnion(other: CreationBasis<AGENT>) : Basis<AGENT> {
-        return newBasis(this.creations * other.creations, this.toAnnihilationMap())
+        return newBasis(this.creations * other.creations, this.annihilations)
     }
 
 
     open fun operatorUnion(other: Basis<AGENT>) : Basis<AGENT> {
-        val annihilations = HashMap<AGENT,Int>()
-        forEachAnnihilationEntry { agent, count ->
-            annihilations[agent] = count
+        val unionAnnihilations = HashMap<AGENT,Int>()
+        annihilations.forEach { (agent, count) ->
+            unionAnnihilations[agent] = count
         }
-        other.forEachAnnihilationEntry {agent, count ->
-            annihilations.timesAssign(agent, count)
+        other.annihilations.forEach {(agent, count) ->
+            unionAnnihilations.timesAssign(agent, count)
         }
-        return newBasis(this.creations * other.creations, annihilations)
-    }
-
-
-    open fun toAnnihilationMap(): Map<AGENT,Int> {
-        val annihilations = HashMap<AGENT,Int>()
-        forEachAnnihilationEntry { agent, count ->
-            annihilations[agent] = count
-        }
-        return annihilations
+        return newBasis(this.creations * other.creations, unionAnnihilations)
     }
 
 

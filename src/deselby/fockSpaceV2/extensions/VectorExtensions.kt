@@ -48,12 +48,6 @@ operator fun<AGENT,BASIS : FockBasisVector<AGENT, BASIS>> BASIS.times(multiplier
 operator fun<BASIS : FockBasisVector<*, BASIS>> Double.times(basis : BASIS) : OneHotDoubleVector<BASIS> =
         OneHotDoubleVector(basis, this)
 
-
-operator fun<BASIS : FockBasisVector<*, BASIS>> Double.times(other : DoubleVector<BASIS>) : DoubleVector<BASIS> =
-    other * this
-
-
-
 operator fun <AGENT, OTHERBASIS : FockBasisVector<AGENT, OTHERBASIS>>
         DoubleVector<Operator<AGENT>>.times(other : DoubleVector<OTHERBASIS>) : MutableDoubleVector<OTHERBASIS> {
     val result = other.zero()

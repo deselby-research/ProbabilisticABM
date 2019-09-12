@@ -4,12 +4,8 @@ import deselby.std.vectorSpace.OneHotDoubleVector
 
 open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis<AGENT>(creations) {
 
-    override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) {
-    }
-
     override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = CreationBasis(creations * entries)
 
-    override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) { }
 
 //    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) { } // zero
 
@@ -30,12 +26,9 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 
     fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
-    override fun toAnnihilationMap(): Map<AGENT, Int> {
-        return emptyMap()
-    }
 
     override fun operatorUnion(other: Basis<AGENT>): Basis<AGENT> {
-        return newBasis(this.creations * other.creations, other.toAnnihilationMap())
+        return newBasis(this.creations * other.creations, other.annihilations)
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
