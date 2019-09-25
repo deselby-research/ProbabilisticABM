@@ -8,7 +8,7 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
     override val annihilations: Map<AGENT, Int>
 
     constructor(creations: Map<AGENT, Int>, annihilations: Map<AGENT, Int>) : super(creations) {
-  //      if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
+        if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
         this.annihilations = annihilations
     }
 

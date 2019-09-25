@@ -2,7 +2,6 @@ package experiments.spatialPredatorPrey
 
 import deselby.fockSpace.BinomialBasis
 import deselby.fockSpace.CreationBasis
-import deselby.std.gnuplot
 import experiments.spatialPredatorPrey.discreteEventABM.Agent
 import experiments.spatialPredatorPrey.discreteEventABM.Prey
 import org.junit.Test
@@ -15,8 +14,8 @@ class Experiments {
     fun testPriors() {
         val params = Params(
                 8,
-                0.1,
-                0.1,
+                0.05,
+                0.05,
                 0.03,
                 0.06,
                 1.0,
@@ -28,11 +27,13 @@ class Experiments {
         val startState = mapOf<Agent,Int>(Prey(0,0, params.GRIDSIZE) to 1)
         val startBasis = CreationBasis(startState.toFockMap())
         val time = 0.5
-        val deMeans = deExperiments.prior(startState, params, time, 1000000)
-        println(deMeans.entries.sortedByDescending { it.value })
-        val fockMeans = fockExperiments.prior(startBasis, params, time, 1000000)
-        println(fockMeans.entries.sortedByDescending { it.value })
-        fockExperiments.plot(fockMeans, params.GRIDSIZE)
+//        val deMeans = deExperiments.prior(startState, params, time, 1000000)
+//        println(deMeans.entries.sortedByDescending { it.value })
+//        val fockMeans = fockExperiments.monteCarloPrior(startBasis, params, time, 1000000)
+//        println(fockMeans.entries.sortedByDescending { it.value })
+        val reverseMeans = fockExperiments.reverseIntegralPrior(startBasis, params, time)
+        println(reverseMeans.entries.sortedByDescending { it.value })
+//        fockExperiments.plot(fockMeans, params.GRIDSIZE)
     }
 
     @Test

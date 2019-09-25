@@ -56,6 +56,10 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 
     inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
 
+    fun marginalise(activeAgents: Set<AGENT>): CreationBasis<AGENT> {
+        return CreationBasis(creations.filter {activeAgents.contains(it.key)})
+    }
+
     fun toCreationVector(weight: Double = 1.0) : CreationVector<AGENT> = OneHotDoubleVector(this, weight)
 
     fun toMutableCreationBasis() = MutableCreationBasis(this)

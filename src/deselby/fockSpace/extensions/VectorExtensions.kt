@@ -37,9 +37,9 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVec
 }
 
 
-fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
+fun<AGENT> CovariantFockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
     val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
-    forEach { entry ->
+    entries.forEach { entry ->
         entry.key.annihilations.keys.forEach { d ->
             index.getOrPut(d, { ArrayList() }).add(entry)
         }
@@ -48,14 +48,22 @@ fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
 }
 
 
-fun<AGENT> FockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
+fun<AGENT> CovariantFockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
     val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
-    forEach { entry ->
+    entries.forEach { entry ->
         entry.key.creations.keys.forEach { d ->
             index.getOrPut(d, { ArrayList() }).add(entry)
         }
     }
     return index
+}
+
+fun<AGENT> CovariantFockVector<AGENT>.stripCreations(): FockVector<AGENT> {
+    val stripped = HashFockVector<AGENT>()
+    entries.forEach { entry ->
+        stripped.plusAssign(Basis.newBasis(emptyMap(), entry.key.annihilations), entry.value)
+    }
+    return stripped
 }
 
 
@@ -70,6 +78,25 @@ fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGENT>) : 
     return commutation
 }
 
+
+inline fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGENT>, crossinline termConsumer: (Basis<AGENT>, Double) -> Unit) {
+    forEach { termBasis, termWeight ->
+        termBasis.semicommute(creationIndex) { commutedBasis, commutedWeight ->
+            termConsumer(commutedBasis, commutedWeight * termWeight)
+        }
+    }
+}
+
+
+fun<AGENT> FockVector<AGENT>.semiCommuteAndStrip(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
+    val commutation = HashFockVector<AGENT>()
+    forEach { termBasis, termWeight ->
+        termBasis.semiCommuteAndStrip(creationIndex) { commutedBasis, commutedWeight ->
+            commutation.plusAssign(commutedBasis, commutedWeight * termWeight)
+        }
+    }
+    return commutation
+}
 
 
 
@@ -97,15 +124,31 @@ operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(creationVector: Cr
     return result
 }
 
-
-operator fun<AGENT> Basis<AGENT>.times(rhs: CreationVector<AGENT>) : FockVector<AGENT> {
-    val result = HashDoubleVector<Basis<AGENT>>()
-    rhs.entries.forEach { rhsTerm ->
-        this.multiply(rhsTerm.key) { basis, weight ->
-            result.plusAssign(basis, weight*rhsTerm.value)
+operator fun<AGENT> CreationVector<AGENT>.times(creationVector: CreationVector<AGENT>) : CreationVector<AGENT> {
+    val result = HashCreationVector<AGENT>()
+    this.entries.forEach { thisTerm ->
+        creationVector.entries.forEach {otherTerm ->
+            val vectorWeight = thisTerm.value * otherTerm.value
+            thisTerm.key.multiply(otherTerm.key) { basis, weight ->
+                result.plusAssign(basis as CreationBasis<AGENT>, weight * vectorWeight)
+            }
         }
     }
     return result
+}
+
+
+operator fun<AGENT, BASIS: Ground<AGENT>> FockVector<AGENT>.times(groundedVector: GroundedVector<AGENT, BASIS>): GroundedVector<AGENT,BASIS> {
+    return GroundedVector(this.vectorMultiply<AGENT,Basis<AGENT>, CreationBasis<AGENT>, CreationBasis<AGENT>>(groundedVector.creationVector) { lhs, rhs, termConsumer ->
+        lhs.multiplyAndGround(rhs, groundedVector.ground, termConsumer)
+    }, groundedVector.ground)
+}
+
+
+fun<AGENT, BASIS: Ground<AGENT>> FockVector<AGENT>.timesAndMarginalise(groundedVector: GroundedVector<AGENT, BASIS>, activeAgents: Set<AGENT>): GroundedVector<AGENT,BASIS> {
+    return GroundedVector(this.vectorMultiply<AGENT,Basis<AGENT>, CreationBasis<AGENT>, CreationBasis<AGENT>>(groundedVector.creationVector) { lhs, rhs, termConsumer ->
+        lhs.multiplyGroundAndMarginalise(rhs, groundedVector.ground, activeAgents, termConsumer)
+    }, groundedVector.ground)
 }
 
 
@@ -114,6 +157,20 @@ operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVec
     this.entries.forEach { lhsTerm ->
         lhsTerm.key.multiply(rhs) { basis, weight ->
             result.plusAssign(basis, weight*lhsTerm.value)
+        }
+    }
+    return result
+}
+
+
+operator fun<AGENT> CovariantFockVector<AGENT>.times(rhs: CovariantFockVector<AGENT>) : FockVector<AGENT> {
+    val result = HashDoubleVector<Basis<AGENT>>()
+    this.entries.forEach { lhsTerm ->
+        rhs.entries.forEach { rhsTerm ->
+            val termWeight = lhsTerm.value * rhsTerm.value
+            lhsTerm.key.multiply(rhsTerm.key) { basis, weight ->
+                result.plusAssign(basis, weight * termWeight)
+            }
         }
     }
     return result
@@ -144,6 +201,11 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.timesApproximate(creationVector: 
         }
     }
     return result
+}
+
+
+fun<AGENT> FockVector<AGENT>.multiplyAndStrip(other: FockVector<AGENT>): FockVector<AGENT> {
+    return this.vectorMultiply(other, Basis<AGENT>::multiplyAndStrip)
 }
 
 
@@ -197,6 +259,21 @@ inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
     }
     return result
 }
+
+inline fun<AGENT, LHSBASIS: Basis<AGENT>, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
+        DoubleVector<LHSBASIS>.vectorMultiply(rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
+    val result = HashDoubleVector<OUTBASIS>()
+    this.entries.forEach { lhsTerm ->
+        rhs.entries.forEach { rhsTerm ->
+            val termWeight = lhsTerm.value * rhsTerm.value
+            multiply(lhsTerm.key, rhsTerm.key) { basis, weight ->
+                result.plusAssign(basis, weight * termWeight)
+            }
+        }
+    }
+    return result
+}
+
 
 fun<AGENT,BASIS: Ground<AGENT>> CreationVector<AGENT>.asGroundedVector(ground: BASIS) = GroundedVector(this, ground)
 

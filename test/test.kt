@@ -7,18 +7,20 @@ import deselby.std.combinatorics.combinations
 import deselby.std.gnuplot
 import deselby.std.step
 import deselby.std.vectorSpace.HashDoubleVector
+import org.apache.commons.math3.linear.SparseFieldVector
 import java.util.*
 import kotlin.math.floor
 
 
 fun main() {
-//    val a = OperatorBasis(mapOf(0 to 1), mapOf(0 to 3, 1 to 1))
-//    val b = OperatorBasis(mapOf(0 to 2, 1 to 1), mapOf(0 to 3))
+    val a = mapOf(3 to "three", 2 to "two", 6 to "six")
+    val b = listOf(3,2,6,5)
+    val v = TreeSet<Int>()
+    val w = TreeSet<Int>()
+    if(v == w) {
 
-    val a = OperatorBasis(mapOf(3 to 1), mapOf(0 to 3, 1 to 1))
-    val b = OperatorBasis(mapOf(0 to 2, 1 to 1), mapOf(3 to 1))
+    }
 
-    val commutation = HashDoubleVector<Basis<Int>>()
-    a.semicommute(b, commutation::plusAssign)
-    println(commutation)
+
+
 }

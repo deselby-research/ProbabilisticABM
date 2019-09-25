@@ -62,7 +62,7 @@ class FockSpaceVectorTest {
         println("startState = $startState")
         println("H = $H")
         println("reduced H = $reducedHamiltonian")
-        println("hIndex = $hIndex")
+        println("haIndex = $hIndex")
 
         var p = startState.toCreationVector()
         p = p.asGroundedVector(D0).integrate(H, 20.0, 0.001, 1e-12)

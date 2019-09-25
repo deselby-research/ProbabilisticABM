@@ -10,7 +10,7 @@ object FockSIR {
 
     fun posterior(observations : Array<Int>, observationInterval: Double, params: SIRParams, r: Double) {
 
-        var D0 = DeselbyGround(mapOf(0 to 40.0, 1 to 7.0)) // initial prior
+        var D0 = DeselbyGround(mapOf(0 to 40.0, 1 to 7.0)) // initial monteCarloPrior
         var p : CreationVector<Int> = Basis.identityCreationVector<Int>()
         val hamiltonian = Hamiltonian(params)
 
@@ -54,7 +54,7 @@ object FockSIR {
 
     fun monteCarloPosterior(observations : Array<Int>, observationInterval: Double, params: SIRParams, r: Double) {
 
-        val D0 = DeselbyGround(mapOf(0 to 40.0, 1 to 7.0)) // initial prior
+        val D0 = DeselbyGround(mapOf(0 to 40.0, 1 to 7.0)) // initial monteCarloPrior
         val sample = Basis.identity<Int>()
         var posterior = sample.asGroundedBasis(D0)
         var forecast  = Basis.identityCreationVector<Int>()

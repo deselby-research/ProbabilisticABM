@@ -7,7 +7,7 @@ import deselby.std.FallingFactorial
 object DeselbySIR {
     fun posterior(observations: Array<Int>, observationInterval: Double, params: SIRParams, r: Double) {
 
-        var p = DeselbyDistribution(listOf(params.lambdaS, params.lambdaI)) // initial prior
+        var p = DeselbyDistribution(listOf(params.lambdaS, params.lambdaI)) // initial monteCarloPrior
         for (nObs in 0 until observations.size) {
             p = p.binomialObserve(r, observations[nObs], 1) //.truncateBelow(1e-5)
             p.renormalise()
@@ -22,7 +22,7 @@ object DeselbySIR {
     }
 
     fun prior(params: SIRParams, T: Double) {
-        var p = DeselbyDistribution(listOf(params.lambdaS, params.lambdaI)) // initial prior
+        var p = DeselbyDistribution(listOf(params.lambdaS, params.lambdaI)) // initial monteCarloPrior
         p = p.integrate({ SIRHamiltonian(params, it) }, T, 0.01)
         println(p)
         println("means = (${p.mean(0)}, ${p.mean(1)}")

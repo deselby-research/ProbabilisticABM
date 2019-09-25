@@ -19,15 +19,53 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     abstract fun create(d: AGENT, n: Int=1): Basis<AGENT>
     abstract fun create(entries: Iterable<Map.Entry<AGENT,Int>>): Basis<AGENT>
     abstract fun timesAnnihilate(d: AGENT): Basis<AGENT>  // this * annihilation operator
-    abstract fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer:(Basis<AGENT>, Double) -> Unit) // other^-1[this,other]
+    abstract fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer:(Basis<AGENT>, Double) -> Unit) // other^-1*this.creations^-1[this,other]
 
-    fun multiply(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-        termConsumer(otherBasis * this, 1.0)
+//    fun multiply(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+//        termConsumer(otherBasis * this, 1.0)
+//        semicommute(otherBasis, termConsumer)
+//    }
+
+    fun multiply(otherBasis: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        termConsumer(this.operatorUnion(otherBasis), 1.0)
         semicommute(otherBasis, termConsumer)
+    }
+
+
+    fun multiplyAndStrip(rhs: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        termConsumer(newBasis(emptyMap(), this.annihilations.times(rhs.annihilations)), 1.0)
+        semiCommuteAndStrip(rhs, termConsumer)
     }
 
     fun multiply(ground: Ground<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         ground.preMultiply(this, termConsumer)
+    }
+
+    inline fun multiplyAndGround(rhs: CreationBasis<AGENT>, ground: Ground<AGENT>, crossinline termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        multiply(rhs) { prodBasis, prodWeight ->
+            ground.preMultiply(prodBasis) { groundedBasis, groundedWeight ->
+                termConsumer(groundedBasis, groundedWeight * prodWeight)
+            }
+        }
+    }
+
+    inline fun multiplyGroundAndMarginalise(rhs: CreationBasis<AGENT>, ground: Ground<AGENT>, activeAgents: Set<AGENT>, crossinline termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        multiply(rhs) { prodBasis, prodWeight ->
+            ground.preMultiply(prodBasis) { groundedBasis, groundedWeight ->
+                termConsumer(groundedBasis.marginalise(activeAgents), groundedWeight * prodWeight)
+            }
+        }
+    }
+
+
+    operator fun times(rhs: CreationVector<AGENT>) : FockVector<AGENT> {
+        val result = HashDoubleVector<Basis<AGENT>>()
+        rhs.entries.forEach { rhsTerm ->
+            this.multiply(rhsTerm.key) { basis, weight ->
+                result.plusAssign(basis, weight*rhsTerm.value)
+            }
+        }
+        return result
     }
 
 
@@ -71,8 +109,71 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     fun commute(vector: DoubleVector<Basis<AGENT>>) : FockVector<AGENT> = vectorMultiply(this, vector, Basis<AGENT>::commute)
 
 
-    fun operatorUnion(other: CreationBasis<AGENT>) : Basis<AGENT> {
-        return newBasis(this.creations * other.creations, this.annihilations)
+    inline fun semiCommuteAndStrip(creationIndex: CreationIndex<AGENT>, crossinline termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        creationIndex.allTermsContaining(this.annihilations.keys).forEach { (indexedBasis, indexedWeight) ->
+            this.semiCommuteAndStrip(indexedBasis) { commutedBasis, commutedWeight ->
+                termConsumer(commutedBasis, commutedWeight * indexedWeight)
+            }
+        }
+    }
+
+    fun semiCommuteAndStrip(rhs: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        val creationOrder = rhs.creations.values.sum()
+        if(creationOrder > 2) TODO("Not implemented")
+        val ann = this.annihilations
+        when {
+            creationOrder == 0 -> return
+
+            creationOrder == 1 -> {
+                val d = rhs.creations.keys.first()
+                val m = ann[d]
+                if (m != null) {
+                    val annUnion = HashMap<AGENT,Int>(rhs.annihilations)
+                    annUnion.timesAssign(ann)
+                    annUnion.timesAssign(d, -1)
+                    termConsumer(newBasis(emptyMap(), annUnion), m.toDouble())
+                }
+            }
+
+            rhs.creations.size == 2 -> {
+                val d1 = rhs.creations.keys.first()
+                val m1 = ann[d1]
+                val d2 = rhs.creations.keys.last()
+                val m2 = ann[d2]
+                if (m1 != null) {
+                    val annUnion = HashMap<AGENT,Int>(rhs.annihilations)
+                    annUnion.timesAssign(ann)
+                    val annminusd1 = annUnion.times(d1, -1)
+                    termConsumer(newBasis(emptyMap(), annminusd1), m1.toDouble())
+                    if (m2 != null) {
+                        termConsumer(newBasis(emptyMap(), annUnion.times(d2, -1)), m2.toDouble())
+                        termConsumer(newBasis(emptyMap(), annminusd1.times(d2, -1)), (m1 * m2).toDouble())
+                    }
+                } else if (m2 != null) {
+                    val annUnion = HashMap<AGENT,Int>(rhs.annihilations)
+                    annUnion.timesAssign(ann)
+                    annUnion.timesAssign(d2, -1)
+                    termConsumer(newBasis(emptyMap(), annUnion), m2.toDouble())
+                }
+            }
+
+            else -> {
+                // must be reflexive
+                val d = rhs.creations.keys.first()
+                val m = ann[d]
+                if (m != null) {
+                    val annUnion = HashMap<AGENT, Int>(rhs.annihilations)
+                    annUnion.timesAssign(ann)
+                    termConsumer(newBasis(emptyMap(), annUnion.times(d, -1)), 2.0 * m)
+                    if (m > 1) termConsumer(newBasis(emptyMap(), annUnion.times(d, -2)), (m * (m - 1)).toDouble())
+                }
+            }
+        }
+    }
+
+
+    fun commuteAndGround(rhs: CreationBasis<AGENT>, D0: Ground<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+
     }
 
 
@@ -97,7 +198,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
-    fun toVector(weight: Double = 1.0) = OneHotDoubleVector(this, weight)
+    fun toVector(weight: Double = 1.0): FockVector<AGENT> = OneHotDoubleVector(this, weight)
 
     override fun toString(): String {
         return buildString {
@@ -131,6 +232,10 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
                 else -> OperatorBasis(creations, annihilations)
             }
         }
+
+        fun<AGENT> create(d: AGENT) = CreationBasis(mapOf(d to 1))
+
+        fun<AGENT> annihilate(d: AGENT) = ActionBasis(emptyMap(), d)
 
         inline fun<AGENT> Collection<AGENT>.toCountMap(): Map<AGENT,Int> {
             return when(size) {

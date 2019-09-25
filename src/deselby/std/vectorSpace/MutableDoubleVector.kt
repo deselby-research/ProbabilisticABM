@@ -1,5 +1,7 @@
 package deselby.std.vectorSpace
 
+import kotlin.math.absoluteValue
+
 interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector<BASIS> {
 //    val coeffs : MutableMap<BASIS, Double>
 
@@ -37,6 +39,14 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
         }
     }
 
+    fun plusAssign(basis : BASIS, increment : Double, smallestNotZero: Double) {
+        if(increment == 0.0) return
+        merge(basis , increment) {a , b ->
+            val newVal = a + b
+            if(newVal.absoluteValue < smallestNotZero) null else newVal
+        }
+    }
+
 
     // value of entry should be non-zero!
     operator fun minusAssign(entry : Map.Entry<BASIS,Double>) {
@@ -44,5 +54,9 @@ interface MutableDoubleVector<BASIS> : MutableVector<BASIS,Double>, DoubleVector
             val newVal = a + b
             if(newVal == 0.0) null else newVal
         }
+    }
+
+    fun truncateBelow(smallestCoefficient: Double) {
+        entries.removeAll { it.value.absoluteValue < smallestCoefficient }
     }
 }

@@ -1,21 +1,84 @@
 package experiments.spatialPredatorPrey.fock
 
 import deselby.fockSpace.*
-import deselby.fockSpace.extensions.asGroundedVector
-import deselby.fockSpace.extensions.logProb
-import deselby.fockSpace.extensions.means
+import deselby.fockSpace.extensions.*
 import deselby.std.Gnuplot
-import deselby.std.gnuplot
 import experiments.spatialPredatorPrey.Params
 import experiments.spatialPredatorPrey.SmallParams
 import experiments.spatialPredatorPrey.StandardParams
 import org.junit.Test
+import kotlin.math.absoluteValue
 import kotlin.math.exp
 import kotlin.math.ln
 
 class Experiments {
 
     val gp = Gnuplot()
+
+    @Test
+    fun reverseExponentialComposition() {
+        val time = 0.1
+        val sim = Simulation(SmallParams)
+        val a = Basis.annihilate<Agent>(Predator(0))
+        val b = Basis.annihilate<Agent>(Prey(1))
+        val ab = Basis.newBasis(emptyMap(),mapOf(Prey(1) as Agent to 1, Predator(0) as Agent to 1))
+        val Eab = sim.reverseExponential(ab, time,6)
+        val EabD = Eab * sim.D0
+        println("Sum of EabD = ${EabD.values.sum()}")
+        val Ea = sim.reverseExponential(a, time,6)
+        println("Ea size = ${Ea.size}")
+        val Eb = sim.reverseExponential(b, time,6)
+        println("Eb size = ${Eb.size}")
+        val EaD = Ea * sim.D0
+//        val EbEaD = Eb * EaD *sim.D0
+//        println("EbEaD size = ${EbEaD.size}")
+//        println("EbEaD sum = ${EbEaD.values.sum()}")
+        val EbD = Eb * sim.D0
+//        val EaEbD = Ea * EbD *sim.D0
+//        println("EaEbD size = ${EaEbD.size}")
+//        println("EaEbD sum = ${EaEbD.values.sum()}")
+        val prodOfSums = EaD.values.sum()*EbD.values.sum()
+//        println("product of sums = ${prodOfSums}")
+//        val commutationD = EaEbD - EbEaD
+//        println("commutation size = ${commutationD.size}")
+//        val commutationSum = commutationD.values.sum()
+//        println("commutation sum = ${commutationSum}")
+//        println("commutation norm = ${commutationD.normL1()}")
+//        println("composed sum = ${prodOfSums + commutationSum}")
+
+        val EaStripped = Ea.stripCreations()
+        val semicommutation = EaStripped.semicommute(EbD.toCreationIndex()) * sim.D0
+        println("semiommutation size = ${semicommutation.size}")
+        println("semi-composed sum = ${prodOfSums + semicommutation.values.sum()}")
+    }
+
+
+    @Test
+    fun reverseSumIntegrationWithStripping() {
+        val time = 0.5
+        val sim = Simulation(StandardParams)
+//        val a = Basis.annihilate<Agent>(Predator(0))
+//        val a = Basis.annihilate<Agent>(Prey(1))
+        val a = Basis.newBasis(emptyMap(),mapOf(Prey(1) as Agent to 1, Predator(0) as Agent to 1))
+
+        val marginalIntegral = sim.reverseExponential(a, time, 8,true)
+        println(marginalIntegral.size)
+    }
+
+
+    @Test
+    fun reverseMarginalisedIntegration() {
+        val time = 0.5
+        val sim = Simulation(StandardParams)
+//        val a = Basis.annihilate<Agent>(Predator(0))
+//        val b = Basis.annihilate<Agent>(Prey(1))
+//        val ab = Basis.newBasis(emptyMap(),mapOf(Prey(1) as Agent to 1, Predator(0) as Agent to 1))
+
+//        val marginalIntegral = sim.reverseMarginalisedIntegrate(listOf(Predator(0), Prey(1), Predator(2)), time)
+        val marginalIntegral = sim.reverseMarginalisedIntegrate(listOf(Predator(0)), time)
+        println(marginalIntegral.size)
+    }
+
 
     @Test
     fun simulate() {
@@ -45,7 +108,7 @@ class Experiments {
         val observations = ObservationGenerator.generate(sim.params, pObserve, nObservations, obsInterval)
 
         println("observations = ${observations}")
-        println("prior ground = ${sim.D0}")
+        println("monteCarloPrior ground = ${sim.D0}")
 
         val nSamples = 500000
         observations.forEach { (realState, observedState) ->
@@ -89,7 +152,7 @@ class Experiments {
         sim.setLambdas { 1e-6 }
 
         println("observations = ${observations}")
-        println("prior ground = ${sim.D0}")
+        println("monteCarloPrior ground = ${sim.D0}")
         println("initial state = ${observations[0].real}")
 
         val nSamples = 20000
@@ -163,18 +226,25 @@ class Experiments {
     }
 
 
-    fun prior(startState: CreationBasis<Agent>, params: Params, time: Double, nSamples: Int): Map<Agent, Double> {
+    fun monteCarloPrior(startState: CreationBasis<Agent>, params: Params, time: Double, nSamples: Int): Map<Agent, Double> {
         val sim = Simulation(params)
         val prior = sim.monteCarloIntegrateParallel(startState, nSamples, 8, time)
-        println("prior size = ${prior.size} sum = ${prior.values.sum()}")
+        println("monteCarloPrior size = ${prior.size} sum = ${prior.values.sum()}")
         return prior.asGroundedVector(sim.D0).means()
+    }
+
+
+    fun reverseIntegralPrior(startState: CreationBasis<Agent>, params: Params, time: Double): Map<Agent, Double> {
+        val sim = Simulation(params)
+        val prior = sim.reverseIntegrateToBasis(startState, time)
+        return prior.lambdas
     }
 
 
     fun posterior(startState: CreationBasis<Agent>, params: Params, observations: BinomialBasis<Agent>, time: Double, nSamples: Int): Map<Agent, Double> {
         val sim = Simulation(params)
         val prior = sim.monteCarloIntegrateParallel(startState, nSamples, 8, time)
-        println("prior size = ${prior.size} sum = ${prior.values.sum()}")
+        println("monteCarloPrior size = ${prior.size} sum = ${prior.values.sum()}")
         val posterior = observations.timesApproximate(prior.asGroundedVector(sim.D0))
         return posterior.ground.lambdas.mapValues { it.value + posterior.basis[it.key] }
     }

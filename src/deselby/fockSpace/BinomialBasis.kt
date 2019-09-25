@@ -12,7 +12,7 @@ import kotlin.math.pow
 class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int>) {
     val pNotObserve = 1.0 - pObserve
 
-    // calculates the (unnormalised) prior probability of the observations
+    // calculates the (unnormalised) monteCarloPrior probability of the observations
     // which is the product over i of ((1-pObserve)lambda_i)^m_i
     //
     fun times(D0: DeselbyGround<AGENT>): DeselbyGround<AGENT> {
@@ -24,9 +24,10 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
     }
 
 
+    // finds the basis that minimises the KL divergence with this likelihood times prior
     fun timesApproximate(prior: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedBasis<AGENT,DeselbyGround<AGENT>> {
 //        val filteredMap = HashMap<CreationBasis<AGENT>,Double>()
-//        prior.creationVector.filterTo(filteredMap) {abs(it.value) < 1e-5}
+//        monteCarloPrior.creationVector.filterTo(filteredMap) {abs(it.value) < 1e-5}
 //        val filteredPrior = HashCreationVector(filteredMap)
         val cPrimes = reweight(prior)
         val basisFit = calcBasisFit(prior.creationVector)
@@ -81,6 +82,7 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
 
     // Calculates the log likelihood of the observations in this
     // for the supplied 'concreteState'
+    // TODO: Doesn't this assume lambda=0?
     fun logLikelihood(concreteState: CreationBasis<AGENT>, allAgents: Iterable<AGENT>) : Double {
         var l = 0.0
 //        val allAgents = observations.keys.times(concreteState.creations.keys)

@@ -1,5 +1,7 @@
 package deselby.std.combinatorics
 
+import org.apache.commons.math3.util.CombinatoricsUtils
+
 //inline fun<reified T> Sequence<Sequence<T>>.combinations() : Sequence<List<T>> {
 //    val size = this.count()
 //    val sequenceIt = this.iterator()
@@ -28,4 +30,8 @@ inline fun<reified T> Collection<Iterable<T>>.combinations() : Sequence<List<T>>
     return object : Sequence<List<T>> {
         override fun iterator() = CombinationIterator(this@combinations, iterators, firstCombination)
     }
+}
+
+fun Int.choose(m: Int): Long {
+    return CombinatoricsUtils.binomialCoefficient(this, m)
 }

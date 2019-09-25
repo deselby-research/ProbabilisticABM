@@ -5,35 +5,36 @@ import deselby.fockSpace.extensions.times
 import kotlin.math.min
 import kotlin.math.pow
 
-// Represents the likelihood of occupation number, nAnnihilations, given a probability
-// of detection, p, and an observed number, nCreations.
-// A probability of 0.0 and an observation of 0 is equivalent to no observation
+// Represents the likelihood of occupation number, n, given a probability
+// of detection, pObserve, and an observed number, nObserved.
+// A pObserve of 0.0 and an observation of 0 is equivalent to no observation
 //
-// P(nAnnihilations|p,nCreations) \propto nAnnihilations!/((nAnnihilations-nCreations)!nCreations!) p^nCreations(1-p)^{nAnnihilations-nCreations}
+// P(n|p,nObserved) \propto n!/((n-nObserved)!nObserved!) p^nObserved(1-p)^{n-nObserved}
 //
 // Only implementing pre-multiplication with Deselby for now
 //
 // Implementation uses the strange fact that the coefficients of a Binomial, B, times
-// a Deselby basis, D, are the same as
-// B_m D_n = (1-p)^nAnnihilations a*^nCreations a^nCreations D_n
+// a Deselby basis, D, are, when expressed as Deselby bases, the same as
+// B_m D_n = (1-p)^n a*^nObservations a^nObservations D_n
 // this works for both Deselby and delta ground!
 ////////////////////////////////////////////////////
 class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObserved : Int) {
 
     val amamBasis = Basis.newBasis(mapOf(d to nObserved), mapOf(d to nObserved))
 
-    operator fun times(fock: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedVector<AGENT, DeselbyGround<AGENT>> {
-        val newGround = modifiedGroundState(fock.ground)
-        val creationState = this * fock.creationVector * newGround
+    // returns the posterior for the given prior
+    operator fun times(prior: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedVector<AGENT, DeselbyGround<AGENT>> {
+        val newGround = modifiedGroundState(prior.ground)
+        val creationState = this * prior.creationVector * newGround
         val normalisedState = creationState / creationState.values.sum()
         return GroundedVector(normalisedState, newGround)
     }
 
     // Implementation of identity
-    // B_{p,nCreations}(k) * D_{nAnnihilations,l}(k) = (1-p)^nAnnihilations\sum_q c_q D_{nAnnihilations+nCreations-q,(1-p)l}
+    // B_{p,nObserved}(k) * D_{n,l}(k) = (1-p)^n\sum_q c_q D_{n+nObserved-q,(1-p)l}
     // where
-    // c_0 = l^nCreations
-    // c_{q+1} = (nCreations-q)(nAnnihilations-q)/((q+1)l) c_q
+    // c_0 = l^nObserved
+    // c_{q+1} = (nObserved-q)(n-q)/((q+1)l) c_q
     operator fun times(deselby: GroundedBasis<AGENT,DeselbyGround<AGENT>>): GroundedVector<AGENT, DeselbyGround<AGENT>> {
         val perturbationState = HashCreationVector<AGENT>()
         val newGround = modifiedGroundState(deselby.ground)
@@ -43,8 +44,8 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
     }
 
 
-    operator fun times(creationVector: CreationVector<AGENT>) : FockVector<AGENT> =
-            vectorMultiply(this, creationVector, BinomialLikelihood<AGENT>::multiply)
+    operator fun times(prior: CreationVector<AGENT>) : FockVector<AGENT> =
+            vectorMultiply(this, prior, BinomialLikelihood<AGENT>::multiply)
 
 
     private fun modifiedGroundState(g: DeselbyGround<AGENT>) : DeselbyGround<AGENT> {
@@ -53,10 +54,11 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
         return DeselbyGround(newLambda)
     }
 
-
-    fun multiply(otherCreations: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-        val multiplier = (1.0-pObserve).pow(otherCreations[d])
-        amamBasis.multiply(otherCreations) {basis , weight ->
+    // returns a FockVector that, when grounded on a modified ground state (i.e. updated lambdas),
+    // gives the (un-normalised) posterior
+    fun multiply(prior: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
+        val multiplier = (1.0-pObserve).pow(prior[d])
+        amamBasis.multiply(prior) { basis, weight ->
             termConsumer(basis, weight*multiplier)
         }
     }
@@ -79,15 +81,5 @@ class BinomialLikelihood<AGENT>(val d : AGENT, val pObserve : Double, val nObser
         }
         return sum
     }
-
-//    data class Coefficient(val c: Double, val q: Int)
-//
-//    fun productCoefficients(nAnnihilations: Int, nCreations: Int, lambda: Double) =
-//            generateSequence(Coefficient((1.0-pObserve).pow(nAnnihilations)*lambda.pow(nCreations), 0)) {
-//                if(it.q == nAnnihilations || it.q == nCreations) return@generateSequence null
-//                val newq = it.q+1
-//                Coefficient(it.c*(nAnnihilations-it.q)*(nCreations-it.q)/(newq*lambda), newq)
-//            }
-//
 
 }
