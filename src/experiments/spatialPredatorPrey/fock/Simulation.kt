@@ -7,6 +7,7 @@ import deselby.fockSpace.extensions.toAnnihilationIndex
 import deselby.fockSpace.extensions.toCreationIndex
 import deselby.std.vectorSpace.SamplableDoubleVector
 import experiments.phasedMonteCarlo.monteCarlo
+import experiments.reverseSummation.reversePosteriorMean
 import experiments.spatialPredatorPrey.Params
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -106,7 +107,8 @@ class Simulation {
 
     fun reverseIntegrateToBasis(startState: CreationBasis<Agent>, integrationTime: Double) =
             DeselbyGround(D0.lambdas.keys.associateWith {
-                reverseIntegrateToBasis(it, startState, integrationTime) })
+                reverseIntegrateToBasis(it, startState, integrationTime)
+            })
 
 
     // calculates sum a_d exp(Ht) startState
@@ -122,9 +124,9 @@ class Simulation {
         while (increment.absoluteValue > 0.001) {
             ++i
             val nextTerm = HashFockVector<Agent>()
-            val taylorWeight = integrationTime/i
+            val taylorWeight = integrationTime / i
             ithTerm.semicommute(hcIndex) { basis, weight ->
-                nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight*taylorWeight)
+                nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight * taylorWeight)
 //                nextTerm.plusAssign(basis, weight*taylorWeight) // without stripping
             }
             ithTerm = nextTerm
@@ -155,12 +157,12 @@ class Simulation {
         while (increment.absoluteValue > 0.001) {
             ++i
             val nextTerm = HashFockVector<Agent>()
-            val taylorWeight = integrationTime/i
+            val taylorWeight = integrationTime / i
             ithTerm.semicommute(hcIndex) { basis, weight ->
-                if(stripCreations)
-                    nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight*taylorWeight)
+                if (stripCreations)
+                    nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight * taylorWeight)
                 else
-                    nextTerm.plusAssign(basis, weight*taylorWeight)
+                    nextTerm.plusAssign(basis, weight * taylorWeight)
             }
             ithTerm = nextTerm
             // Truncate small terms
@@ -183,14 +185,14 @@ class Simulation {
         val exponential = HashFockVector<Agent>()
         var ithTerm = a.toVector()
         exponential += ithTerm
-        for(i in 1..order) {
+        for (i in 1..order) {
             val nextTerm = HashFockVector<Agent>()
-            val taylorWeight = integrationTime/i
+            val taylorWeight = integrationTime / i
             ithTerm.semicommute(hcIndex) { basis, weight ->
-                if(stripCreations)
-                    nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight*taylorWeight)
+                if (stripCreations)
+                    nextTerm.plusAssign(Basis.newBasis(emptyMap(), basis.annihilations), weight * taylorWeight)
                 else
-                    nextTerm.plusAssign(basis, weight*taylorWeight)
+                    nextTerm.plusAssign(basis, weight * taylorWeight)
             }
             ithTerm = nextTerm
             // Truncate small terms
@@ -220,13 +222,13 @@ class Simulation {
         while (increment > 0.001) {
             ++i
             val nextTerm = HashFockVector<Agent>()
-            val taylorWeight = integrationTime/i
+            val taylorWeight = integrationTime / i
             ithTerm.semicommute(hcIndex) { basis, weight ->
-                val creations = HashMap<Agent,Int>()
+                val creations = HashMap<Agent, Int>()
                 notMarginalised.forEach { retainedAgent ->
                     basis.creations[retainedAgent]?.also { creations[retainedAgent] = it }
                 }
-                nextTerm.plusAssign(Basis.newBasis(creations, basis.annihilations), weight*taylorWeight)
+                nextTerm.plusAssign(Basis.newBasis(creations, basis.annihilations), weight * taylorWeight)
             }
 
             // Truncate small terms
@@ -239,7 +241,7 @@ class Simulation {
 //            }
 
             nextTerm.entries.removeAll { term ->
-                (0.25).pow(term.key.annihilations.size)*term.value < 1e-6
+                (0.25).pow(term.key.annihilations.size) * term.value < 1e-6
             }
 
             val leadingHTerm = marginalisedH * ithTerm
@@ -254,8 +256,8 @@ class Simulation {
 
     fun marginaliseCreations(vec: FockVector<Agent>, notMarginalised: List<Agent>): FockVector<Agent> {
         val marginalisation = HashFockVector<Agent>()
-        vec.forEach {(basis, weight) ->
-            val creations = HashMap<Agent,Int>()
+        vec.forEach { (basis, weight) ->
+            val creations = HashMap<Agent, Int>()
             notMarginalised.forEach { retainedAgent ->
                 basis.creations[retainedAgent]?.also { creations[retainedAgent] = it }
             }
@@ -264,4 +266,17 @@ class Simulation {
         return marginalisation
     }
 
+    fun reversePosterior(startState: CreationBasis<Agent>, observations: BinomialBasis<Agent>, time: Double, expansionOrder: Int): GroundedBasis<Agent,DeselbyGround<Agent>> {
+        val means = HashMap<Agent, Double>()
+
+        D0.lambdas.forEach { (d, lambdad) ->
+//            println("calculating agent $d")
+            val desiredExpectation = Basis.annihilate(d).toVector()
+            means[d] = desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
+        }
+
+        val groundBasis = CreationBasis(observations.observations.filterValues { it != 0 })
+        val newGround = DeselbyGround(means.mapValues { (d, mean) -> mean - groundBasis[d] })
+        return groundBasis.asGroundedBasis(newGround)
+    }
 }

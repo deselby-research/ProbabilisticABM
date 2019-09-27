@@ -1,7 +1,6 @@
 package deselby.fockSpace.extensions
 
 import deselby.fockSpace.*
-import deselby.std.extensions.asBiconsumer
 import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
@@ -152,6 +151,17 @@ fun<AGENT, BASIS: Ground<AGENT>> FockVector<AGENT>.timesAndMarginalise(groundedV
 }
 
 
+fun<AGENT> FockVector<AGENT>.timesAndMarginalise(groundedBasis: Ground<AGENT>, activeAgents: Set<AGENT>): CreationVector<AGENT> {
+    val marginalisation = HashCreationVector<AGENT>()
+    this.forEach {(basis, weight) ->
+        groundedBasis.preMultiply(basis) { groundedBasis, groundedWeight ->
+            marginalisation.plusAssign(groundedBasis.marginalise(activeAgents), groundedWeight * weight)
+        }
+    }
+    return marginalisation
+}
+
+
 operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVector<AGENT> {
     val result = HashDoubleVector<Basis<AGENT>>()
     this.entries.forEach { lhsTerm ->
@@ -180,7 +190,7 @@ operator fun<AGENT> CovariantFockVector<AGENT>.times(rhs: CovariantFockVector<AG
 operator fun<AGENT> FockVector<AGENT>.times(rhs: Basis<AGENT>) : FockVector<AGENT> {
     val multiplied = HashDoubleVector<Basis<AGENT>>()
     this.forEach { (thisBasis, thisWeight) ->
-        multiplied.plusAssign(thisBasis.operatorUnion(rhs), thisWeight)
+        multiplied.plusAssign(thisBasis.union(rhs), thisWeight)
         thisBasis.semicommute(rhs) { commutedBasis, cWeight ->
             multiplied.plusAssign(commutedBasis, cWeight * thisWeight)
         }

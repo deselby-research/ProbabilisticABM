@@ -18,7 +18,7 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
 
     override fun timesAnnihilate(d: AGENT) = OperatorBasis(creations, annihilations.times(d,1))
 
-    // ca commuteToPerturbation C = (C^-1)c[a,C]
+    // ca commuteToPerturbation C = (C^-1)[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val annihilationIterator = annihilations.iterator()
         val commutationSequences = Array(annihilations.size) {
@@ -35,7 +35,7 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
                 if(caPair.nAnnihilations != 0) termAnnihilations[caPair.d] = caPair.nAnnihilations
                 weight *= caPair.weight
             }
-            val termBasis = newBasis(creations * termCreations, termAnnihilations)
+            val termBasis = newBasis(termCreations, termAnnihilations)
             termConsumer(termBasis, weight)
         }
     }

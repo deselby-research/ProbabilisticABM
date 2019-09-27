@@ -63,6 +63,8 @@ class SIRTests {
             sum = reducedExpansion.values.sum()
             println("F$m size = ${Fexpansion.size}")
             println("expansion sum = $sum")
+            println("groundedSum = ${(Fexpansion * F0.asGroundedBasis(D0)).values.sum()}")
+            println("termsum = ${(fcm * F0.asGroundedBasis(D0)).values.sum()}")
             println("norm = ${reducedExpansion.normL1()}")
         }
         assert((sum - 18.59206120519).absoluteValue < 1e-10)
@@ -70,7 +72,37 @@ class SIRTests {
 
 
     @Test
-    fun posteriorTest() {
+    fun reverseIntegrateAndSumTest() {
+        val T = 1.0
+        val observable = ActionBasis(emptyMap(),0).toVector()
+        val sum = observable.reverseIntegrateAndSum(H.toCreationIndex(), T, F0.asGroundedBasis(D0), 1e-11)
+        println("sum = $sum")
+        assert((sum - 18.59206120519).absoluteValue < 1e-10)
+    }
+
+    @Test
+    fun packagedPosteriorTest() {
+        val T = 1.0
+        val pObserve = 0.9
+        val nObserved = 8
+
+        val observable = Basis.newBasis(emptyMap(),mapOf(0 to 1)).toVector()
+        val observation = BinomialBasis(pObserve, mapOf(1 to nObserved))
+        val posterior = observable.reversePosteriorMean(
+                H.toCreationIndex(),
+                H.toAnnihilationIndex(),
+                H,
+                T,
+                F0.asGroundedBasis(D0),
+                observation,
+                15
+        )
+        println("posterior = $posterior")
+        assert((posterior - 18.39639407602808).absoluteValue < 1e-10)
+    }
+
+    @Test
+    fun longhandPosteriorTest() {
         val T = 1.0
         val n = 500
         val pObserve = 0.9
@@ -86,7 +118,7 @@ class SIRTests {
         println("Integral posterior mean S = $integralMean")
 
         var fcm = Basis.newBasis(emptyMap(),mapOf(0 to 1, 1 to nObserved)).toVector()* exp(-T)// as DoubleVector<Basis<Int>>
-        val LgcommuteH = LgOperator(1, pObserve).commute(H)
+        val LgcommuteH = LgOperator(setOf(1), pObserve).commute(H)
         val Fexpansion = HashDoubleVector(fcm)
         val hIndex = H.toCreationIndex()
         println("LgCommuteH = $LgcommuteH")
@@ -113,6 +145,9 @@ class SIRTests {
             println("expansion sum = $normSum")
         }
         println("Posterior = ${sum/normSum}")
+        val difference = (sum/normSum)/integralMean
+        println("ratio of forward and reverse integrals (should be 1.0) = $difference")
+        assert((difference - 1.0).absoluteValue < 1e-4)
     }
 
 

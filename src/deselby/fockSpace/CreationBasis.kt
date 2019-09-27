@@ -27,8 +27,12 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
 
-    override fun operatorUnion(other: Basis<AGENT>): Basis<AGENT> {
+    override fun union(other: Basis<AGENT>): Basis<AGENT> {
         return newBasis(this.creations * other.creations, other.annihilations)
+    }
+
+    fun union(other: CreationBasis<AGENT>): CreationBasis<AGENT> {
+        return CreationBasis(this.creations * other.creations)
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
@@ -54,7 +58,7 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
         return(CreationBasis(newCreations))
     }
 
-    inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
+//    inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
 
     fun marginalise(activeAgents: Set<AGENT>): CreationBasis<AGENT> {
         return CreationBasis(creations.filter {activeAgents.contains(it.key)})

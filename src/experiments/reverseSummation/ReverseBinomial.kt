@@ -19,7 +19,7 @@ class ReverseBinomial {
         val n = 4
         var aHi = a
         // [AG,H] = [A,H]G + A[G,H]
-        val LgcommuteH = LgOperator(d, 0.5).commute(sim.H)
+        val LgcommuteH = LgOperator(setOf(d), 0.5).commute(sim.H)
         println(LgcommuteH.size)
         println(LgcommuteH)
         for(i in 1..n) {

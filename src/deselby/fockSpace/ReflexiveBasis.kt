@@ -12,8 +12,8 @@ class ReflexiveBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AG
     // ca commuteToPerturbation C = (C^-1)c[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val m = basis.creations[d]?:return
-        termConsumer(ActionBasis(creations.times(d,-1), d), 2.0*m)
-        if(m>1) termConsumer(CreationBasis(creations.times(d,-2)), (m*(m-1)).toDouble())
+        termConsumer(ActionBasis(mapOf(d to -1), d), 2.0*m)
+        if(m>1) termConsumer(CreationBasis(mapOf(d to -2)), (m*(m-1)).toDouble())
     }
 
 

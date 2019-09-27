@@ -16,6 +16,8 @@ class SmallTest {
 
     // Calculate |a_i H F| where the norm is the sum of coefficients
 
+
+
     @Test
     fun proofOfConcept() {
         val aH = H.annihilate(0)

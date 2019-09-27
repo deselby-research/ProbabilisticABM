@@ -3,17 +3,65 @@ package experiments.spatialPredatorPrey.fock
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
 import deselby.std.Gnuplot
+import experiments.reverseSummation.reverseIntegrateAndSum
 import experiments.spatialPredatorPrey.Params
 import experiments.spatialPredatorPrey.SmallParams
 import experiments.spatialPredatorPrey.StandardParams
+import experiments.spatialPredatorPrey.TenByTenParams
 import org.junit.Test
 import kotlin.math.absoluteValue
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.random.Random
 
 class Experiments {
 
     val gp = Gnuplot()
+
+    @Test
+    fun reversePosterior() {
+        val sim = Simulation(TenByTenParams)
+        val obsInterval = 0.125
+        val nWindows = 5   // number of assimilation windows
+        val pLook = 0.2     // probability of looking at a grid point
+        val pObserve = 0.9  // probability of detecting an agent given that we're looking
+        var state = Basis.identity<Agent>()
+        val allObservations = ObservationGenerator.generate(sim.params, pObserve, nWindows, obsInterval)
+        val observations = allObservations.map { observation ->
+            Pair(observation.real, BinomialBasis(observation.observed.pObserve,
+                    sim.D0.lambdas.keys
+                            .filter { Random.nextDouble() < pLook }
+                            .associateWith { observation.observed.observations[it]?:0 }
+            ))
+        }
+
+        observations.forEach { (realState, binomObs) ->
+            println()
+            println("Starting window in state $state ${sim.D0}")
+            println("observation is $binomObs")
+            val (nextState, nextD0) = sim.reversePosterior(state, binomObs, obsInterval, 2)
+            sim.D0 = nextD0
+            state = nextState
+            println("binomial logProb of real state = ${binomObs.logLikelihood(CreationBasis(realState), sim.D0.lambdas.keys)}")
+            println("logProb of real state = ${state.asGroundedBasis(sim.D0).logProb(realState)}")
+
+        }
+    }
+
+
+    @Test
+    fun reversePrior() {
+        val time = 0.5
+        val sim = Simulation(TenByTenParams)
+        val newLambda = HashMap<Agent,Double>()
+        val startState = Basis.identity<Agent>().asGroundedBasis(sim.D0)
+        sim.D0.lambdas.forEach {(d, lambdad) ->
+            val dmean = ActionBasis(emptySet(), d).toVector().reverseIntegrateAndSum(sim.hcIndex, time, startState, 2e-4)
+            newLambda[d] = dmean
+            println("$d -> $dmean")
+        }
+
+    }
 
     @Test
     fun reverseExponentialComposition() {

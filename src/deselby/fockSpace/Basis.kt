@@ -19,7 +19,10 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     abstract fun create(d: AGENT, n: Int=1): Basis<AGENT>
     abstract fun create(entries: Iterable<Map.Entry<AGENT,Int>>): Basis<AGENT>
     abstract fun timesAnnihilate(d: AGENT): Basis<AGENT>  // this * annihilation operator
-    abstract fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer:(Basis<AGENT>, Double) -> Unit) // other^-1*this.creations^-1[this,other]
+
+    // if this = ca, c = creations and a=annihilations
+    // returns other^-1[a,other]
+    abstract fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer:(Basis<AGENT>, Double) -> Unit)
 
 //    fun multiply(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
 //        termConsumer(otherBasis * this, 1.0)
@@ -27,7 +30,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
 //    }
 
     fun multiply(otherBasis: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-        termConsumer(this.operatorUnion(otherBasis), 1.0)
+        termConsumer(this.union(otherBasis), 1.0)
         semicommute(otherBasis, termConsumer)
     }
 
@@ -50,6 +53,7 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
     inline fun multiplyGroundAndMarginalise(rhs: CreationBasis<AGENT>, ground: Ground<AGENT>, activeAgents: Set<AGENT>, crossinline termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
+        // TODO: Make this more efficient by marginalising sooner
         multiply(rhs) { prodBasis, prodWeight ->
             ground.preMultiply(prodBasis) { groundedBasis, groundedWeight ->
                 termConsumer(groundedBasis.marginalise(activeAgents), groundedWeight * prodWeight)
@@ -76,10 +80,13 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     // where c and C are creations and a and A are annihilations.
     // This can be used to multiply two bases to cannonical form since ca * CA = cCaA + c[a,C]A
     //
-    // Uses commuteToPerturbation which calculates (C^-1)c[a,C]
+    // Uses commuteToPerturbation which calculates (C^-1)[a,C]
     inline fun semicommute(other: Basis<AGENT>, crossinline termConsumer:(Basis<AGENT>, Double) -> Unit) {
         commuteToPerturbation(CreationBasis(other.creations)) { perturbation, weight ->
-            termConsumer(other.operatorUnion(perturbation), weight)
+            val newCreations = HashMap(this.creations)
+            newCreations.timesAssign(other.creations)
+            newCreations.timesAssign(perturbation.creations)
+            termConsumer(newBasis(newCreations, perturbation.annihilations.times(other.annihilations)), weight)
         }
     }
 
@@ -177,15 +184,8 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
     }
 
 
-    open fun operatorUnion(other: Basis<AGENT>) : Basis<AGENT> {
-        val unionAnnihilations = HashMap<AGENT,Int>()
-        annihilations.forEach { (agent, count) ->
-            unionAnnihilations[agent] = count
-        }
-        other.annihilations.forEach {(agent, count) ->
-            unionAnnihilations.timesAssign(agent, count)
-        }
-        return newBasis(this.creations * other.creations, unionAnnihilations)
+    open fun union(other: Basis<AGENT>) : Basis<AGENT> {
+        return newBasis(this.creations * other.creations, this.annihilations * other.annihilations)
     }
 
 

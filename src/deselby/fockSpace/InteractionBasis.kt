@@ -18,22 +18,20 @@ class InteractionBasis<AGENT> : Basis<AGENT> {
     override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = InteractionBasis(creations * entries, d1, d2)
 
 
-    // ca commuteToPerturbation C = (C^-1)c[a,C]
+    // ca commuteToPerturbation C = (C^-1)[a,C]
     override fun commuteToPerturbation(basis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         val m1 = basis.creations[d1]
         val m2 = basis.creations[d2]
         if(m1 != null) {
             if(m2 != null) {
-//                val creationUnion = this.creations times basis.creations
-                val creationsminusd1 = creations.times(d1,-1)
-                termConsumer(ActionBasis(creationsminusd1, d2), m1.toDouble())
-                termConsumer(ActionBasis(creations.times(d2,-1), d1), m2.toDouble())
-                termConsumer(CreationBasis(creationsminusd1.times(d2,-1)), (m1*m2).toDouble())
+                termConsumer(ActionBasis(mapOf(d1 to -1), d2), m1.toDouble())
+                termConsumer(ActionBasis(mapOf(d2 to -1), d1), m2.toDouble())
+                termConsumer(CreationBasis(mapOf(d1 to -1, d2 to -1)), (m1*m2).toDouble())
             } else {
-                termConsumer(ActionBasis(this.creations.times(d1,-1), d2), m1.toDouble())
+                termConsumer(ActionBasis(mapOf(d1 to -1), d2), m1.toDouble())
             }
         } else if(m2 != null) {
-            termConsumer(ActionBasis(this.creations.times(d2,-1), d1), m2.toDouble())
+            termConsumer(ActionBasis(mapOf(d2 to -1), d1), m2.toDouble())
         }
     }
 
