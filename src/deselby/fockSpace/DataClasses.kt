@@ -2,10 +2,11 @@ package deselby.fockSpace
 
 import deselby.fockSpace.Basis.Companion.newBasis
 import deselby.std.vectorSpace.DoubleVector
+import java.io.Serializable
 
 data class GroundedVector<AGENT, out BASIS: Ground<AGENT>>(val creationVector: CreationVector<AGENT>, val ground: BASIS)
 
-data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBasis<AGENT>, val ground: BASIS) : Ground<AGENT> {
+data class GroundedBasis<AGENT, out BASIS: Ground<AGENT>>(val basis: CreationBasis<AGENT>, val ground: BASIS) : Ground<AGENT>, Serializable {
 
     //val identity = Basis.identity<AGENT>()
 

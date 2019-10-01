@@ -2,6 +2,7 @@ package experiments.spatialPredatorPrey.fock
 
 import deselby.fockSpace.HashFockVector
 import experiments.spatialPredatorPrey.Params
+import java.io.Serializable
 
 class Predator : Agent {
 //    companion object {

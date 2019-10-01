@@ -1,15 +1,18 @@
 package deselby.fockSpace
 
 import deselby.std.combinatorics.combinations
+import java.io.Serializable
 import java.lang.IllegalArgumentException
 
-class OperatorBasis<AGENT> : Basis<AGENT> {
+class OperatorBasis<AGENT> : Basis<AGENT>, Serializable {
 
     override val annihilations: Map<AGENT, Int>
+    private val hashCache: Int
 
     constructor(creations: Map<AGENT, Int>, annihilations: Map<AGENT, Int>) : super(creations) {
         if(annihilations.values.sum() < 3) throw(IllegalArgumentException("Number of annihilations should be more than 2 in an OperatorBasis. Try using Basis.newBasis instead."))
         this.annihilations = annihilations
+        hashCache = creations.hashCode() + 31*annihilations.hashCode()
     }
 
     override fun create(entries: Iterable<Map.Entry<AGENT, Int>>) = OperatorBasis(creations * entries, annihilations)
@@ -42,7 +45,7 @@ class OperatorBasis<AGENT> : Basis<AGENT> {
 
 
     override fun hashCode(): Int {
-        return  creations.hashCode() + 31*annihilations.hashCode()
+        return hashCache
     }
 
 

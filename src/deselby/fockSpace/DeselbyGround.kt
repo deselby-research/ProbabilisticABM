@@ -3,9 +3,10 @@ package deselby.fockSpace
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
 import org.apache.commons.math3.distribution.PoissonDistribution
+import java.io.Serializable
 import kotlin.math.pow
 
-class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT> {
+class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT>, Serializable {
 
     override fun preMultiply(basis: Basis<AGENT>, termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
         var multiplier = 1.0

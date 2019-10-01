@@ -1,17 +1,21 @@
 package deselby.fockSpace
 
-class InteractionBasis<AGENT> : Basis<AGENT> {
+import java.io.Serializable
+
+class InteractionBasis<AGENT> : Basis<AGENT>, Serializable {
 
     override val annihilations : Map<AGENT,Int>
         get() = mapOf(d1 to 1, d2 to 1)
     val d1: AGENT
     val d2: AGENT
+    private val hashCache: Int
 
 
     constructor(creations: Map<AGENT, Int>, d1: AGENT, d2: AGENT) : super(creations) {
         if(d1 == d2) throw(IllegalArgumentException("InteractionBasis should involve different agents. Use ReflexiveBasis instead"))
         this.d1 = d1
         this.d2 = d2
+        hashCache = 1922 + creations.hashCode() + (d1.hashCode() + d2.hashCode())*31
     }
 
 
@@ -49,10 +53,8 @@ class InteractionBasis<AGENT> : Basis<AGENT> {
         return OperatorBasis(creations, annihilations)
     }
 
-
     override fun hashCode(): Int {
-        return  1922 + creations.hashCode() + (d1.hashCode() + d2.hashCode())*31
-
+        return hashCache
     }
 
 

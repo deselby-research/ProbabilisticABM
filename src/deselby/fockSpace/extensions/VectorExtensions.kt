@@ -88,7 +88,7 @@ inline fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGE
 
 
 fun<AGENT> FockVector<AGENT>.semiCommuteAndStrip(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
-    val commutation = HashFockVector<AGENT>()
+    val commutation = HashFockVector<AGENT>(HashMap(this.size * 30))
     forEach { termBasis, termWeight ->
         termBasis.semiCommuteAndStrip(creationIndex) { commutedBasis, commutedWeight ->
             commutation.plusAssign(commutedBasis, commutedWeight * termWeight)
@@ -161,6 +161,18 @@ fun<AGENT> FockVector<AGENT>.timesAndMarginalise(groundedBasis: Ground<AGENT>, a
     return marginalisation
 }
 
+
+// removes any terms that have any annihilations that are not in activeAgents
+// i.e. leaving only terms whose annihilations are subsets of activeAgents
+fun<AGENT> FockVector<AGENT>.reverseMarginalise(activeAgents: Set<AGENT>): FockVector<AGENT> {
+    val marginalised = HashFockVector<AGENT>()
+    this.forEach { term ->
+        if(activeAgents.containsAll(term.key.annihilations.keys)) {
+            marginalised.plusAssign(term)
+        }
+    }
+    return marginalised
+}
 
 operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVector<AGENT> {
     val result = HashDoubleVector<Basis<AGENT>>()
@@ -272,7 +284,7 @@ inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
 
 inline fun<AGENT, LHSBASIS: Basis<AGENT>, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
         DoubleVector<LHSBASIS>.vectorMultiply(rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
-    val result = HashDoubleVector<OUTBASIS>()
+    val result = HashDoubleVector<OUTBASIS>(HashMap(this.size * rhs.size / 2))
     this.entries.forEach { lhsTerm ->
         rhs.entries.forEach { rhsTerm ->
             val termWeight = lhsTerm.value * rhsTerm.value
@@ -310,6 +322,7 @@ fun<AGENT> CreationVector<AGENT>.join() : CreationBasis<AGENT> {
     return CreationBasis(join)
 }
 
+// returns the probability of this grounded basis at point K
 fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>): Double {
     var logProb = 0.0
     ground.lambdas.forEach { (agent, lambda) ->

@@ -1,6 +1,9 @@
 package deselby.fockSpace
 
-class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT>(creations) {
+import java.io.Serializable
+
+class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT>(creations), Serializable {
+    val hashCache: Int = 961 + creations.hashCode() + d.hashCode()*31
 
     override val annihilations: Map<AGENT, Int>
         get() = mapOf(d to 1)
@@ -28,9 +31,8 @@ class ActionBasis<AGENT>(creations: Map<AGENT, Int>, val d: AGENT) : Basis<AGENT
         return if(this.d == d) ReflexiveBasis(creations, d) else InteractionBasis(creations, this.d, d)
     }
 
-
     override fun hashCode(): Int {
-        return  961 + creations.hashCode() + d.hashCode()*31
+        return hashCache
     }
 
 

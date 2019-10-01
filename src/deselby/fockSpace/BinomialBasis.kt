@@ -4,12 +4,14 @@ import deselby.fockSpace.extensions.join
 import deselby.std.FallingFactorial
 import deselby.std.extensions.fallingFactorial
 import org.apache.commons.math3.distribution.BinomialDistribution
+import org.apache.commons.math3.special.Gamma
+import java.io.Serializable
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
-class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int>) {
+class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int>): Serializable {
     val pNotObserve = 1.0 - pObserve
 
     // calculates the (unnormalised) monteCarloPrior probability of the observations
@@ -80,9 +82,30 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
     }
 
 
+    // Calculates the log probability of concreteState given the observations in this
+    // Where there is no observation, assume a prior poisson distribution given in 'priors'
+    // uses the identity that B_r(k,m)D_0(k,lambda) \propto D_m(k,(1-r)lambda)
+    // so P(k|m) = D_m(k,(1-r)lambda)
+    fun logProb(concreteState: Map<AGENT,Int>, priors: Map<AGENT,Double>) : Double {
+        var l = 0.0
+        priors.forEach {(agent,lambda )->
+            val kReal = concreteState[agent]?:0
+            val kObserved  = observations[agent]
+            if(kObserved != null) {
+                if(kReal < kObserved) return Double.NEGATIVE_INFINITY
+                val k = kReal - kObserved
+                val lambdap = (1.0-pObserve)*lambda
+                l += k*ln(lambdap) - lambdap - Gamma.logGamma(k+1.0)
+            } else {
+                l += kReal*ln(lambda) - lambda - Gamma.logGamma(kReal+1.0)
+            }
+        }
+        return l
+    }
+
     // Calculates the log likelihood of the observations in this
-    // for the supplied 'concreteState'
-    // TODO: Doesn't this assume lambda=0?
+    // for the supplied 'concreteState', assuming that absent observations
+    // are observed to be zero
     fun logLikelihood(concreteState: CreationBasis<AGENT>, allAgents: Iterable<AGENT>) : Double {
         var l = 0.0
 //        val allAgents = observations.keys.times(concreteState.creations.keys)
@@ -91,6 +114,7 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
         }
         return l
     }
+
 
     // Calculates the log-probability of 'concreteState' on the
     // re-normalised product of this and 'prior'

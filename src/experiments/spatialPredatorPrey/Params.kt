@@ -1,5 +1,8 @@
 package experiments.spatialPredatorPrey
 
+import deselby.fockSpace.DeselbyGround
+import java.io.Serializable
+
 open class Params(val GRIDSIZE: Int,
              val lambdaPred: Double,
              val lambdaPrey: Double,
@@ -9,7 +12,7 @@ open class Params(val GRIDSIZE: Int,
              val predDie: Double,
              val predCaptureOnly: Double,
              val predCaptureAndReproduce: Double,
-             val predDiffuse: Double) {
+             val predDiffuse: Double): Serializable {
     val GRIDSIZESQ = GRIDSIZE*GRIDSIZE
     val predCapture = predCaptureAndReproduce + predCaptureOnly
     val preyTotal = preyDie + preyDiffuse + preyReproduce
@@ -68,3 +71,17 @@ object SmallParams : Params(
         0.5,
         1.0
 )
+
+object TestParams : Params(
+        32,
+        0.03,
+        0.06,
+        0.1,
+        0.15,
+        1.0,
+        0.1,
+        0.0,//0.05,
+        0.5,
+        1.0
+)
+

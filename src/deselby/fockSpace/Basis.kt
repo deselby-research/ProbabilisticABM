@@ -5,8 +5,9 @@ import deselby.fockSpace.extensions.vectorMultiply
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.OneHotDoubleVector
+import java.io.Serializable
 
-abstract class Basis<AGENT>(val creations : Map<AGENT,Int>) {
+abstract class Basis<AGENT>(val creations : Map<AGENT,Int>): Serializable {
 
     open val annihilations: Map<AGENT,Int>
         get() = emptyMap()

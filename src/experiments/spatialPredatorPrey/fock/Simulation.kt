@@ -33,14 +33,18 @@ class Simulation {
         H = calcFullHamiltonian()
         haIndex = H.toAnnihilationIndex()
         hcIndex = H.toCreationIndex()
+        D0 = defaultGround()
+    }
+
+
+    fun defaultGround(): DeselbyGround<Agent> {
         val lambdas = HashMap<Agent, Double>()
         for (pos in 0 until params.GRIDSIZESQ) {
             lambdas[Predator(pos)] = params.lambdaPred
             lambdas[Prey(pos)] = params.lambdaPrey
         }
-        D0 = DeselbyGround(lambdas)
+        return DeselbyGround(lambdas)
     }
-
 
     fun setLambdas(lambda: (Agent) -> Double) {
         val lambdas = HashMap<Agent, Double>()
@@ -267,16 +271,36 @@ class Simulation {
     }
 
     fun reversePosterior(startState: CreationBasis<Agent>, observations: BinomialBasis<Agent>, time: Double, expansionOrder: Int): GroundedBasis<Agent,DeselbyGround<Agent>> {
-        val means = HashMap<Agent, Double>()
+//        val means = HashMap<Agent, Double>()
+//
+//        D0.lambdas.forEach { (d, lambdad) ->
+//            val desiredExpectation = Basis.annihilate(d).toVector()
+//            means[d] = desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
+//        }
 
-        D0.lambdas.forEach { (d, lambdad) ->
-//            println("calculating agent $d")
+        val means = D0.lambdas.mapValues { (d, lambdad) ->
+//        val means = D0.lambdas.parallelMapValues { (d, lambdad) ->
             val desiredExpectation = Basis.annihilate(d).toVector()
-            means[d] = desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
+            desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
         }
 
         val groundBasis = CreationBasis(observations.observations.filterValues { it != 0 })
         val newGround = DeselbyGround(means.mapValues { (d, mean) -> mean - groundBasis[d] })
         return groundBasis.asGroundedBasis(newGround)
+    }
+
+
+    fun<K,V,R> Map<K,V>.parallelMapValues(f: (Map.Entry<K,V>) -> R): Map<K,R> {
+        val futures = this.map {
+            val future = GlobalScope.async { f(it) }
+            Pair(it.key, future)
+        }
+        val results = HashMap<K,R>(futures.size)
+        runBlocking {
+            futures.forEach {(key, future) ->
+                results[key] = future.await()
+            }
+        }
+        return results
     }
 }

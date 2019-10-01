@@ -1,8 +1,10 @@
 package deselby.fockSpace
 
 import deselby.std.vectorSpace.OneHotDoubleVector
+import java.io.Serializable
 
-open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis<AGENT>(creations) {
+open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis<AGENT>(creations), Serializable {
+    val hashCache: Int = creations.hashCode()
 
     override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = CreationBasis(creations * entries)
 
@@ -69,7 +71,7 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     fun toMutableCreationBasis() = MutableCreationBasis(this)
 
     override fun hashCode(): Int {
-        return creations.hashCode()
+        return hashCache
     }
 
 
