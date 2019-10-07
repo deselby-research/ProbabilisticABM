@@ -30,7 +30,11 @@ object ReverseIntegrationPaperParams : Params(
 
 
 fun main(args: Array<String>) {
-    for(i in 1..20) {
+//    readLog("data/experiment2/Experiment1570017336847.dat") // best
+//    readLog("data/experiment2/Experiment1570037250091.dat") //worst
+//    readLog("data/experiment2/Experiment1570079875376.dat") //midway
+
+    for(i in 1..5) {
         assimilationRun()
     }
 }
@@ -45,7 +49,7 @@ fun assimilationRun() {
     val priorGround = sim.D0.lambdas
 
     val obsInterval = 0.5
-    val nWindows = 16   // number of assimilation windows
+    val nWindows = 64   // number of assimilation windows
     val pLook = 0.02     // probability of looking at an agent state
     val pObserve = 0.9  // probability of detecting an agent given that we're looking
     var state = Basis.identity<Agent>()
@@ -81,4 +85,13 @@ fun assimilationRun() {
     }
     rawOut.close()
     analysisOut.close()
+}
+
+fun readLog(filename: String) {
+    val log = AssimilationLog(filename)
+    println("read log of length ${log.records.size}")
+//    log.records.forEach {
+//        println(it.posteriorGround)
+//    }
+    log.plot(63)
 }

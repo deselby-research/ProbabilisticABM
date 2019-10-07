@@ -18,7 +18,7 @@ class Experiments {
     fun simulate() {
         val plotter = StatePlotter()
         val sim = Simulation(TestParams)
-        for(i in 1..1000) {
+        for(i in 1..(32*5)) {
             sim.simulate(0.2)
 //        println("${sim.predatorMultiplicity()} ${sim.preyMultiplicity()} ${sim.averageMultiplicity()}")
             plotter.gp("pause 0.01")

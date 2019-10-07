@@ -19,7 +19,7 @@ class Experiments {
 
     @Test
     fun reversePosterior() {
-        val sim = Simulation(TenByTenParams)
+        val sim = Simulation(ReverseIntegrationPaperParams)
         val priorLambda = sim.D0.lambdas
         val obsInterval = 0.5
         val nWindows = 10   // number of assimilation windows

@@ -87,7 +87,8 @@ fun<AGENT> FockVector<AGENT>.reverseBinomialIntegrateAndSum(hcIndex: CreationInd
     var weight = exp(-T)
     var jointSum = weight * amplitude
     var termSum = 0.0
-    var xtestimate = 0.0
+//    var xtestimate = 0.0
+//    var err = 0.0
     for(order in 1..expansionOrder) {
         weight *= T/order
         val tCommuteH = taylorTerm.semiCommuteAndStrip(hcIndex)
@@ -120,7 +121,7 @@ fun<AGENT> FockVector<AGENT>.reverseBinomialIntegrateAndSum(hcIndex: CreationInd
         // estimate truncation error
 //        xtestimate += (termSum.absoluteValue/(weight*amplitude)).pow(1.0/order) * T
 //        val xt = xtestimate/order
-//        var err = amplitude*(exp(xt) - 1.0)
+//        err = amplitude*(exp(xt) - 1.0)
 //        var w = amplitude
 //        for(i in 1..order) {
 //            w *= 1.0/i
@@ -129,6 +130,7 @@ fun<AGENT> FockVector<AGENT>.reverseBinomialIntegrateAndSum(hcIndex: CreationInd
 //        println("estimated truncation error = ${100.0*exp(-T)*err / jointSum}%")
 
     }
+//    println("estimated truncation error = ${100.0*exp(-T)*err / jointSum}%")
 //    println()
     return jointSum
 }
