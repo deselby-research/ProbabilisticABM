@@ -2,6 +2,8 @@ package experiments.spatialPredatorPrey.discreteEventABM
 
 import experiments.spatialPredatorPrey.Params
 import experiments.spatialPredatorPrey.StandardParams
+import experiments.spatialPredatorPrey.TenByTenParams
+import experiments.spatialPredatorPrey.TestParams
 import org.apache.commons.math3.distribution.BinomialDistribution
 import org.apache.commons.math3.special.Gamma.logGamma
 import org.junit.Test
@@ -15,9 +17,9 @@ class Experiments {
     @Test
     fun simulate() {
         val plotter = StatePlotter()
-        val sim = Simulation(StandardParams)
-        for(i in 1..2000) {
-            sim.simulate(0.1)
+        val sim = Simulation(TestParams)
+        for(i in 1..(32*5)) {
+            sim.simulate(0.2)
 //        println("${sim.predatorMultiplicity()} ${sim.preyMultiplicity()} ${sim.averageMultiplicity()}")
             plotter.gp("pause 0.01")
             plotter.plot(sim)

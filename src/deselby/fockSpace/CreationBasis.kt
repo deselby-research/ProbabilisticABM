@@ -1,15 +1,13 @@
 package deselby.fockSpace
 
 import deselby.std.vectorSpace.OneHotDoubleVector
+import java.io.Serializable
 
-open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis<AGENT>(creations) {
-
-    override fun forEachAnnihilationEntry(entryConsumer: (AGENT, Int) -> Unit) {
-    }
+open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis<AGENT>(creations), Serializable {
+    val hashCache: Int = creations.hashCode()
 
     override fun create(entries: Iterable<Map.Entry<AGENT,Int>>) = CreationBasis(creations * entries)
 
-    override fun forEachAnnihilationKey(keyConsumer: (AGENT) -> Unit) { }
 
 //    override fun commutationsTo(termConsumer: (AGENT, Basis<AGENT>, Double) -> Unit) { } // zero
 
@@ -30,12 +28,13 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 
     fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
-    override fun toAnnihilationMap(): Map<AGENT, Int> {
-        return emptyMap()
+
+    override fun union(other: Basis<AGENT>): Basis<AGENT> {
+        return newBasis(this.creations * other.creations, other.annihilations)
     }
 
-    override fun operatorUnion(other: Basis<AGENT>): Basis<AGENT> {
-        return newBasis(this.creations * other.creations, other.toAnnihilationMap())
+    fun union(other: CreationBasis<AGENT>): CreationBasis<AGENT> {
+        return CreationBasis(this.creations * other.creations)
     }
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
@@ -61,14 +60,18 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
         return(CreationBasis(newCreations))
     }
 
-    inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
+//    inline operator fun times(other: Basis<AGENT>) = other.create(creations.entries)
+
+    fun marginalise(activeAgents: Set<AGENT>): CreationBasis<AGENT> {
+        return CreationBasis(creations.filter {activeAgents.contains(it.key)})
+    }
 
     fun toCreationVector(weight: Double = 1.0) : CreationVector<AGENT> = OneHotDoubleVector(this, weight)
 
     fun toMutableCreationBasis() = MutableCreationBasis(this)
 
     override fun hashCode(): Int {
-        return creations.hashCode()
+        return hashCache
     }
 
 

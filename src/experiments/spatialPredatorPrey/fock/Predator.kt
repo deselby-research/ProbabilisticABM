@@ -2,6 +2,7 @@ package experiments.spatialPredatorPrey.fock
 
 import deselby.fockSpace.HashFockVector
 import experiments.spatialPredatorPrey.Params
+import java.io.Serializable
 
 class Predator : Agent {
 //    companion object {
@@ -20,10 +21,10 @@ class Predator : Agent {
 
 
     fun hamiltonian(h: HashFockVector<Agent>, params: Params) {
-        diffuse(h, params.GRIDSIZE, params.predDiffuse)
-        capture(h, params)
-        captureAndReproduce(h, params)
-        die(h, params.predDie)
+        if(params.predDiffuse > 0.0) diffuse(h, params.GRIDSIZE, params.predDiffuse)
+        if(params.predCaptureOnly > 0.0) capture(h, params)
+        if(params.predCaptureAndReproduce > 0.0) captureAndReproduce(h, params)
+        if(params.predDie > 0.0) die(h, params.predDie)
     }
 
     fun capture(h: HashFockVector<Agent>, params: Params) {

@@ -2,8 +2,9 @@ package experiments.spatialPredatorPrey.fock
 
 import deselby.fockSpace.*
 import experiments.spatialPredatorPrey.Params
+import java.io.Serializable
 
-abstract class Agent(val pos: Int) {
+abstract class Agent(val pos: Int): Serializable {
 //    companion object {
 //        const val GRIDSIZE = Simulation.GRIDSIZE
 //    }

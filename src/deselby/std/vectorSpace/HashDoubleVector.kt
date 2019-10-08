@@ -7,6 +7,10 @@ class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : MutableDoubl
     override val entries
             get() = coeffs.entries
 
+    constructor() : this(HashMap())
+
+    constructor(vecToCopy : Vector<BASIS,Double>) : this(HashMap(vecToCopy))
+
     constructor(vararg mappings : Pair<BASIS,Double>) : this(HashMap(mappings.size)) {
         coeffs.putAll(mappings)
     }
@@ -22,9 +26,6 @@ class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : MutableDoubl
     override fun merge(key: BASIS, value: Double, remappingFunction: BiFunction<in Double, in Double, out Double?>): Double?
         = coeffs.merge(key, value, remappingFunction)
 
-    constructor() : this(HashMap())
-
-    constructor(vecToCopy : Vector<BASIS,Double>) : this(HashMap(vecToCopy))
 
     override fun toMutableVector() = HashDoubleVector(HashMap(coeffs))
 

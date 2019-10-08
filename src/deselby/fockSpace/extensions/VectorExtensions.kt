@@ -1,7 +1,6 @@
 package deselby.fockSpace.extensions
 
 import deselby.fockSpace.*
-import deselby.std.extensions.asBiconsumer
 import deselby.std.vectorSpace.CovariantDoubleVector
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
@@ -10,6 +9,7 @@ import org.apache.commons.math3.special.Gamma
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.min
+
 
 
 fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.create(d: AGENT, n: Int=1) : DoubleVector<Basis<AGENT>> {
@@ -36,10 +36,10 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.annihilate(d : AGENT) : DoubleVec
 }
 
 
-fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
+fun<AGENT> CovariantFockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
     val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
-    forEach { entry ->
-        entry.key.forEachAnnihilationKey { d ->
+    entries.forEach { entry ->
+        entry.key.annihilations.keys.forEach { d ->
             index.getOrPut(d, { ArrayList() }).add(entry)
         }
     }
@@ -47,9 +47,9 @@ fun<AGENT> FockVector<AGENT>.toAnnihilationIndex(): AnnihilationIndex<AGENT> {
 }
 
 
-fun<AGENT> FockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
+fun<AGENT> CovariantFockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
     val index = HashMap<AGENT, ArrayList<Map.Entry<Basis<AGENT>,Double>>>()
-    forEach { entry ->
+    entries.forEach { entry ->
         entry.key.creations.keys.forEach { d ->
             index.getOrPut(d, { ArrayList() }).add(entry)
         }
@@ -57,27 +57,46 @@ fun<AGENT> FockVector<AGENT>.toCreationIndex(): CreationIndex<AGENT> {
     return index
 }
 
-
-fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
-    val activeTerms = HashSet<Map.Entry<Basis<AGENT>,Double>>()
-    otherBasis.creations.keys.forEach { d ->
-        this[d]?.forEach { term ->
-            activeTerms.add(term)
-        }
+fun<AGENT> CovariantFockVector<AGENT>.stripCreations(): FockVector<AGENT> {
+    val stripped = HashFockVector<AGENT>()
+    entries.forEach { entry ->
+        stripped.plusAssign(Basis.newBasis(emptyMap(), entry.key.annihilations), entry.value)
     }
-    activeTerms.forEach { (indexedBasis, indexedWeight) ->
-        indexedBasis.semicommute(otherBasis) { commutedBasis, commutedWeight ->
-            termConsumer(commutedBasis, commutedWeight * indexedWeight)
-        }
-    }
+    return stripped
 }
 
 
-fun<AGENT> AnnihilationIndex<AGENT>.commute(otherBasis: CreationBasis<AGENT>) : FockVector<AGENT> {
+
+fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
     val commutation = HashFockVector<AGENT>()
-    this.commute(otherBasis, commutation::plusAssign)
+    forEach { termBasis, termWeight ->
+        termBasis.semicommute(creationIndex) { commutedBasis, commutedWeight ->
+            commutation.plusAssign(commutedBasis, commutedWeight * termWeight)
+        }
+    }
     return commutation
 }
+
+
+inline fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGENT>, crossinline termConsumer: (Basis<AGENT>, Double) -> Unit) {
+    forEach { termBasis, termWeight ->
+        termBasis.semicommute(creationIndex) { commutedBasis, commutedWeight ->
+            termConsumer(commutedBasis, commutedWeight * termWeight)
+        }
+    }
+}
+
+
+fun<AGENT> FockVector<AGENT>.semiCommuteAndStrip(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
+    val commutation = HashFockVector<AGENT>(HashMap(this.size * 30))
+    forEach { termBasis, termWeight ->
+        termBasis.semiCommuteAndStrip(creationIndex) { commutedBasis, commutedWeight ->
+            commutation.plusAssign(commutedBasis, commutedWeight * termWeight)
+        }
+    }
+    return commutation
+}
+
 
 
 operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(groundBasis: Ground<AGENT>) : DoubleVector<CreationBasis<AGENT>> {
@@ -104,17 +123,56 @@ operator fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.times(creationVector: Cr
     return result
 }
 
-
-operator fun<AGENT> Basis<AGENT>.times(rhs: CreationVector<AGENT>) : FockVector<AGENT> {
-    val result = HashDoubleVector<Basis<AGENT>>()
-    rhs.entries.forEach { rhsTerm ->
-        this.multiply(rhsTerm.key) { basis, weight ->
-            result.plusAssign(basis, weight*rhsTerm.value)
+operator fun<AGENT> CreationVector<AGENT>.times(creationVector: CreationVector<AGENT>) : CreationVector<AGENT> {
+    val result = HashCreationVector<AGENT>()
+    this.entries.forEach { thisTerm ->
+        creationVector.entries.forEach {otherTerm ->
+            val vectorWeight = thisTerm.value * otherTerm.value
+            thisTerm.key.multiply(otherTerm.key) { basis, weight ->
+                result.plusAssign(basis as CreationBasis<AGENT>, weight * vectorWeight)
+            }
         }
     }
     return result
 }
 
+
+operator fun<AGENT, BASIS: Ground<AGENT>> FockVector<AGENT>.times(groundedVector: GroundedVector<AGENT, BASIS>): GroundedVector<AGENT,BASIS> {
+    return GroundedVector(this.vectorMultiply<AGENT,Basis<AGENT>, CreationBasis<AGENT>, CreationBasis<AGENT>>(groundedVector.creationVector) { lhs, rhs, termConsumer ->
+        lhs.multiplyAndGround(rhs, groundedVector.ground, termConsumer)
+    }, groundedVector.ground)
+}
+
+
+fun<AGENT, BASIS: Ground<AGENT>> FockVector<AGENT>.timesAndMarginalise(groundedVector: GroundedVector<AGENT, BASIS>, activeAgents: Set<AGENT>): GroundedVector<AGENT,BASIS> {
+    return GroundedVector(this.vectorMultiply<AGENT,Basis<AGENT>, CreationBasis<AGENT>, CreationBasis<AGENT>>(groundedVector.creationVector) { lhs, rhs, termConsumer ->
+        lhs.multiplyGroundAndMarginalise(rhs, groundedVector.ground, activeAgents, termConsumer)
+    }, groundedVector.ground)
+}
+
+
+fun<AGENT> FockVector<AGENT>.timesAndMarginalise(groundedBasis: Ground<AGENT>, activeAgents: Set<AGENT>): CreationVector<AGENT> {
+    val marginalisation = HashCreationVector<AGENT>()
+    this.forEach {(basis, weight) ->
+        groundedBasis.preMultiply(basis) { groundedBasis, groundedWeight ->
+            marginalisation.plusAssign(groundedBasis.marginalise(activeAgents), groundedWeight * weight)
+        }
+    }
+    return marginalisation
+}
+
+
+// removes any terms that have any annihilations that are not in activeAgents
+// i.e. leaving only terms whose annihilations are subsets of activeAgents
+fun<AGENT> FockVector<AGENT>.reverseMarginalise(activeAgents: Set<AGENT>): FockVector<AGENT> {
+    val marginalised = HashFockVector<AGENT>()
+    this.forEach { term ->
+        if(activeAgents.containsAll(term.key.annihilations.keys)) {
+            marginalised.plusAssign(term)
+        }
+    }
+    return marginalised
+}
 
 operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVector<AGENT> {
     val result = HashDoubleVector<Basis<AGENT>>()
@@ -127,10 +185,24 @@ operator fun<AGENT> FockVector<AGENT>.times(rhs: CreationBasis<AGENT>) : FockVec
 }
 
 
+operator fun<AGENT> CovariantFockVector<AGENT>.times(rhs: CovariantFockVector<AGENT>) : FockVector<AGENT> {
+    val result = HashDoubleVector<Basis<AGENT>>()
+    this.entries.forEach { lhsTerm ->
+        rhs.entries.forEach { rhsTerm ->
+            val termWeight = lhsTerm.value * rhsTerm.value
+            lhsTerm.key.multiply(rhsTerm.key) { basis, weight ->
+                result.plusAssign(basis, weight * termWeight)
+            }
+        }
+    }
+    return result
+}
+
+
 operator fun<AGENT> FockVector<AGENT>.times(rhs: Basis<AGENT>) : FockVector<AGENT> {
     val multiplied = HashDoubleVector<Basis<AGENT>>()
     this.forEach { (thisBasis, thisWeight) ->
-        multiplied.plusAssign(thisBasis.operatorUnion(rhs), thisWeight)
+        multiplied.plusAssign(thisBasis.union(rhs), thisWeight)
         thisBasis.semicommute(rhs) { commutedBasis, cWeight ->
             multiplied.plusAssign(commutedBasis, cWeight * thisWeight)
         }
@@ -151,6 +223,11 @@ fun<AGENT> CovariantDoubleVector<Basis<AGENT>>.timesApproximate(creationVector: 
         }
     }
     return result
+}
+
+
+fun<AGENT> FockVector<AGENT>.multiplyAndStrip(other: FockVector<AGENT>): FockVector<AGENT> {
+    return this.vectorMultiply(other, Basis<AGENT>::multiplyAndStrip)
 }
 
 
@@ -195,7 +272,7 @@ fun<AGENT> GroundedVector<AGENT,Ground<AGENT>>.integrate(hamiltonian: FockVector
 
 
 inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
-        vectorConsumerMultiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
+        vectorMultiply(lhs: LHSBASIS, rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
     val result = HashDoubleVector<OUTBASIS>()
     rhs.entries.forEach { rhsTerm ->
         multiply(lhs, rhsTerm.key) { basis, weight ->
@@ -204,6 +281,21 @@ inline fun<AGENT, LHSBASIS, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
     }
     return result
 }
+
+inline fun<AGENT, LHSBASIS: Basis<AGENT>, RHSBASIS: Basis<AGENT>, OUTBASIS: Basis<AGENT>>
+        DoubleVector<LHSBASIS>.vectorMultiply(rhs: DoubleVector<RHSBASIS>, multiply: (LHSBASIS, RHSBASIS, (OUTBASIS, Double) -> Unit) -> Unit) : DoubleVector<OUTBASIS> {
+    val result = HashDoubleVector<OUTBASIS>(HashMap(this.size * rhs.size / 2))
+    this.entries.forEach { lhsTerm ->
+        rhs.entries.forEach { rhsTerm ->
+            val termWeight = lhsTerm.value * rhsTerm.value
+            multiply(lhsTerm.key, rhsTerm.key) { basis, weight ->
+                result.plusAssign(basis, weight * termWeight)
+            }
+        }
+    }
+    return result
+}
+
 
 fun<AGENT,BASIS: Ground<AGENT>> CreationVector<AGENT>.asGroundedVector(ground: BASIS) = GroundedVector(this, ground)
 
@@ -230,6 +322,7 @@ fun<AGENT> CreationVector<AGENT>.join() : CreationBasis<AGENT> {
     return CreationBasis(join)
 }
 
+// returns the probability of this grounded basis at point K
 fun<AGENT> GroundedBasis<AGENT,DeselbyGround<AGENT>>.logProb(K: Map<AGENT,Int>): Double {
     var logProb = 0.0
     ground.lambdas.forEach { (agent, lambda) ->

@@ -36,7 +36,7 @@ fun deselbyPosterior(observations : Array<Int>) {
     val observationInterval = 1.0
     val r = 0.9 // coeff of detection of infected
 
-    var p = DeselbyDistribution(listOf(40.0, 7.0)) // initial prior
+    var p = DeselbyDistribution(listOf(40.0, 7.0)) // initial monteCarloPrior
     for(nObs in 0 until observations.size) {
         p = p.integrateWithLambdaOptimisation(::SIRHamiltonian, observationInterval, 0.001)
         //   println("before observation :${p.marginaliseTo(1)}")

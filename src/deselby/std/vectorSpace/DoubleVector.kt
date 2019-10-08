@@ -2,6 +2,7 @@ package deselby.std.vectorSpace
 
 import deselby.std.abstractAlgebra.HasTimes
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 interface DoubleVector<BASIS> : CovariantDoubleVector<BASIS>, Vector<BASIS,Double> {
 
@@ -43,6 +44,18 @@ interface DoubleVector<BASIS> : CovariantDoubleVector<BASIS>, Vector<BASIS,Doubl
         return result
     }
 
+    // L1-norm is defined as the sum of absolute values of the coefficients
+    fun normL1() = values.sumByDouble(::abs)
+
+    fun normLinfty() = values.asSequence().map { abs(it) }.max()?:0.0
+
+    fun filterBelow(upperLimit: Double): DoubleVector<BASIS> {
+        val filtered = zero()
+        entries.forEach {
+            if(it.value.absoluteValue > upperLimit) filtered[it.key] = it.value
+        }
+        return filtered
+    }
 
     companion object {
 
