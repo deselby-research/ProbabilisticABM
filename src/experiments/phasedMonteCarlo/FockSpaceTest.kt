@@ -10,7 +10,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.system.measureTimeMillis
 
-class V3Test {
+class FockSpaceTest {
     val lambda = 0.1
     val dt = 0.0001
     val T = 2.0

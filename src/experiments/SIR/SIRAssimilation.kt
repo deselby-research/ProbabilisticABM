@@ -1,4 +1,4 @@
-package experiments
+package experiments.SIR
 
 import deselby.distributions.discrete.DeselbyDistribution
 import deselby.distributions.FockState
@@ -26,7 +26,7 @@ fun main(args : Array<String>) {
     val observationInterval = 1.0
     val totalTime = 5.0
     val r = 0.9 // coeff of detection of infected
-    val realStartState = SIRState(35,5,0)
+    val realStartState = SIRState(35, 5, 0)
     val observations = generateObservations(realStartState, observationInterval, r, totalTime)
     deselbyPosterior(observations)
     metropolisHastingsPosterior(observations)

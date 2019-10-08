@@ -1,4 +1,4 @@
-package experiments.mcmc
+package experiments.misc
 
 import deselby.mcmc.MetropolisHastings
 import deselby.mcmc.MonteCarloRandomGenerator
@@ -12,7 +12,7 @@ import kotlin.math.ln
 import kotlin.math.sign
 import kotlin.random.Random
 
-class MatrixMultiplyTest {
+class MCMCMatrixMultiplyTest {
 
     // Attempt to calculate matrix to the power nAnnihilations using
     // phased mcmc.
