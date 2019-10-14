@@ -278,8 +278,8 @@ class Simulation {
 //            means[d] = desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
 //        }
 
-        val means = D0.lambdas.mapValues { (d, lambdad) ->
-//        val means = D0.lambdas.parallelMapValues { (d, lambdad) ->
+//        val means = D0.lambdas.mapValues { (d, lambdad) ->
+        val means = D0.lambdas.parallelMapValues { (d, lambdad) ->
             val desiredExpectation = Basis.annihilate(d).toVector()
             desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
         }
