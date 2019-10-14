@@ -8,7 +8,7 @@ Although agent based models have had many applications, there are very few tools
 
 This project adapts the mathematical tools of quantum field theory to allow us to do Bayesian inference on agent based models, with the ultimate goal of being able to simulate social systems using real-world data to calibrate and constrain the state of the system while providing a proper treatment of uncertainty in the model results.
 
-An introduction to our approach can be found in [/doc/mathsFoundataions.pdf](https://github.com/deselby-research/ProbabilisticABM/blob/master/doc/mathsFoundations.pdf)
+An introduction to our approach can be found in [/doc/mathsFoundataions.pdf](./doc/mathsFoundations.pdf)
 
 ### Dependencies
 
@@ -21,6 +21,6 @@ This library makes use of the following standard libraries, available on Maven, 
 
 ### Data assimilation
 
-[/doc/ABMDataAssimilation.pdf](https://github.com/deselby-research/ProbabilisticABM/blob/master/doc/ABMDataAssimilation.pdf) describes how we used this software to perform assimilation of incomplete, noisy observations into a spatial predator-prey model. The code used to create the results in this paper can be found in the `src/experiments/spatialPredatorPrey/fock` directory. 
+[/doc/ABMDataAssimilation.pdf](./doc/ABMDataAssimilation.pdf) describes how we used this software to perform assimilation of incomplete, noisy observations into a spatial predator-prey model. The code used to create the results in this paper can be found in the `src/experiments/spatialPredatorPrey/fock` directory. 
 
 
