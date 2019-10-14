@@ -1,5 +1,7 @@
 # ProbabilisticABM
 
+![pretty picture](./doc/img/candy.png)
+
 This is a software library being developed and used as part of a research project into probabilistic [agent based modelling](https://en.wikipedia.org/wiki/Agent-based_model).
 
 Although agent based models have had many applications, there are very few tools available to treat them probabilistically; making it hard to properly calibrate models, assimilate observational data into models and quantify uncertainty in model results.
