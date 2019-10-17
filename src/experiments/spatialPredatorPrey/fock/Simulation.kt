@@ -12,6 +12,7 @@ import experiments.spatialPredatorPrey.Params
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
@@ -270,14 +271,30 @@ class Simulation {
         return marginalisation
     }
 
-    fun reversePosterior(startState: CreationBasis<Agent>, observations: BinomialBasis<Agent>, time: Double, expansionOrder: Int): GroundedBasis<Agent,DeselbyGround<Agent>> {
-//        val means = HashMap<Agent, Double>()
-//
-//        D0.lambdas.forEach { (d, lambdad) ->
-//            val desiredExpectation = Basis.annihilate(d).toVector()
-//            means[d] = desiredExpectation.reversePosteriorMean(hcIndex, haIndex, H, time, startState.asGroundedBasis(D0), observations, expansionOrder)
-//        }
+    fun reversePosteriorWithTranslate(startState: CreationBasis<Agent>, observations: BinomialBasis<Agent>, time: Double, expansionOrder: Int): GroundedBasis<Agent,DeselbyGround<Agent>> {
+        val means = D0.lambdas.parallelMapValues { (d, lambdad) ->
+            val desiredExpectation = Basis.annihilate(d.copyAt(0)).toVector()
+            val relativeStartState = startState.map {it.translate(-d.pos, params.GRIDSIZE)}
+            val relativeD0 = D0.map {it.translate(-d.pos, params.GRIDSIZE)}
+            desiredExpectation.reversePosteriorMean(
+                    hcIndex,
+                    haIndex,
+                    H,
+                    time,
+                    relativeStartState.asGroundedBasis(relativeD0),
+                    observations,
+                    expansionOrder,
+                    true
+            )
+        }
 
+        val groundBasis = CreationBasis(observations.observations.filterValues { it != 0 })
+        val newGround = DeselbyGround(means.mapValues { (d, mean) -> mean - groundBasis[d] })
+        return groundBasis.asGroundedBasis(newGround)
+    }
+
+
+    fun reversePosterior(startState: CreationBasis<Agent>, observations: BinomialBasis<Agent>, time: Double, expansionOrder: Int): GroundedBasis<Agent,DeselbyGround<Agent>> {
 //        val means = D0.lambdas.mapValues { (d, lambdad) ->
         val means = D0.lambdas.parallelMapValues { (d, lambdad) ->
             val desiredExpectation = Basis.annihilate(d).toVector()

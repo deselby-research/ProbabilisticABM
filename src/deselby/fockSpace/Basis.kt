@@ -30,6 +30,10 @@ abstract class Basis<AGENT>(val creations : Map<AGENT,Int>): Serializable {
 //        semicommute(otherBasis, termConsumer)
 //    }
 
+    open fun map(transform: (AGENT) -> AGENT) : Basis<AGENT> {
+        return newBasis(creations.mapKeys { transform(it.key) }, annihilations.mapKeys { transform(it.key) })
+    }
+
     fun multiply(otherBasis: Basis<AGENT>, termConsumer: (Basis<AGENT>, Double) -> Unit) {
         termConsumer(this.union(otherBasis), 1.0)
         semicommute(otherBasis, termConsumer)

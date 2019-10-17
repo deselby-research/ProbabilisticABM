@@ -59,4 +59,11 @@ abstract class Agent(val pos: Int): Serializable {
         val to = Basis.newBasis(addedAgents.asList(), thisAndOther)
         return (to.toVector() - from.toVector())*rate
     }
+
+
+    fun translate(transVector: Int, gridSize: Int): Agent {
+        val newX = (pos + transVector + gridSize).rem(gridSize)
+        val newY = (transVector.div(gridSize) + pos.div(gridSize) + gridSize).rem(gridSize)
+        return copyAt(newY*gridSize + newX)
+    }
 }

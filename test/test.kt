@@ -7,32 +7,38 @@ import deselby.std.vectorSpace.HashDoubleVector
 import experiments.spatialPredatorPrey.fock.Agent
 import experiments.spatialPredatorPrey.fock.Predator
 import experiments.spatialPredatorPrey.fock.Prey
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.math3.linear.SparseFieldVector
 import java.io.*
 import java.util.*
 import kotlin.math.floor
 
+class MyClass(val c: Int) {
+    override fun hashCode(): Int {
+        return c
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if(other !is MyClass) return false
+        return c == other.c
+    }
+
+    override fun toString(): String {
+        return "c = $c"
+    }
+}
 
 fun main(args : Array<String>) {
-    val basis = CreationBasis(mapOf(Predator(1) as Agent to 1))
-    val ground = DeselbyGround(mapOf(Predator(2) to 1.234, Prey(45) to 2.345))
-    val binom = BinomialBasis(0.1234, mapOf(Predator(23) as Agent to 0))
-    objWrite(binom)
-    val read = objRead<BinomialBasis<Agent>>()
-    println(read)
-}
+    val m = HashMap<Any,Any>()
 
-fun objWrite(obj: Any) {
-    val expt = "Experiment.dat"
-    val objStr = ObjectOutputStream(FileOutputStream(expt))
-    objStr.writeObject(obj)
-    objStr.close()
-}
+    m[9] = 1234
+    m["hello"] = "goodbye"
+    m[MyClass(1234)] = MyClass(2345)
 
-fun<T> objRead(): T {
-    val fname = "Experiment.dat"
-    val objStr = ObjectInputStream(FileInputStream(fname))
-    val m = objStr.readObject() as T
-    objStr.close()
-    return m
+    println(m["hello"])
+    println(m[9])
+    println(m[1.0])
+    println(m[MyClass(1234)])
 }

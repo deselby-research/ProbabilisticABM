@@ -22,7 +22,7 @@ class Experiments {
         val sim = Simulation(ReverseIntegrationPaperParams)
         val priorLambda = sim.D0.lambdas
         val obsInterval = 0.5
-        val nWindows = 10   // number of assimilation windows
+        val nWindows = 1   // number of assimilation windows
         val pLook = 0.02     // probability of looking at a agent state
         val pObserve = 0.9  // probability of detecting an agent given that we're looking
         var state = Basis.identity<Agent>()
@@ -40,7 +40,8 @@ class Experiments {
                 println()
                 println("Starting window in state $state ${sim.D0}")
                 println("observation is $binomObs")
-                val (nextState, nextD0) = sim.reversePosterior(state, binomObs, obsInterval, 3)
+//                val (nextState, nextD0) = sim.reversePosterior(state, binomObs, obsInterval, 3)
+                val (nextState, nextD0) = sim.reversePosteriorWithTranslate(state, binomObs, obsInterval, 3)
                 sim.D0 = nextD0
                 state = nextState
                 val binomLogProb = binomObs.logProb(realState, priorLambda)

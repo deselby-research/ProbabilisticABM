@@ -29,13 +29,20 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
     fun<GROUND: Ground<AGENT>> asGroundedBasis(ground: GROUND) = GroundedBasis(this, ground)
 
 
+    override fun map(transform: (AGENT) -> AGENT) : CreationBasis<AGENT> {
+        return CreationBasis(creations.mapKeys { transform(it.key) })
+    }
+
+
     override fun union(other: Basis<AGENT>): Basis<AGENT> {
         return newBasis(this.creations * other.creations, other.annihilations)
     }
 
+
     fun union(other: CreationBasis<AGENT>): CreationBasis<AGENT> {
         return CreationBasis(this.creations * other.creations)
     }
+
 
 //    override fun multiplyTo(otherBasis: CreationBasis<AGENT>,
 //                            ground: Ground<AGENT>,
@@ -47,6 +54,7 @@ open class CreationBasis<AGENT>(creations: Map<AGENT, Int> = emptyMap()) : Basis
 //                        termConsumer: (CreationBasis<AGENT>, Double) -> Unit) {
 //        termConsumer(this, 1.0)
 //    }
+
 
     operator fun get(d : AGENT) : Int {
         return creations[d]?:0
