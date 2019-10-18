@@ -5,13 +5,11 @@ import deselby.fockSpace.extensions.*
 import deselby.std.vectorSpace.DoubleVector
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.extensions.times
-import experiments.SIR.FockSIR
-import experiments.SIR.SIRParams
-import org.apache.commons.math3.distribution.PoissonDistribution
+import models.SIR.FockSIR
+import models.SIR.SIRParams
 import org.junit.Test
 import kotlin.math.absoluteValue
 import kotlin.math.exp
-import kotlin.test.assert
 
 class SIRTests {
     val params = SIRParams(0.01, 0.1, 20.0, 7.0)
@@ -159,7 +157,7 @@ class SIRTests {
                         ActionBasis(emptySet(), 1).toVector() - ActionBasis(mapOf(1 to 1), 1).toVector()
         val a0 = ActionBasis(emptySet(), 0).toVector()
         val a1 = ActionBasis(emptySet(), 1).toVector()
-        val F0 = CreationBasis<Int>(emptyMap())
+ //       val F0 = CreationBasis<Int>(emptyMap())
         println("H = $H")
 
 //        val mean0 = a0 * (H * D0) * D0

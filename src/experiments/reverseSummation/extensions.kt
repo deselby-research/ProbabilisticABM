@@ -3,13 +3,7 @@ package experiments.reverseSummation
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
 import deselby.std.vectorSpace.extensions.times
-import experiments.spatialPredatorPrey.fock.LikelihoodCache
-import experiments.spatialPredatorPrey.fock.NormalisationCache
-import experiments.spatialPredatorPrey.fock.ReverseIntegralCache
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.absoluteValue
 import kotlin.math.exp
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 

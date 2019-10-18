@@ -1,13 +1,15 @@
 package experiments.SIR
 
 import deselby.std.gnuplot
+import models.SIR.NonFockSIR
+import models.SIR.SIRParams
 import org.apache.commons.math3.random.MersenneTwister
 import org.junit.Test
 
 class TestNonFockSIR {
     @Test
     fun compareDifferentialDiscrete() {
-        val bg = SIRParams(0.1,1.0, 0.0, 0.0)
+        val bg = SIRParams(0.1, 1.0, 0.0, 0.0)
         val S0 = 5000
         val I0 = 100
         val DT = 0.001

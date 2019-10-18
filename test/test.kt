@@ -1,19 +1,4 @@
-import deselby.fockSpace.*
-import deselby.std.Gnuplot
-import deselby.std.combinatorics.combinations
-import deselby.std.gnuplot
-import deselby.std.step
-import deselby.std.vectorSpace.HashDoubleVector
-import experiments.spatialPredatorPrey.fock.Agent
-import experiments.spatialPredatorPrey.fock.Predator
-import experiments.spatialPredatorPrey.fock.Prey
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
-import org.apache.commons.math3.linear.SparseFieldVector
-import java.io.*
 import java.util.*
-import kotlin.math.floor
 
 class MyClass(val c: Int) {
     override fun hashCode(): Int {

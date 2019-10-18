@@ -2,10 +2,10 @@ package experiments.reverseSummation
 
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
-import experiments.spatialPredatorPrey.TenByTenParams
-import experiments.spatialPredatorPrey.fock.Agent
-import experiments.spatialPredatorPrey.fock.Predator
-import experiments.spatialPredatorPrey.fock.Simulation
+import models.predatorPrey.TenByTenParams
+import models.predatorPrey.fock.Agent
+import models.predatorPrey.fock.Predator
+import models.predatorPrey.fock.Simulation
 import org.apache.commons.math3.distribution.PoissonDistribution
 import org.junit.Test
 
