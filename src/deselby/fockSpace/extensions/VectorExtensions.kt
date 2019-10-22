@@ -231,6 +231,15 @@ fun<AGENT> FockVector<AGENT>.multiplyAndStrip(other: FockVector<AGENT>): FockVec
 }
 
 
+fun<AGENT> FockVector<AGENT>.mapAgents(transform: (AGENT) -> AGENT): FockVector<AGENT> {
+    val result = HashFockVector<AGENT>()
+    this.forEach {(basis, weight) ->
+        result.plusAssign(basis.map(transform), weight)
+    }
+    return result
+}
+
+
 operator fun<AGENT> CreationVector<AGENT>.div(basis: CreationBasis<AGENT>) : CreationVector<AGENT> {
     val result = HashDoubleVector<CreationBasis<AGENT>>()
     this.entries.forEach { result.plusAssign(it.key / basis, it.value) }

@@ -7,14 +7,10 @@ import deselby.fockSpace.extensions.semicommute
 import deselby.fockSpace.extensions.stripCreations
 import deselby.fockSpace.extensions.times
 import deselby.std.combinatorics.choose
-import experiments.spatialPredatorPrey.SmallParams
-import experiments.spatialPredatorPrey.StandardParams
-import experiments.spatialPredatorPrey.TenByTenParams
-import experiments.spatialPredatorPrey.fock.Agent
-import experiments.spatialPredatorPrey.fock.Predator
-import experiments.spatialPredatorPrey.fock.Prey
-import experiments.spatialPredatorPrey.fock.Simulation
-import org.apache.commons.math3.util.CombinatoricsUtils
+import models.predatorPrey.TenByTenParams
+import models.predatorPrey.fock.Agent
+import models.predatorPrey.fock.Predator
+import models.predatorPrey.fock.Simulation
 import org.junit.Test
 import kotlin.math.pow
 

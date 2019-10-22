@@ -25,6 +25,9 @@ class BinomialBasis<AGENT>(val pObserve: Double, val observations: Map<AGENT,Int
         return DeselbyGround(newLambdas)
     }
 
+    fun map(transform: (AGENT) -> AGENT): BinomialBasis<AGENT> {
+        return BinomialBasis(pObserve, observations.mapKeys { transform(it.key) })
+    }
 
     // finds the basis that minimises the KL divergence with this likelihood times prior
     fun timesApproximate(prior: GroundedVector<AGENT,DeselbyGround<AGENT>>): GroundedBasis<AGENT,DeselbyGround<AGENT>> {

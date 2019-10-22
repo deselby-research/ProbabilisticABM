@@ -4,8 +4,8 @@ import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
 import deselby.std.vectorSpace.HashDoubleVector
 import deselby.std.vectorSpace.extensions.times
-import experiments.SIR.FockSIR
-import experiments.SIR.SIRParams
+import models.SIR.FockSIR
+import models.SIR.SIRParams
 import org.junit.Test
 
 class SmallTest {

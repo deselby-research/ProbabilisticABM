@@ -22,6 +22,10 @@ class DeselbyGround<AGENT>(val lambdas : Map<AGENT,Double>) : Ground<AGENT>, Ser
 
     override fun lambda(d : AGENT) = this.lambdas[d]?:0.0
 
+    fun map(transform: (AGENT) -> AGENT): DeselbyGround<AGENT> {
+        return DeselbyGround(lambdas.mapKeys { transform(it.key) })
+    }
+
 //    fun mean(state: CreationVector<AGENT>) : Map<AGENT,Double> {
 //        var mean = HashMap<AGENT,Double>()
 //        lambdas.mapValuesTo(mean) {0.0}

@@ -3,9 +3,7 @@ package experiments.reverseSummation
 import deselby.fockSpace.*
 import deselby.fockSpace.extensions.*
 import deselby.std.vectorSpace.extensions.times
-import kotlin.math.absoluteValue
 import kotlin.math.exp
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 
@@ -53,7 +51,9 @@ fun<AGENT> FockVector<AGENT>.reversePosteriorMean(hcIndex: CreationIndex<AGENT>,
                                                   H: FockVector<AGENT>,
                                                   T: Double,
                                                   startState: GroundedBasis<AGENT, DeselbyGround<AGENT>>,
-                                                  observations: BinomialBasis<AGENT>, expansionOrder: Int): Double
+                                                  observations: BinomialBasis<AGENT>,
+                                                  expansionOrder: Int,
+                                                  useCache: Boolean=false): Double
 {
     val startFootprint = this.toAnnihhilationFootprint().reverseFootprint(hcIndex, expansionOrder)
 //    val forwardFootprints = startFootprint.forwardFootprintList(haIndex, expansionOrder)
@@ -68,7 +68,12 @@ fun<AGENT> FockVector<AGENT>.reversePosteriorMean(hcIndex: CreationIndex<AGENT>,
     val binomialBasis = Basis.newBasis(nonZeroObservations, nonZeroObservations)
 
 //    println("Calculating posterior of $this with observation ${observedAgents.map {AbstractMap.SimpleEntry(it, observations.observations[it])}}")
-    val jointSum = (this * binomialBasis).reverseBinomialIntegrateAndSum(hcIndex, LgCommuteH, T, kLgStartState, expansionOrder)
+
+
+    val jointSum = (this * binomialBasis).reverseBinomialIntegrateAndSum(hcIndex, LgCommuteH, T,
+            kLgStartState,
+            expansionOrder,
+            if(useCache) LikelihoodCache else null)
     if(observedAgents.isEmpty()) return jointSum
 
 //    val marginalisedH = H.reverseMarginalise(observationFootprint.reverseFootprint(hcIndex, expansionOrder))
@@ -76,29 +81,45 @@ fun<AGENT> FockVector<AGENT>.reversePosteriorMean(hcIndex: CreationIndex<AGENT>,
 //    val nextOrderTerm = (T/(expansionOrder+1)) * taylorTerm.timesAndMarginalise(HLgD0, emptySet()).creationVector
 //    println("next order term sum = ${nextOrderTerm.values.sum()}")
 
-    val normalisationSum = binomialBasis.toVector().reverseBinomialIntegrateAndSum(hcIndex, LgCommuteH, T, kLgStartState, expansionOrder)
+    val normalisationSum = binomialBasis.toVector().reverseBinomialIntegrateAndSum(hcIndex, LgCommuteH, T,
+            kLgStartState,
+            expansionOrder,
+            if(useCache) NormalisationCache else null)
 //    println("posterior = ${jointSum / normalisationSum}")
     return jointSum / normalisationSum
 }
 
-fun<AGENT> FockVector<AGENT>.reverseBinomialIntegrateAndSum(hcIndex: CreationIndex<AGENT>, LgCommuteH: FockVector<AGENT>, T: Double, ground: GroundedBasis<AGENT,DeselbyGround<AGENT>>, expansionOrder: Int): Double {
-    val taylorTerm = HashFockVector(this.stripCreations())
+fun<AGENT> FockVector<AGENT>.reverseBinomialIntegrateAndSum(
+        hcIndex: CreationIndex<AGENT>,
+        LgCommuteH: FockVector<AGENT>,
+        T: Double,
+        ground: GroundedBasis<AGENT,DeselbyGround<AGENT>>,
+        expansionOrder: Int,
+        cache: ReverseIntegralCache? = null): Double {
+    var taylorTerm = HashFockVector(this.stripCreations())
     val amplitude = (taylorTerm * ground).values.sum()
     var weight = exp(-T)
     var jointSum = weight * amplitude
     var termSum = 0.0
+    val termCache = cache?.get(taylorTerm)
+    val cacheSize = termCache?.size?:0
 //    var xtestimate = 0.0
 //    var err = 0.0
     for(order in 1..expansionOrder) {
         weight *= T/order
-        val tCommuteH = taylorTerm.semiCommuteAndStrip(hcIndex)
-        val tLgCommuteH = taylorTerm.multiplyAndStrip(LgCommuteH)
-        taylorTerm += tCommuteH
-        taylorTerm += tLgCommuteH
+        if(order > cacheSize) {
+            val tCommuteH = taylorTerm.semiCommuteAndStrip(hcIndex)
+            val tLgCommuteH = taylorTerm.multiplyAndStrip(LgCommuteH)
+            taylorTerm.plusAssign(tCommuteH)
+            taylorTerm.plusAssign(tLgCommuteH)
+            termCache?.add(HashFockVector(taylorTerm))
+        } else {
+            taylorTerm = HashFockVector(termCache!!.get(order-1))
+        }
         termSum = weight * (taylorTerm.timesAndMarginalise(ground, emptySet())).values.sum()
         jointSum += termSum
 
-//        println("termSize = ${taylorTerm.size} termSum = ${100.0*termSum/jointSum}% expansionSum = $jointSum")
+        println("termSize = ${taylorTerm.size} termSum = ${100.0*termSum/jointSum}% expansionSum = $jointSum")
 
         // remove small terms (worst-case assume smallest n terms go to 1)
 //        if(order < expansionOrder) {
