@@ -1,6 +1,7 @@
 package models.predatorPrey.fock
 
 import deselby.fockSpace.*
+import models.FockAgent
 import java.io.Serializable
 
 abstract class Agent(val pos: Int): Serializable {
@@ -26,7 +27,6 @@ abstract class Agent(val pos: Int): Serializable {
     abstract fun copyAt(id: Int): Agent
 
 
-
     fun diffuse(h: HashFockVector<Agent>, size: Int, rate: Double) {
         h += action(rate/4.0, copyAt(right(size)))
         h += action(rate/4.0, copyAt(left(size)))
@@ -46,17 +46,12 @@ abstract class Agent(val pos: Int): Serializable {
 
 
     fun action(rate: Double, vararg addedAgents: Agent) : FockVector<Agent> {
-        val from = ActionBasis(mapOf(this to 1),this)
-        val to = ActionBasis(addedAgents.asList(), this)
-        return (to.toVector() - from.toVector())*rate
+        return FockAgent.action(this, rate, *addedAgents)
     }
 
 
     fun interaction(rate: Double, otherAgent: Agent, vararg addedAgents: Agent) : FockVector<Agent> {
-        val thisAndOther = listOf(this, otherAgent)
-        val from = Basis.newBasis(thisAndOther, thisAndOther)
-        val to = Basis.newBasis(addedAgents.asList(), thisAndOther)
-        return (to.toVector() - from.toVector())*rate
+        return FockAgent.interaction(this, otherAgent, rate, *addedAgents)
     }
 
 

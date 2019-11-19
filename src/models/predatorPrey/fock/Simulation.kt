@@ -12,10 +12,11 @@ import models.predatorPrey.Params
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import models.FockModel
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
-class Simulation {
+class Simulation: FockModel<Agent> {
 //    companion object {
 //        const val GRIDSIZE = 3
 //    }
@@ -46,6 +47,7 @@ class Simulation {
         return DeselbyGround(lambdas)
     }
 
+
     fun setLambdas(lambda: (Agent) -> Double) {
         val lambdas = HashMap<Agent, Double>()
         for (pos in 0 until params.GRIDSIZESQ) {
@@ -58,7 +60,7 @@ class Simulation {
     }
 
 
-    fun calcFullHamiltonian(): FockVector<Agent> {
+    override fun calcFullHamiltonian(): FockVector<Agent> {
         val H = HashFockVector<Agent>()
         for (pos in 0 until params.GRIDSIZESQ) {
             Predator(pos).hamiltonian(H, params)
