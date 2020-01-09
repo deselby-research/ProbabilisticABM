@@ -3,6 +3,7 @@ package models
 import deselby.fockSpace.ActionBasis
 import deselby.fockSpace.Basis
 import deselby.fockSpace.FockVector
+import deselby.fockSpace.extensions.times
 
 object FockAgent {
 
@@ -10,6 +11,13 @@ object FockAgent {
         val from = ActionBasis(mapOf(subjectAgent to 1), subjectAgent)
         val to = ActionBasis(resultAgents.asList(), subjectAgent)
         return (to.toVector() - from.toVector())*rate
+    }
+
+    // Only works for max occupation number of 1
+    fun<AGENT> actionInAbsence(subjectAgent: AGENT, absentAgent: AGENT, rate: Double, vararg resultAgents: AGENT) : FockVector<AGENT> {
+        val action = action(subjectAgent, rate, *resultAgents)
+        val absence = ActionBasis(mapOf(absentAgent to 1), absentAgent).toVector()
+        return action - action*absence
     }
 
 

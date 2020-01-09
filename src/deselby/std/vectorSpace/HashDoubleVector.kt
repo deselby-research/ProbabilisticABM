@@ -2,6 +2,7 @@ package deselby.std.vectorSpace
 
 import java.util.function.BiFunction
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : MutableDoubleVector<BASIS>, AbstractMutableMap<BASIS,Double>() {
     override val entries
@@ -35,8 +36,20 @@ class HashDoubleVector<BASIS>(val coeffs : HashMap<BASIS,Double>) : MutableDoubl
         if(coeffs.isEmpty()) return "{ }"
         val sortedTerms = entries.sortedByDescending { abs(it.value) }
         return buildString {
+            var firstTerm = true
             sortedTerms.forEach {
-                append("%+fP[%s] ".format(it.value, it.key))
+                if(it.value > 0.0) {
+                    if(!firstTerm) append(" + ")
+                } else {
+                    append(" - ")
+                }
+                firstTerm = false
+                if(it.value.absoluteValue == 1.0) {
+                    val basis = it.key.toString()
+                    if(basis.isNotEmpty()) append(it.key.toString()) else append("1.0")
+                } else {
+                    append("%f%s ".format(it.value.absoluteValue, it.key))
+                }
             }
         }
 //        var s = ""
