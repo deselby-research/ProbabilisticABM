@@ -1,0 +1,242 @@
+\documentclass[letterpaper,10pt]{article}
+\usepackage{epsfig,comment,amssymb,listings,amsmath}
+\setlength{\parskip}{1.8mm}
+\setlength{\parindent}{0mm}
+\begin{document}
+%\date{}
+\title{\Large \bf Commutation relations in Fock space}
+
+\author{
+{\rm Daniel Tang}\\
+}
+
+\maketitle
+
+% Use the following at camera-ready time to suppress page numbers.
+% Comment it out when you first submit the paper for review.
+%\thispagestyle{empty}
+
+\section{Commutation identities}
+%##########################################################
+
+\begin{equation}
+AB = BA + [A,B]
+\end{equation}
+
+\begin{equation}
+[A, BC] = [A,B]C + B[A,C]
+\end{equation}
+
+\begin{equation}
+[AB, C] =  A[B,C] + [A,C]B
+\end{equation}
+
+\begin{equation}
+[A,B + C] = [A,B] + [A,C]
+\label{sumcommute}
+\end{equation}
+\begin{equation}
+[A,mB] = m[A,B]
+\end{equation}
+where $m$ is a scalar multiplicative constant.
+\begin{equation}
+[A,B] = -[B,A]
+\end{equation}
+
+\begin{equation}
+[ab,AB] = a[b,A]B + [a,A]bB + Aa[b,B] + A[a,B]b
+\end{equation}
+\begin{equation}
+ = a[b,A]B  + [a,A]Bb + aA[b,B] + A[a,B]b
+\end{equation}
+
+\begin{equation}
+[A,B^n] = \sum_{q=1}^n B^{q-1}[A,B]B^{n-q}
+\end{equation}
+
+\begin{equation}
+[A,B^{n+1}] = [A,B]B^n + [A,B^n]B - [[A,B^n],B]
+\end{equation}
+
+\begin{multline}
+[[A,C],[B,D]]=[[[A,B],C],D]+[[[B,C],D],A]
+\\+[[[C,D],A],B]+[[[D,A],B],C]
+\end{multline}
+(source Wikipedia "Commutator")
+
+\begin{equation}
+[[A,H],[B,H]]=[[[A,B],H],H]+[[[B,H],H],A]-[[[A,H],B],H]
+\end{equation}
+so
+\begin{multline}
+[[^nA,H],[^mB,H]]=[^2[[^{n-1}A,H],[^{m-1}B,H]],H]
+\\+[[^{m+1}B,H],[^{n-1}A,H]]-[[[^nA,H],[^{m-1}B,H]],H]
+\end{multline}
+
+
+If we define $[^nA,H] = [\dots [[A,H],H] \dots ,H]$ to be the $n$-fold commutation:
+
+\begin{equation}
+[^n AB,H] = \sum_{m=0}^n {n \choose m}[^mA,H][^{n-m}B,H]
+\end{equation}
+
+\begin{equation}
+[^n ABC,H] = \sum_{a+b+c = n} \frac{n!}{a!b!c!}[^aA,H][^bB,H][^cC,H]
+\end{equation}
+
+\section{Annihilation and creation operators}
+%##########################################################
+
+Beginning with
+
+\[
+[a_\psi,a_\phi^\dag] = a_\psi a_\phi^\dag - a_\phi^\dag a_\psi = 
+\begin{cases}
+ 1 & \text{if }\psi=\phi \\
+ 0 & \text{otherwise} \\
+ \end{cases}
+\]
+
+
+\section{$a^\dag$ and $a$ operators}
+%##########################################################
+
+\begin{equation}
+[a^m, a^\dag] = ma^{m-1}
+\end{equation}
+
+\begin{equation}
+[a,a^{\dag m}] = ma^{\dag(m-1)}
+\end{equation}
+the above holds for all m, even -ve.
+\begin{equation}
+[a^-,a^m] = ((a^- + a)^m - a^m)a^-
+\end{equation}
+
+\begin{equation}
+[a^n,a^{\dag m}] = \sum_{q=1}^{\min(m,n)} \frac{m!n!}{q!(m-q)!(n-q)!} a^{\dag m-q}a^{n-q}
+\end{equation}
+
+
+\begin{equation}
+[a^{\dag p}a^m, a^{\dag q}a^n] = 
+a^{\dag p}[a^m, a^{\dag q}] a^n - 
+a^{\dag q} [a^n, a^{\dag p}]a^m
+\end{equation}
+
+\section{$a^-$ operator}
+%##########################################################
+
+Define the $a^-$ operator such that
+\[
+a^-a^\dag = I
+\]
+where $I$ is the identity operator. Given this we can see immediately that $[a^\dag,a^-a^\dag] = 0$, so
+\[
+a^\dag a^-a^\dag -a^-a^\dag a^\dag = [a^\dag,a^-]a^\dag = 0
+\]
+So, for all states, $S$ other than the ground state,
+\[
+[a^\dag,a^-]S = 0
+\]
+For the ground state, $\emptyset$, in order to ensure $[a^\dag,a^-]\emptyset = 0$ we define
+\[
+a^\dag (a^-\emptyset) = \emptyset
+\]
+However, such terms as $a^-\emptyset$ will never arise through annihilation operators as they will always be multipllied by zero.
+
+\section{$L_{ir}$ operator}
+%##########################################################
+
+Changes $\lambda_i$ to $(1-r)\lambda_i$
+
+\begin{equation}
+[L_{ir}, a_i^\dag] = 0
+\end{equation}
+
+
+\begin{equation}
+[L_{ir}, a_i] = r\lambda_i L_{ir}
+\end{equation}
+
+\begin{equation}
+[L_{ir}, a_i^n] =  L_{ir}(a_i^n - (a_i-r\lambda_i)^n)
+\end{equation}
+
+\section{$g_{ir}$ operator}
+%##########################################################
+
+Multiplies each basis by $(1-r)^{\Delta_i}$
+
+\[
+g_{ir}D_0 = 1
+\]
+
+\begin{equation}
+[a_i^\dag, g_{ir}] = ra_i^\dag g_{ir}
+\end{equation}
+
+\begin{equation}
+[a_i, g_{ir}] = \frac{r(\lambda - a_i)}{1-r}g_{ir}
+\end{equation}
+so
+\begin{equation}
+g_{ir}a_i^{\dag n} = (1-r)^na_i^{\dag n}g_{ir}
+\end{equation}
+and
+\begin{equation}
+[g_{ir}, a_i^{\dag n}] = ((1-r)^n - 1)a_i^{\dag n}g_{ir}
+\end{equation}
+also
+\begin{equation}
+g_{ir}a_i = \frac{a_i-r\lambda_i}{1-r}g_{ir}
+\end{equation}
+so
+\begin{equation}
+g_{ir}a_i^n = \left(\frac{a_i-r\lambda_i}{1-r}\right)^ng_{ir}
+\end{equation}
+\begin{equation}
+g_{ir}a_i^n = (1-r)^{-n}\sum_{m=0}^n{n \choose m} a_i^m(-r\lambda_i)^{n-m}g_{ir}
+\end{equation}
+
+and
+\begin{equation}
+[g_{ir},a_i^n] = \left((1-r)^{-n}\sum_{m=0}^n{n \choose m} a_i^m(-r\lambda_i)^{n-m} - a_i^n\right) g_{ir}
+\end{equation}
+so
+\begin{equation}
+[g_{ir},a_i^{\dag n}a_i^m] = \left((1-r)^{n-m}\sum_{l=0}^m{m \choose l} a_i^{\dag n}a_i^l(-r\lambda_i)^{m-l} - a_i^{\dag n}a_i^m\right) g_{ir}
+\end{equation}
+
+\section{$Lg_{ir}$ operator}
+%##########################################################
+
+We can join the $L$ and $g$ operators into a compound operator that multiplies bases by $(1-r)^\Delta_i$ and multiplies $\lambda_i$ by $(1-r)$. It has the properties:
+
+\begin{equation}
+[Lg_{ir}, a_i^\dag] = -ra_i^\dag Lg_{ir}
+\end{equation}
+
+
+\begin{equation}
+[Lg_{ir}, a_i] = \frac{ra_i}{1-r} Lg_{ir}
+\end{equation}
+
+So
+\begin{equation}
+Lg_{ir}a_i^{\dag n}a_i^m = (1-r)^{n-m}a_i^{\dag n}a_i^mLg_{ir}
+\end{equation}
+and
+\begin{equation}
+[Lg_{ir},a_i^{\dag n}a_i^m] = ((1-r)^{n-m} - 1)a_i^{\dag n}a_i^mLg_{ir}
+\end{equation}
+
+
+
+%{\footnotesize \bibliographystyle{acm}
+%\bibliography{sample}}
+
+
+%\theendnotes
+
+\end{document}

@@ -21,6 +21,6 @@ This library makes use of the following standard libraries, available on Maven, 
 
 ### Data assimilation
 
-[/doc/ABMDataAssimilation.pdf](./doc/ABMDataAssimilation.pdf) describes how we used this software to perform assimilation of incomplete, noisy observations into a spatial predator-prey model. The code used to create the results in this paper can be found in the `src/experiments/reverseSummation` directory. 
+[This ArXiv preprint](./doc/arxiv1910.09442.pdf) describes how we used this software to perform assimilation of incomplete, noisy observations into a spatial predator-prey model. The code used to create the results in this paper can be found in the `src/experiments/reverseSummation` directory.
 
-
+[This draft](./doc/MAPOrbitDraft.pdf) describes some current work on an algorithm to find the Maximum A Posteriori.

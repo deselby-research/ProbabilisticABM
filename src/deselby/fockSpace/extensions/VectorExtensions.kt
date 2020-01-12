@@ -87,6 +87,11 @@ inline fun<AGENT> FockVector<AGENT>.semicommute(creationIndex: CreationIndex<AGE
 }
 
 
+fun<AGENT> FockVector<AGENT>.commute(rhs: FockVector<AGENT>): FockVector<AGENT> {
+    return this.vectorMultiply(rhs, Basis<AGENT>::commute)
+}
+
+
 fun<AGENT> FockVector<AGENT>.semiCommuteAndStrip(creationIndex: CreationIndex<AGENT>) : FockVector<AGENT> {
     val commutation = HashFockVector<AGENT>(HashMap(this.size * 30))
     forEach { termBasis, termWeight ->
