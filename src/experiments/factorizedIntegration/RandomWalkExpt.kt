@@ -53,6 +53,22 @@ class RandomWalkExpt {
 
     }
 
+
+    @Test
+    fun actionCommutatorTest() {
+        val rho = 1.0
+        val interaction = FockAgent.interaction(1,2, rho, 3,4)
+        val s1 = HashFockVector(CreationBasis(mapOf(1 to 1)) to 1.0)
+        val c1 = s1*rho + interaction.commute(s1)
+        println(c1)
+
+        val rho2 = 1.0
+        val action = FockAgent.action(2, rho2, 5)
+        val c2 = c1*rho2 + action.commute(c1)
+        println(c2)
+    }
+
+
     @Test
     fun simpleTest() {
         val A = HashFockVector(InteractionBasis(emptyMap(),1,2) to 1.0)
